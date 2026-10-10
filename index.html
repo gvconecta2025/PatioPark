@@ -6,22 +6,21 @@
     <title>Controle de Pátio - Nuvem</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    
-    <!-- Biblioteca EXIF.js para ler Metadados Reais da Foto -->
     <script src="https://cdn.jsdelivr.net/npm/exif-js"></script>
 
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f3f4f6; }
-        input, select { text-transform: uppercase; font-weight: bold; color: #000; font-size: 1.1rem; }
-        input::placeholder, select::placeholder { font-weight: normal; color: #6b7280; text-transform: none; }
+        input, select, textarea { text-transform: uppercase; font-weight: bold; color: #000; font-size: 1.1rem; }
+        input::placeholder, select::placeholder, textarea::placeholder { font-weight: normal; color: #6b7280; text-transform: none; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
 <body class="h-[100dvh] flex flex-col overflow-hidden text-gray-800">
 
+    <!-- CABEÇALHO -->
     <header class="bg-blue-900 text-white p-4 shadow-md flex-shrink-0 z-10 flex justify-between items-center">
-        <h1 class="text-xl font-bold"><i class="fas fa-truck"></i> CONTROLE DE PÁTIO</h1>
+        <h1 class="text-xl font-bold uppercase"><i class="fas fa-truck"></i> CONTROLE DE PÁTIO</h1>
         <div id="status-conexao" class="text-xs font-bold text-yellow-300"><i class="fas fa-spinner fa-spin"></i> Conectando...</div>
     </header>
 
@@ -29,90 +28,106 @@
 
         <!-- ABA 1: REGISTRAR (APENAS MODO COMPLETO) -->
         <div id="view-registro" class="block pb-20">
-            <h2 class="text-xl font-bold mb-4 flex items-center"><i class="fas fa-edit mr-2"></i> Novo Registro</h2>
+            <h2 class="text-xl font-bold mb-4 flex items-center uppercase"><i class="fas fa-edit mr-2"></i> Novo Registro</h2>
             
             <div class="space-y-4 bg-white p-4 rounded-lg shadow">
                 
                 <div>
-                    <label class="block text-sm font-bold text-gray-700">1. Placa (Tire foto p/ extrair Data Real e Placa)</label>
+                    <label class="block text-sm font-bold text-gray-700 uppercase">1. Placa (Tire foto p/ extrair Data Real)</label>
                     <div class="relative flex items-center">
-                        <input type="text" id="c_placa" class="w-full border-2 border-gray-300 p-3 pr-14 rounded-lg focus:border-blue-500 focus:outline-none" onblur="window.verificarHistorico(this.value)" onkeypress="window.handleEnter(event, 'c_local')" placeholder="ABC-1234">
+                        <input type="text" id="c_placa" class="w-full border-2 border-gray-300 p-3 pr-24 rounded-lg focus:border-blue-500 focus:outline-none uppercase" onblur="window.verificarHistorico(this.value)" onkeypress="window.handleEnter(event, 'c_local')" placeholder="ABC-1234">
                         
-                        <label class="absolute right-2 top-2 bottom-2 bg-blue-100 hover:bg-blue-200 text-blue-600 rounded-lg w-10 flex items-center justify-center cursor-pointer border border-blue-300">
-                            <i class="fas fa-camera text-lg"></i>
-                            <input type="file" accept="image/*" capture="environment" class="hidden" onchange="window.processarFotoPlaca(event)">
-                        </label>
+                        <!-- BOTÕES DE CÂMERA E GALERIA -->
+                        <div class="absolute right-2 top-1/2 -translate-y-1/2 flex space-x-1">
+                            <label title="Abrir Câmera" class="bg-blue-100 hover:bg-blue-200 text-blue-600 rounded w-10 h-10 flex items-center justify-center cursor-pointer border border-blue-300 shadow-sm">
+                                <i class="fas fa-camera text-lg"></i>
+                                <input type="file" accept="image/*" capture="environment" class="hidden" onchange="window.processarFotoPlaca(event)">
+                            </label>
+                            <label title="Abrir Galeria" class="bg-purple-100 hover:bg-purple-200 text-purple-600 rounded w-10 h-10 flex items-center justify-center cursor-pointer border border-purple-300 shadow-sm">
+                                <i class="fas fa-image text-lg"></i>
+                                <input type="file" accept="image/*" class="hidden" onchange="window.processarFotoPlaca(event)">
+                            </label>
+                        </div>
                     </div>
                     <div id="status_foto_completo" class="text-xs font-bold text-orange-600 mt-2 hidden">
-                        <i class="fas fa-info-circle"></i> Capturando data e placa...
+                        <i class="fas fa-info-circle"></i> Capturando imagem...
                     </div>
                 </div>
 
-                <!-- ALERTA DE HISTÓRICO (FICHA DO VEÍCULO) -->
                 <div id="alerta_historico_completo" class="hidden bg-blue-50 border-l-4 border-blue-500 p-3 rounded-r-lg shadow-sm">
                     <div class="flex justify-between items-start">
                         <div>
-                            <h3 class="font-bold text-blue-800 text-sm"><i class="fas fa-history"></i> Veículo Conhecido</h3>
-                            <p id="texto_historico_completo" class="text-xs text-blue-600 mt-1"></p>
+                            <h3 class="font-bold text-blue-800 text-sm uppercase"><i class="fas fa-history"></i> Veículo Conhecido</h3>
+                            <p id="texto_historico_completo" class="text-xs text-blue-600 mt-1 uppercase"></p>
                         </div>
-                        <button type="button" onclick="window.aplicarAutopreenchimento()" class="bg-blue-600 text-white text-xs font-bold px-3 py-2 rounded shadow hover:bg-blue-700">
+                        <button type="button" onclick="window.aplicarAutopreenchimento()" class="bg-blue-600 text-white text-xs font-bold px-3 py-2 rounded shadow hover:bg-blue-700 uppercase">
                             Autopreencher
                         </button>
                     </div>
                 </div>
 
                 <div>
-                    <label class="block text-sm font-bold text-gray-700">2. Local de Entrega</label>
+                    <label class="block text-sm font-bold text-gray-700 uppercase">2. Local de Entrega</label>
                     <div class="relative flex items-center">
-                        <input type="text" id="c_local" class="w-full border-2 border-gray-300 p-3 pr-10 rounded-lg focus:border-blue-500 focus:outline-none" onkeypress="window.handleEnter(event, 'c_motorista')">
+                        <input type="text" id="c_local" class="w-full border-2 border-gray-300 p-3 pr-10 rounded-lg focus:border-blue-500 focus:outline-none uppercase" onkeypress="window.handleEnter(event, 'c_motorista')">
                         <button tabindex="-1" onclick="window.limparCampo('c_local')" class="absolute right-3 text-red-400 hover:text-red-600"><i class="fas fa-times-circle text-xl"></i></button>
                     </div>
                 </div>
 
                 <div>
-                    <label class="block text-sm font-bold text-gray-700">3. Motorista Principal</label>
+                    <label class="block text-sm font-bold text-gray-700 uppercase">3. Motorista Principal</label>
                     <div class="relative flex items-center">
-                        <input type="text" id="c_motorista" class="w-full border-2 border-gray-300 p-3 pr-10 rounded-lg focus:border-blue-500 focus:outline-none" onkeypress="window.handleEnter(event, 'c_documento')">
+                        <input type="text" id="c_motorista" class="w-full border-2 border-gray-300 p-3 pr-10 rounded-lg focus:border-blue-500 focus:outline-none uppercase" onkeypress="window.handleEnter(event, 'c_documento')">
                         <button tabindex="-1" onclick="window.limparCampo('c_motorista')" class="absolute right-3 text-red-400 hover:text-red-600"><i class="fas fa-times-circle text-xl"></i></button>
                     </div>
                 </div>
 
                 <div>
-                    <label class="block text-sm font-bold text-gray-700">4. Documento</label>
+                    <label class="block text-sm font-bold text-gray-700 uppercase">4. Documento</label>
                     <div class="relative flex items-center">
-                        <input type="text" inputmode="text" id="c_documento" class="w-full border-2 border-gray-300 p-3 pr-10 rounded-lg focus:border-blue-500 focus:outline-none" onkeypress="window.handleEnter(event, 'c_empresa')">
+                        <input type="text" inputmode="text" id="c_documento" class="w-full border-2 border-gray-300 p-3 pr-10 rounded-lg focus:border-blue-500 focus:outline-none uppercase" onkeypress="window.handleEnter(event, 'c_empresa')">
                         <button tabindex="-1" onclick="window.limparCampo('c_documento')" class="absolute right-3 text-red-400 hover:text-red-600"><i class="fas fa-times-circle text-xl"></i></button>
                     </div>
                 </div>
 
                 <div>
-                    <label class="block text-sm font-bold text-gray-700">5. Nome da Empresa</label>
+                    <label class="block text-sm font-bold text-gray-700 uppercase">5. Nome da Empresa</label>
                     <div class="relative flex items-center">
-                        <input type="text" id="c_empresa" class="w-full border-2 border-gray-300 p-3 pr-10 rounded-lg focus:border-blue-500 focus:outline-none" onkeypress="window.handleEnter(event, 'c_modelo')">
+                        <input type="text" id="c_empresa" class="w-full border-2 border-gray-300 p-3 pr-10 rounded-lg focus:border-blue-500 focus:outline-none uppercase" onkeypress="window.handleEnter(event, 'c_modelo')">
                         <button tabindex="-1" onclick="window.limparCampo('c_empresa')" class="absolute right-3 text-red-400 hover:text-red-600"><i class="fas fa-times-circle text-xl"></i></button>
                     </div>
                 </div>
                 
                 <div>
-                    <label class="block text-sm font-bold text-gray-700">6. Modelo do Veículo</label>
-                    <div class="relative flex items-center">
-                        <select id="c_modelo" class="w-full border-2 border-gray-300 p-3 rounded-lg focus:border-blue-500 focus:outline-none bg-white">
-                            <option value="" disabled selected>SELECIONE O TIPO</option>
-                            <option value="CAMINHÃO">CAMINHÃO</option>
-                            <option value="PICAPE">PICAPE</option>
-                            <option value="FIORINO">FIORINO</option>
-                            <option value="SAVEIRO">SAVEIRO</option>
-                            <option value="MOTO">MOTO</option>
-                            <option value="CARRO DE PASSEIO">CARRO DE PASSEIO</option>
-                            <option value="OUTROS">OUTROS</option>
-                        </select>
-                    </div>
+                    <label class="block text-sm font-bold text-gray-700 uppercase">6. Modelo do Veículo</label>
+                    <select id="c_modelo" onchange="window.verificarModeloOutros(this.value)" class="w-full border-2 border-gray-300 p-3 rounded-lg focus:border-blue-500 focus:outline-none bg-white uppercase">
+                        <option value="" disabled selected>SELECIONE O TIPO</option>
+                        <option value="CAMINHÃO">CAMINHÃO</option>
+                        <option value="PICAPE">PICAPE</option>
+                        <option value="FIORINO">FIORINO</option>
+                        <option value="SAVEIRO">SAVEIRO</option>
+                        <option value="MOTO">MOTO</option>
+                        <option value="CARRO DE PASSEIO">CARRO DE PASSEIO</option>
+                        <option value="OUTROS">OUTROS</option>
+                    </select>
                 </div>
 
-                <div><label class="block text-sm font-bold text-gray-700">7. Nota Fiscal</label><input type="text" id="c_nota" class="w-full border-2 border-gray-300 p-3 rounded-lg focus:border-blue-500 focus:outline-none" onkeypress="window.handleEnter(event, 'c_visto')"></div>
-                <div><label class="block text-sm font-bold text-gray-700">8. Resp. pela Entrada (Visto)</label><input type="text" id="c_visto" class="w-full border-2 border-gray-300 p-3 rounded-lg focus:border-blue-500 focus:outline-none" onkeypress="if(event.key === 'Enter') window.salvarRegistro()"></div>
+                <!-- CAMPO DE OBSERVAÇÃO DE MODELO (Aparece ao selecionar "OUTROS") -->
+                <div id="container_modelo_obs" class="hidden p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                    <label class="block text-xs font-bold text-blue-700 uppercase mb-1">Qual o modelo do veículo?</label>
+                    <input type="text" id="c_modelo_obs" class="w-full border-2 border-blue-300 p-2 rounded focus:border-blue-500 focus:outline-none uppercase" placeholder="DIGITE O MODELO">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 uppercase">7. Nota Fiscal</label>
+                    <input type="text" id="c_nota" class="w-full border-2 border-gray-300 p-3 rounded-lg focus:border-blue-500 focus:outline-none uppercase" onkeypress="window.handleEnter(event, 'c_visto')">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 uppercase">8. Resp. pela Entrada (Visto)</label>
+                    <input type="text" id="c_visto" class="w-full border-2 border-gray-300 p-3 rounded-lg focus:border-blue-500 focus:outline-none uppercase" onkeypress="if(event.key === 'Enter') window.salvarRegistro()">
+                </div>
                 
-                <button onclick="window.salvarRegistro()" id="btn-salvar-entrada" class="w-full bg-green-600 active:bg-green-700 text-white font-bold p-4 rounded-lg mt-4 text-xl shadow flex justify-center items-center">
+                <button onclick="window.salvarRegistro()" id="btn-salvar-entrada" class="w-full bg-green-600 active:bg-green-700 text-white font-bold p-4 rounded-lg mt-4 text-xl shadow flex justify-center items-center uppercase">
                     <i class="fas fa-save mr-2"></i> SALVAR ENTRADA
                 </button>
             </div>
@@ -121,11 +136,11 @@
         <!-- ABA 2: PÁTIO -->
         <div id="view-patio" class="hidden pb-20">
             <div class="flex justify-between items-center mb-4">
-                <h2 class="text-xl font-bold flex items-center"><i class="fas fa-truck-loading mr-2"></i> Pátio Atual</h2>
+                <h2 class="text-xl font-bold flex items-center uppercase"><i class="fas fa-truck-loading mr-2"></i> Pátio Atual</h2>
             </div>
             <div class="mb-4 relative">
                 <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
-                <input type="text" id="busca-patio" onkeyup="window.filtrarListas()" placeholder="Buscar Placa, Empresa ou Motorista..." class="w-full pl-10 pr-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none font-bold">
+                <input type="text" id="busca-patio" onkeyup="window.filtrarListas()" placeholder="Buscar Placa, Empresa ou Motorista..." class="w-full pl-10 pr-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none font-bold uppercase">
             </div>
             <div id="lista-patio" class="space-y-4"></div>
         </div>
@@ -133,11 +148,11 @@
         <!-- ABA 3: PLANILHA -->
         <div id="view-planilha" class="hidden pb-20">
             <div class="flex justify-between items-center mb-4">
-                <h2 class="text-xl font-bold flex items-center"><i class="fas fa-table mr-2"></i> Histórico Geral</h2>
+                <h2 class="text-xl font-bold flex items-center uppercase"><i class="fas fa-table mr-2"></i> Histórico Geral</h2>
             </div>
             <div class="mb-4 relative">
                 <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
-                <input type="text" id="busca-planilha" onkeyup="window.filtrarListas()" placeholder="Buscar Placa, Empresa ou Motorista..." class="w-full pl-10 pr-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none font-bold">
+                <input type="text" id="busca-planilha" onkeyup="window.filtrarListas()" placeholder="Buscar Placa, Empresa ou Motorista..." class="w-full pl-10 pr-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none font-bold uppercase">
             </div>
             <div class="bg-white rounded-lg shadow overflow-hidden">
                 <div class="overflow-x-auto no-scrollbar">
@@ -167,7 +182,8 @@
 
     </main>
 
-    <nav id="bottom-nav" class="bg-white border-t border-gray-200 flex justify-around p-2 fixed bottom-0 w-full shadow-[0_-10px_20px_rgba(0,0,0,0.05)] z-20 transition-transform duration-300">
+    <!-- MENU INFERIOR -->
+    <nav id="bottom-nav" class="bg-white border-t border-gray-200 flex justify-around p-2 fixed bottom-0 w-full shadow-[0_-10px_20px_rgba(0,0,0,0.05)] z-20 transition-transform duration-300 uppercase">
         <button onclick="window.mudarAba('registro')" id="tab-registro" class="flex flex-col items-center flex-1 py-2 text-blue-600 font-bold transition">
             <i class="fas fa-edit text-xl mb-1"></i>
             <span class="text-xs">Registrar</span>
@@ -182,17 +198,37 @@
         </button>
     </nav>
 
-    <div id="modal-saida" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
+    <!-- MODAL DE DETALHES GIGANTE (95%) -->
+    <div id="modal-detalhes" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80 backdrop-blur-sm p-2">
+        <div class="bg-white rounded-xl shadow-2xl w-[95vw] h-[95vh] flex flex-col overflow-hidden relative">
+            <div class="bg-blue-900 text-white p-4 flex justify-between items-center flex-shrink-0">
+                <h3 class="font-bold text-lg uppercase"><i class="fas fa-file-alt"></i> Ficha do Veículo</h3>
+                <button onclick="window.fecharDetalhes()" class="text-white text-3xl leading-none">&times;</button>
+            </div>
+            
+            <!-- Conteúdo da Ficha -->
+            <div class="flex-1 overflow-y-auto p-4 space-y-4" id="conteudo-detalhes">
+                <!-- Gerado Dinamicamente -->
+            </div>
+            
+            <div class="p-4 border-t bg-gray-50 flex-shrink-0" id="rodape-detalhes">
+                <!-- Botões Gerados Dinamicamente -->
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE SAÍDA -->
+    <div id="modal-saida" class="hidden fixed inset-0 z-[60] bg-black bg-opacity-70 flex items-center justify-center p-4">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden">
-            <div class="bg-red-600 text-white p-4 font-bold text-lg text-center">Registrar Saída</div>
+            <div class="bg-red-600 text-white p-4 font-bold text-lg text-center uppercase">Registrar Saída</div>
             <div class="p-6">
                 <p class="text-sm text-gray-600 mb-4 text-center">Confirmar saída do veículo. O horário será salvo agora no servidor.</p>
-                <label class="block text-sm font-bold text-gray-700 mb-2">Responsável pela Saída (Visto):</label>
-                <input type="text" id="modal_visto_saida" class="w-full border-2 border-gray-300 p-3 rounded-lg focus:border-red-500 focus:outline-none text-xl mb-6 text-center" placeholder="SEU NOME">
+                <label class="block text-sm font-bold text-gray-700 mb-2 uppercase">Responsável pela Saída (Visto):</label>
+                <input type="text" id="modal_visto_saida" class="w-full border-2 border-gray-300 p-3 rounded-lg focus:border-red-500 focus:outline-none text-xl mb-6 text-center uppercase" placeholder="SEU NOME">
                 
                 <div class="flex space-x-3">
-                    <button onclick="window.fecharModal()" class="flex-1 bg-gray-200 text-gray-800 font-bold py-3 rounded-lg">Cancelar</button>
-                    <button onclick="window.confirmarSaida()" id="btn-confirmar-saida" class="flex-1 bg-red-600 text-white font-bold py-3 rounded-lg shadow-md flex justify-center items-center">Confirmar</button>
+                    <button onclick="window.fecharModalSaida()" class="flex-1 bg-gray-200 text-gray-800 font-bold py-3 rounded-lg uppercase">Cancelar</button>
+                    <button onclick="window.confirmarSaida()" id="btn-confirmar-saida" class="flex-1 bg-red-600 text-white font-bold py-3 rounded-lg shadow-md flex justify-center items-center uppercase">Confirmar</button>
                 </div>
             </div>
         </div>
@@ -204,16 +240,18 @@
         import { getFirestore, collection, addDoc, updateDoc, doc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
         // ==========================================
-        // CONFIGURAÇÃO DO FIREBASE (INSIRA SUAS CHAVES AQUI)
+        // CONFIGURAÇÃO DO FIREBASE ADICIONADA:
         // ==========================================
         const firebaseConfig = {
-            apiKey: "SUA_API_KEY",
-            authDomain: "SEU_PROJETO.firebaseapp.com",
-            projectId: "SEU_PROJETO",
-            storageBucket: "SEU_PROJETO.appspot.com",
-            messagingSenderId: "SEU_MESSAGING_ID",
-            appId: "SEU_APP_ID"
+            apiKey: "AIzaSyDYXFu-soolSOoCAxNYlVVgeJVwzJef_fk",
+            authDomain: "patiopark-7984f.firebaseapp.com",
+            projectId: "patiopark-7984f",
+            storageBucket: "patiopark-7984f.firebasestorage.app",
+            messagingSenderId: "1057772370201",
+            appId: "1:1057772370201:web:2da0185c98c15e28926d88",
+            measurementId: "G-VBR7GZ7BYW"
         };
+        // ==========================================
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
@@ -248,7 +286,7 @@
             bottomNav.style.transform = 'translateY(0)';
         });
 
-        // FORÇAR MAIÚSCULAS VISUALMENTE
+        // FORÇAR MAIÚSCULAS AO DIGITAR EM QUALQUER CAMPO
         document.addEventListener('input', function(e) {
             if(e.target.tagName === 'INPUT' && e.target.type === 'text') {
                 let start = e.target.selectionStart;
@@ -258,7 +296,6 @@
             }
         });
 
-        // FUNÇÕES EXPOSTAS PARA O HTML
         window.mudarAba = function(aba) {
             document.getElementById('view-registro').classList.add('hidden');
             document.getElementById('view-patio').classList.add('hidden');
@@ -279,9 +316,18 @@
 
         window.limparCampo = function(id) {
             const input = document.getElementById(id);
-            if(input) {
-                input.value = '';
-                input.focus();
+            if(input) { input.value = ''; input.focus(); }
+        };
+
+        // EXIBIR CAMPO EXTRA SE FOR "OUTROS"
+        window.verificarModeloOutros = function(valor) {
+            const obsContainer = document.getElementById('container_modelo_obs');
+            if(valor === 'OUTROS') {
+                obsContainer.classList.remove('hidden');
+                document.getElementById('c_modelo_obs').focus();
+            } else {
+                obsContainer.classList.add('hidden');
+                document.getElementById('c_modelo_obs').value = '';
             }
         };
 
@@ -292,7 +338,7 @@
             const historico = registros.filter(r => r.placa === placa);
             if(historico.length > 0) {
                 ultimoVeiculoEncontrado = historico[0];
-                const texto = `Visitas totais: ${historico.length} <br> Última: ${ultimoVeiculoEncontrado.entrada} <br> Emp: ${ultimoVeiculoEncontrado.empresa}`;
+                const texto = `Visitas totais: ${historico.length} <br> Última: ${ultimoVeiculoEncontrado.entrada} <br> Emp:${ultimoVeiculoEncontrado.empresa}`;
                 document.getElementById('alerta_historico_completo').classList.remove('hidden');
                 document.getElementById('texto_historico_completo').innerHTML = texto;
             } else {
@@ -307,7 +353,20 @@
             document.getElementById('c_motorista').value = ultimoVeiculoEncontrado.motorista;
             document.getElementById('c_documento').value = ultimoVeiculoEncontrado.documento;
             document.getElementById('c_empresa').value = ultimoVeiculoEncontrado.empresa;
-            document.getElementById('c_modelo').value = ultimoVeiculoEncontrado.modelo;
+            
+            // Lidar com o modelo (se for outros, joga para o campo texto)
+            const modeloEncontrado = ultimoVeiculoEncontrado.modelo;
+            const selectOptions = Array.from(document.getElementById('c_modelo').options).map(opt => opt.value);
+            
+            if(selectOptions.includes(modeloEncontrado)) {
+                document.getElementById('c_modelo').value = modeloEncontrado;
+                window.verificarModeloOutros(modeloEncontrado);
+            } else {
+                document.getElementById('c_modelo').value = 'OUTROS';
+                window.verificarModeloOutros('OUTROS');
+                document.getElementById('c_modelo_obs').value = modeloEncontrado;
+            }
+
             document.getElementById('alerta_historico_completo').classList.add('hidden');
         };
 
@@ -317,7 +376,7 @@
 
             const statusLabel = document.getElementById('status_foto_completo');
             statusLabel.classList.remove('hidden');
-            statusLabel.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Lendo metadados EXIF...';
+            statusLabel.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processando Imagem...';
             statusLabel.classList.replace('text-green-700', 'text-orange-600');
 
             EXIF.getData(file, function() {
@@ -348,14 +407,12 @@
                         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
                         fotoAtualBase64 = canvas.toDataURL('image/jpeg', 0.6);
 
-                        statusLabel.innerHTML += ' | Lendo Placa...';
+                        statusLabel.innerHTML += ' | Confirme a Placa';
                         setTimeout(() => {
                             const placaSugerida = "BRA" + Math.floor(1000 + Math.random() * 9000);
-                            const confirmacao = prompt("IA Vision detectou a placa na imagem. Confirme:", placaSugerida);
-                            const inputAlvo = document.getElementById('c_placa');
-                            
+                            const confirmacao = prompt("IA Vision: Digite a placa do veículo na imagem:", placaSugerida);
                             if(confirmacao) {
-                                inputAlvo.value = confirmacao.toUpperCase();
+                                document.getElementById('c_placa').value = confirmacao.toUpperCase();
                                 window.verificarHistorico(confirmacao);
                             }
                         }, 500);
@@ -370,13 +427,19 @@
             const now = new Date();
             const data = now.toLocaleDateString('pt-BR');
             const hora = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-            return `${data} ${hora}`;
+            return `${data}${hora}`;
         }
 
         window.salvarRegistro = async function() {
             const btn = document.getElementById('btn-salvar-entrada');
             btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> SALVANDO...';
             btn.disabled = true;
+
+            // Determinar o modelo (se foi preenchido "outros")
+            let modeloFinal = document.getElementById('c_modelo').value || '';
+            if(modeloFinal === 'OUTROS') {
+                modeloFinal = document.getElementById('c_modelo_obs').value.trim() || 'OUTROS';
+            }
 
             const horarioDefinitivo = dataHoraMetadata ? dataHoraMetadata + " (EXIF)" : getDataHoraAtualNavegador() + " (Navegador)";
             const novo = {
@@ -385,7 +448,7 @@
                 motorista: document.getElementById('c_motorista').value.trim(),
                 documento: document.getElementById('c_documento').value.trim(),
                 empresa: document.getElementById('c_empresa').value.trim(),
-                modelo: document.getElementById('c_modelo').value || '',
+                modelo: modeloFinal.toUpperCase(),
                 placa: document.getElementById('c_placa').value.trim(),
                 nota: document.getElementById('c_nota').value.trim(),
                 visto_entrada: document.getElementById('c_visto').value.trim(),
@@ -399,7 +462,8 @@
                 await addDoc(collection(db, "registros"), novo);
                 
                 // Limpar Form
-                ['c_local','c_motorista','c_documento','c_empresa','c_modelo','c_placa','c_nota','c_visto'].forEach(id => document.getElementById(id).value = '');
+                ['c_local','c_motorista','c_documento','c_empresa','c_modelo','c_modelo_obs','c_placa','c_nota','c_visto'].forEach(id => document.getElementById(id).value = '');
+                window.verificarModeloOutros(''); // Ocultar campo extra
                 fotoAtualBase64 = null;
                 dataHoraMetadata = null;
                 document.getElementById('status_foto_completo').classList.add('hidden');
@@ -428,18 +492,23 @@
                 const pendente = !r.saida;
                 const matchPatio = !termoPatio || (r.placa.includes(termoPatio) || r.empresa.includes(termoPatio) || r.motorista.includes(termoPatio));
                 const matchPlanilha = !termoPlanilha || (r.placa.includes(termoPlanilha) || r.empresa.includes(termoPlanilha) || r.motorista.includes(termoPlanilha));
-                const imgThumb = r.foto ? `<img src="${r.foto}" class="w-12 h-12 object-cover rounded-lg border shadow-sm">` : `<div class="w-12 h-12 bg-gray-100 rounded-lg flex flex-col items-center justify-center text-gray-400 text-[10px] border"><i class="fas fa-camera mb-1"></i>SEM FOTO</div>`;
+                const imgThumb = r.foto ? `<img src="${r.foto}" class="w-12 h-12 object-cover rounded-lg border shadow-sm">` : `<div class="w-12 h-12 bg-gray-100 rounded-lg flex flex-col items-center justify-center text-gray-400 text-[10px] border"><i class="fas fa-camera mb-1"></i>S/ FOTO</div>`;
 
                 if(matchPatio) {
                     countPatio++;
                     const card = document.createElement('div');
-                    card.className = `bg-white rounded-xl shadow-sm border-l-8 ${pendente ? 'border-blue-500' : 'border-green-500'} p-4 flex flex-col relative`;
-                    let btnSaida = pendente ? `<button onclick="window.abrirModalSaida('${r.firebase_id}')" class="mt-3 w-full bg-red-100 hover:bg-red-200 text-red-700 font-bold py-3 rounded-lg border border-red-300 transition text-sm shadow-sm"><i class="fas fa-sign-out-alt"></i> REGISTRAR SAÍDA</button>` : `<div class="mt-3 text-green-700 font-bold text-center bg-green-50 py-3 rounded-lg border border-green-200 shadow-sm">✅ SAIU: ${r.saida}</div>`;
+                    // O Card agora é clicável para abrir a Ficha Gigante
+                    card.className = `bg-white rounded-xl shadow-sm border-l-8 ${pendente ? 'border-blue-500' : 'border-green-500'} p-4 flex flex-col relative cursor-pointer hover:bg-gray-50 transition`;
+                    card.setAttribute('onclick', `window.abrirDetalhes('${r.firebase_id}')`);
+
+                    // Impede o clique no botão "Saída" de abrir o Modal de detalhes (event.stopPropagation)
+                    let btnSaida = pendente ? `<button onclick="event.stopPropagation(); window.abrirModalSaida('${r.firebase_id}')" class="mt-3 w-full bg-red-100 hover:bg-red-200 text-red-700 font-bold py-3 rounded-lg border border-red-300 transition text-sm shadow-sm uppercase"><i class="fas fa-sign-out-alt"></i> Registrar Saída</button>` : `<div class="mt-3 text-green-700 font-bold text-center bg-green-50 py-3 rounded-lg border border-green-200 shadow-sm uppercase">✅ SAIU: ${r.saida}</div>`;
+                    
                     card.innerHTML = `
                         <div class="flex justify-between items-start border-b pb-3 mb-3">
                             <div class="flex items-center gap-3">
                                 ${imgThumb}
-                                <div><div class="font-black text-xl text-gray-800 leading-none mb-1">${r.placa}</div><div class="text-xs font-bold text-gray-500 uppercase">${r.modelo} • ${r.empresa}</div></div>
+                                <div><div class="font-black text-xl text-gray-800 leading-none mb-1">${r.placa}</div><div class="text-xs font-bold text-gray-500 uppercase">${r.modelo} •${r.empresa}</div></div>
                             </div>
                             <div class="text-right">
                                 <div class="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Entrada (Autenticada)</div>
@@ -449,8 +518,6 @@
                         <div class="grid grid-cols-2 gap-x-2 gap-y-2 text-xs text-gray-700 uppercase font-medium">
                             <div class="truncate"><i class="fas fa-user text-gray-400 w-4"></i> ${r.motorista}</div>
                             <div class="truncate"><i class="fas fa-map-marker-alt text-gray-400 w-4"></i> ${r.local}</div>
-                            <div class="truncate"><i class="fas fa-id-card text-gray-400 w-4"></i> ${r.documento}</div>
-                            <div class="truncate"><i class="fas fa-file-invoice text-gray-400 w-4"></i> ${r.nota}</div>
                         </div>
                         ${btnSaida}
                     `;
@@ -460,61 +527,7 @@
                 if(matchPlanilha) {
                     countPlanilha++;
                     const tr = document.createElement('tr');
-                    tr.className = "hover:bg-gray-50 transition";
-                    let acaoPlanilha = pendente ? `<button onclick="window.abrirModalSaida('${r.firebase_id}')" class="bg-red-500 text-white px-3 py-1.5 rounded text-xs font-bold shadow-sm">DAR SAÍDA</button>` : `<span class="text-green-600 font-bold"><i class="fas fa-check-circle"></i> CONCLUÍDO</span>`;
-                    tr.innerHTML = `
-                        <td class="px-3 py-3 border-r text-center">${acaoPlanilha}</td><td class="px-3 py-3 border-r text-center align-middle">${imgThumb}</td>
-                        <td class="px-3 py-3 border-r font-bold text-blue-700 whitespace-nowrap">${r.entrada}</td><td class="px-3 py-3 border-r font-bold ${pendente ? 'text-gray-400' : 'text-green-600'} whitespace-nowrap">${r.saida || '-- AGUARDANDO --'}</td>
-                        <td class="px-3 py-3 border-r uppercase">${r.local}</td><td class="px-3 py-3 border-r uppercase">${r.motorista}</td><td class="px-3 py-3 border-r uppercase">${r.documento}</td>
-                        <td class="px-3 py-3 border-r uppercase">${r.empresa}</td><td class="px-3 py-3 border-r uppercase font-bold text-gray-600">${r.modelo}</td>
-                        <td class="px-3 py-3 border-r font-black text-gray-900 text-base">${r.placa}</td><td class="px-3 py-3 border-r uppercase">${r.nota}</td>
-                        <td class="px-3 py-3 uppercase text-gray-600 text-[10px] leading-tight"><b>Ent:</b> ${r.visto_entrada} <br> <b>Saí:</b> ${r.visto_saida || '...'}</td>
-                    `;
-                    listaPlanilha.appendChild(tr);
-                }
-            });
+                    tr.className = "hover:bg-gray-50 transition cursor-pointer";
+                    tr.setAttribute('onclick', `window.abrirDetalhes('${r.firebase_id}')`);
 
-            if(countPatio === 0) listaPatio.innerHTML = '<p class="text-center text-gray-500 py-10 font-bold">Nenhum veículo encontrado.</p>';
-            if(countPlanilha === 0) listaPlanilha.innerHTML = '<tr><td colspan="12" class="text-center py-6 font-bold text-gray-500">Nenhum registro encontrado.</td></tr>';
-        };
-
-        window.abrirModalSaida = function(firebase_id) {
-            registroSelecionadoFirebaseId = firebase_id;
-            document.getElementById('modal_visto_saida').value = '';
-            document.getElementById('modal-saida').classList.remove('hidden');
-            setTimeout(() => document.getElementById('modal_visto_saida').focus(), 100);
-        };
-
-        window.fecharModal = function() {
-            document.getElementById('modal-saida').classList.add('hidden');
-            registroSelecionadoFirebaseId = null;
-        };
-
-        window.confirmarSaida = async function() {
-            const visto = document.getElementById('modal_visto_saida').value.trim().toUpperCase();
-            if(!visto) { alert("Por favor, preencha o Responsável pela Saída."); return; }
-            
-            const btn = document.getElementById('btn-confirmar-saida');
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-            btn.disabled = true;
-
-            try {
-                const docRef = doc(db, "registros", registroSelecionadoFirebaseId);
-                await updateDoc(docRef, {
-                    saida: getDataHoraAtualNavegador(),
-                    visto_saida: visto
-                });
-                window.fecharModal();
-            } catch (e) {
-                alert("Erro ao registrar saída na nuvem: " + e.message);
-            } finally {
-                btn.innerHTML = 'Confirmar';
-                btn.disabled = false;
-            }
-        };
-
-        // INICIALIZAÇÃO
-        window.mudarAba('registro');
-    </script>
-</body>
-</html>
+                    let acaoPlanilha = pendente ? `<button onclick="event.stopPropagation(); window.abrirModalSaida('${r.firebase_id}')" class="bg-red-500 text-white px-3 py-1.5 rounded text-xs font-bold shadow-sm uppercase">DAR SAÍDA</button>` : `<span class="text-green-600 font-bold uppercase"><i class="fas fa-
