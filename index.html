@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Controle de Pátio</title>
+    <title>Controle de Pátio - Nuvem</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     
@@ -20,49 +20,82 @@
 </head>
 <body class="h-[100dvh] flex flex-col overflow-hidden text-gray-800">
 
-    <!-- CABEÇALHO -->
-    <header class="bg-blue-900 text-white p-4 shadow-md flex-shrink-0 z-10">
-        <h1 class="text-xl font-bold text-center"><i class="fas fa-truck"></i> CONTROLE DE PÁTIO</h1>
+    <header class="bg-blue-900 text-white p-4 shadow-md flex-shrink-0 z-10 flex justify-between items-center">
+        <h1 class="text-xl font-bold"><i class="fas fa-truck"></i> CONTROLE DE PÁTIO</h1>
+        <div id="status-conexao" class="text-xs font-bold text-yellow-300"><i class="fas fa-spinner fa-spin"></i> Conectando...</div>
     </header>
 
-    <!-- ÁREA PRINCIPAL COM SCROLL -->
     <main class="flex-1 overflow-y-auto p-4 relative" id="main-content">
 
-        <!-- ABA 1: REGISTRAR (ESCOLHA DE MODO) -->
-        <div id="view-registro" class="block h-full">
+        <!-- ABA 1: REGISTRAR (APENAS MODO COMPLETO) -->
+        <div id="view-registro" class="block pb-20">
+            <h2 class="text-xl font-bold mb-4 flex items-center"><i class="fas fa-edit mr-2"></i> Novo Registro</h2>
             
-            <!-- TELA DE ESCOLHA DO MODO -->
-            <div id="escolha-modo" class="flex flex-col items-center justify-center h-full space-y-6 pb-20">
-                <h2 class="text-2xl font-bold text-center mb-4">Como deseja registrar?</h2>
+            <div class="space-y-4 bg-white p-4 rounded-lg shadow">
                 
-                <button onclick="iniciarModo('passo-a-passo')" class="w-full bg-blue-600 active:bg-blue-800 text-white p-6 rounded-xl shadow-lg flex flex-col items-center transition">
-                    <i class="fas fa-forward-step text-5xl mb-2"></i>
-                    <span class="text-2xl font-bold">PASSO A PASSO</span>
-                    <span class="text-sm mt-2 opacity-80">Uma pergunta por vez. Letras grandes.</span>
-                </button>
-
-                <button onclick="iniciarModo('completo')" class="w-full bg-gray-600 active:bg-gray-800 text-white p-6 rounded-xl shadow-lg flex flex-col items-center transition">
-                    <i class="fas fa-list text-5xl mb-2"></i>
-                    <span class="text-2xl font-bold">MODO COMPLETO</span>
-                    <span class="text-sm mt-2 opacity-80">Tudo na mesma tela.</span>
-                </button>
-            </div>
-
-            <!-- FORMULÁRIO COMPLETO -->
-            <div id="form-completo" class="hidden pb-20">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-xl font-bold">Registro Completo</h2>
-                    <button onclick="voltarParaEscolha()" class="text-red-600 font-bold"><i class="fas fa-times"></i> Cancelar</button>
+                <div>
+                    <label class="block text-sm font-bold text-gray-700">1. Placa (Tire foto p/ extrair Data Real e Placa)</label>
+                    <div class="relative flex items-center">
+                        <input type="text" id="c_placa" class="w-full border-2 border-gray-300 p-3 pr-14 rounded-lg focus:border-blue-500 focus:outline-none" onblur="window.verificarHistorico(this.value)" onkeypress="window.handleEnter(event, 'c_local')" placeholder="ABC-1234">
+                        
+                        <label class="absolute right-2 top-2 bottom-2 bg-blue-100 hover:bg-blue-200 text-blue-600 rounded-lg w-10 flex items-center justify-center cursor-pointer border border-blue-300">
+                            <i class="fas fa-camera text-lg"></i>
+                            <input type="file" accept="image/*" capture="environment" class="hidden" onchange="window.processarFotoPlaca(event)">
+                        </label>
+                    </div>
+                    <div id="status_foto_completo" class="text-xs font-bold text-orange-600 mt-2 hidden">
+                        <i class="fas fa-info-circle"></i> Capturando data e placa...
+                    </div>
                 </div>
-                <div class="space-y-4 bg-white p-4 rounded-lg shadow">
-                    <div><label class="block text-sm font-bold text-gray-700">1. Local de Entrega</label><input type="text" id="c_local" class="w-full border-2 border-gray-300 p-3 rounded-lg focus:border-blue-500 focus:outline-none" onkeypress="handleEnter(event, 'c_motorista')"></div>
-                    <div><label class="block text-sm font-bold text-gray-700">2. Motorista Principal</label><input type="text" id="c_motorista" class="w-full border-2 border-gray-300 p-3 rounded-lg focus:border-blue-500 focus:outline-none" onkeypress="handleEnter(event, 'c_documento')"></div>
-                    <div><label class="block text-sm font-bold text-gray-700">3. Documento</label><input type="text" inputmode="text" id="c_documento" class="w-full border-2 border-gray-300 p-3 rounded-lg focus:border-blue-500 focus:outline-none" onkeypress="handleEnter(event, 'c_empresa')"></div>
-                    <div><label class="block text-sm font-bold text-gray-700">4. Nome da Empresa</label><input type="text" id="c_empresa" class="w-full border-2 border-gray-300 p-3 rounded-lg focus:border-blue-500 focus:outline-none" onkeypress="handleEnter(event, 'c_modelo')"></div>
-                    
-                    <!-- MENU SUSPENSO DE MODELOS -->
-                    <div>
-                        <label class="block text-sm font-bold text-gray-700">5. Modelo do Veículo</label>
+
+                <!-- ALERTA DE HISTÓRICO (FICHA DO VEÍCULO) -->
+                <div id="alerta_historico_completo" class="hidden bg-blue-50 border-l-4 border-blue-500 p-3 rounded-r-lg shadow-sm">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h3 class="font-bold text-blue-800 text-sm"><i class="fas fa-history"></i> Veículo Conhecido</h3>
+                            <p id="texto_historico_completo" class="text-xs text-blue-600 mt-1"></p>
+                        </div>
+                        <button type="button" onclick="window.aplicarAutopreenchimento()" class="bg-blue-600 text-white text-xs font-bold px-3 py-2 rounded shadow hover:bg-blue-700">
+                            Autopreencher
+                        </button>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-bold text-gray-700">2. Local de Entrega</label>
+                    <div class="relative flex items-center">
+                        <input type="text" id="c_local" class="w-full border-2 border-gray-300 p-3 pr-10 rounded-lg focus:border-blue-500 focus:outline-none" onkeypress="window.handleEnter(event, 'c_motorista')">
+                        <button tabindex="-1" onclick="window.limparCampo('c_local')" class="absolute right-3 text-red-400 hover:text-red-600"><i class="fas fa-times-circle text-xl"></i></button>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-bold text-gray-700">3. Motorista Principal</label>
+                    <div class="relative flex items-center">
+                        <input type="text" id="c_motorista" class="w-full border-2 border-gray-300 p-3 pr-10 rounded-lg focus:border-blue-500 focus:outline-none" onkeypress="window.handleEnter(event, 'c_documento')">
+                        <button tabindex="-1" onclick="window.limparCampo('c_motorista')" class="absolute right-3 text-red-400 hover:text-red-600"><i class="fas fa-times-circle text-xl"></i></button>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-bold text-gray-700">4. Documento</label>
+                    <div class="relative flex items-center">
+                        <input type="text" inputmode="text" id="c_documento" class="w-full border-2 border-gray-300 p-3 pr-10 rounded-lg focus:border-blue-500 focus:outline-none" onkeypress="window.handleEnter(event, 'c_empresa')">
+                        <button tabindex="-1" onclick="window.limparCampo('c_documento')" class="absolute right-3 text-red-400 hover:text-red-600"><i class="fas fa-times-circle text-xl"></i></button>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-bold text-gray-700">5. Nome da Empresa</label>
+                    <div class="relative flex items-center">
+                        <input type="text" id="c_empresa" class="w-full border-2 border-gray-300 p-3 pr-10 rounded-lg focus:border-blue-500 focus:outline-none" onkeypress="window.handleEnter(event, 'c_modelo')">
+                        <button tabindex="-1" onclick="window.limparCampo('c_empresa')" class="absolute right-3 text-red-400 hover:text-red-600"><i class="fas fa-times-circle text-xl"></i></button>
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-bold text-gray-700">6. Modelo do Veículo</label>
+                    <div class="relative flex items-center">
                         <select id="c_modelo" class="w-full border-2 border-gray-300 p-3 rounded-lg focus:border-blue-500 focus:outline-none bg-white">
                             <option value="" disabled selected>SELECIONE O TIPO</option>
                             <option value="CAMINHÃO">CAMINHÃO</option>
@@ -74,85 +107,38 @@
                             <option value="OUTROS">OUTROS</option>
                         </select>
                     </div>
-
-                    <!-- CAMPO DA PLACA COM BOTÃO DA CÂMERA -->
-                    <div>
-                        <label class="block text-sm font-bold text-gray-700">6. Placa (Tire foto p/ extrair Data Real e Placa)</label>
-                        <div class="relative flex items-center">
-                            <input type="text" id="c_placa" class="w-full border-2 border-gray-300 p-3 pr-14 rounded-lg focus:border-blue-500 focus:outline-none" onkeypress="handleEnter(event, 'c_nota')" placeholder="ABC-1234">
-                            
-                            <!-- LABEL MASCARADO COMO BOTÃO QUE ACIONA A CÂMERA -->
-                            <label class="absolute right-2 top-2 bottom-2 bg-blue-100 hover:bg-blue-200 text-blue-600 rounded-lg w-10 flex items-center justify-center cursor-pointer border border-blue-300">
-                                <i class="fas fa-camera text-lg"></i>
-                                <input type="file" accept="image/*" capture="environment" class="hidden" onchange="processarFotoPlaca(event, 'completo')">
-                            </label>
-                        </div>
-                        <!-- AVISO DE EXTRAÇÃO DE METADADOS -->
-                        <div id="status_foto_completo" class="text-xs font-bold text-orange-600 mt-2 hidden">
-                            <i class="fas fa-info-circle"></i> Capturando data e placa...
-                        </div>
-                    </div>
-
-                    <div><label class="block text-sm font-bold text-gray-700">7. Nota Fiscal</label><input type="text" id="c_nota" class="w-full border-2 border-gray-300 p-3 rounded-lg focus:border-blue-500 focus:outline-none" onkeypress="handleEnter(event, 'c_visto')"></div>
-                    <div><label class="block text-sm font-bold text-gray-700">8. Resp. pela Entrada (Visto)</label><input type="text" id="c_visto" class="w-full border-2 border-gray-300 p-3 rounded-lg focus:border-blue-500 focus:outline-none" onkeypress="if(event.key === 'Enter') salvarRegistro()"></div>
-                    
-                    <button onclick="salvarRegistro()" class="w-full bg-green-600 active:bg-green-700 text-white font-bold p-4 rounded-lg mt-4 text-xl shadow"><i class="fas fa-save"></i> SALVAR ENTRADA</button>
                 </div>
+
+                <div><label class="block text-sm font-bold text-gray-700">7. Nota Fiscal</label><input type="text" id="c_nota" class="w-full border-2 border-gray-300 p-3 rounded-lg focus:border-blue-500 focus:outline-none" onkeypress="window.handleEnter(event, 'c_visto')"></div>
+                <div><label class="block text-sm font-bold text-gray-700">8. Resp. pela Entrada (Visto)</label><input type="text" id="c_visto" class="w-full border-2 border-gray-300 p-3 rounded-lg focus:border-blue-500 focus:outline-none" onkeypress="if(event.key === 'Enter') window.salvarRegistro()"></div>
+                
+                <button onclick="window.salvarRegistro()" id="btn-salvar-entrada" class="w-full bg-green-600 active:bg-green-700 text-white font-bold p-4 rounded-lg mt-4 text-xl shadow flex justify-center items-center">
+                    <i class="fas fa-save mr-2"></i> SALVAR ENTRADA
+                </button>
             </div>
-
-            <!-- FORMULÁRIO PASSO A PASSO -->
-            <div id="form-passos" class="hidden flex-col h-full pb-20">
-                <div class="flex justify-between items-center mb-6 flex-shrink-0">
-                    <span id="passo-contador" class="bg-blue-100 text-blue-800 font-bold px-3 py-1 rounded-full text-sm">Passo 1/8</span>
-                    <button onclick="voltarParaEscolha()" class="text-red-600 font-bold text-lg"><i class="fas fa-times"></i> Cancelar</button>
-                </div>
-
-                <div class="flex-grow flex flex-col justify-center mb-8">
-                    <label id="passo-pergunta" class="block text-2xl md:text-3xl font-extrabold text-gray-800 mb-6 text-center leading-tight">Pergunta</label>
-                    
-                    <!-- Container Dinâmico que receberá INPUT ou SELECT -->
-                    <div id="container-input-passo" class="w-full relative"></div>
-
-                    <div id="status_foto_passo" class="text-sm font-bold text-orange-600 mt-4 text-center hidden">
-                        <i class="fas fa-info-circle"></i> Capturando data real e placa...
-                    </div>
-                </div>
-
-                <div class="flex space-x-4 flex-shrink-0 mt-auto">
-                    <button onclick="passoAnterior()" id="btn-voltar" class="hidden w-1/3 bg-gray-400 active:bg-gray-500 text-white font-bold p-5 rounded-xl text-xl shadow"><i class="fas fa-arrow-left"></i></button>
-                    <button onclick="proximoPasso()" id="btn-avancar" class="flex-1 bg-blue-600 active:bg-blue-700 text-white font-bold p-5 rounded-xl text-2xl shadow transition">AVANÇAR <i class="fas fa-arrow-right"></i></button>
-                </div>
-            </div>
-
         </div>
 
-        <!-- ABA 2: PÁTIO (CARDS COMPACTOS & PREMIUM) -->
+        <!-- ABA 2: PÁTIO -->
         <div id="view-patio" class="hidden pb-20">
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-xl font-bold flex items-center"><i class="fas fa-truck-loading mr-2"></i> Pátio Atual</h2>
             </div>
-
-            <!-- BARRA DE BUSCA -->
             <div class="mb-4 relative">
                 <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
-                <input type="text" id="busca-patio" onkeyup="filtrarListas()" placeholder="Buscar Placa, Empresa ou Motorista..." class="w-full pl-10 pr-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none font-bold">
+                <input type="text" id="busca-patio" onkeyup="window.filtrarListas()" placeholder="Buscar Placa, Empresa ou Motorista..." class="w-full pl-10 pr-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none font-bold">
             </div>
-
-            <div id="lista-patio" class="space-y-4">
-                <!-- Cards renderizados aqui -->
-            </div>
+            <div id="lista-patio" class="space-y-4"></div>
         </div>
 
-        <!-- ABA 3: PLANILHA (TABELA HISTÓRICO) -->
+        <!-- ABA 3: PLANILHA -->
         <div id="view-planilha" class="hidden pb-20">
-            <h2 class="text-xl font-bold mb-4 flex items-center"><i class="fas fa-table mr-2"></i> Histórico Geral</h2>
-
-            <!-- BARRA DE BUSCA -->
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold flex items-center"><i class="fas fa-table mr-2"></i> Histórico Geral</h2>
+            </div>
             <div class="mb-4 relative">
                 <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
-                <input type="text" id="busca-planilha" onkeyup="filtrarListas()" placeholder="Buscar Placa, Empresa ou Motorista..." class="w-full pl-10 pr-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none font-bold">
+                <input type="text" id="busca-planilha" onkeyup="window.filtrarListas()" placeholder="Buscar Placa, Empresa ou Motorista..." class="w-full pl-10 pr-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none font-bold">
             </div>
-
             <div class="bg-white rounded-lg shadow overflow-hidden">
                 <div class="overflow-x-auto no-scrollbar">
                     <table class="min-w-full text-sm text-left">
@@ -173,7 +159,6 @@
                             </tr>
                         </thead>
                         <tbody id="lista-planilha" class="divide-y divide-gray-200 whitespace-nowrap text-xs">
-                            <!-- Linhas renderizadas aqui -->
                         </tbody>
                     </table>
                 </div>
@@ -182,79 +167,88 @@
 
     </main>
 
-    <!-- NAVEGAÇÃO INFERIOR (TABS) - ESCONDE NO TECLADO -->
     <nav id="bottom-nav" class="bg-white border-t border-gray-200 flex justify-around p-2 fixed bottom-0 w-full shadow-[0_-10px_20px_rgba(0,0,0,0.05)] z-20 transition-transform duration-300">
-        <button onclick="mudarAba('registro')" id="tab-registro" class="flex flex-col items-center flex-1 py-2 text-blue-600 font-bold transition">
+        <button onclick="window.mudarAba('registro')" id="tab-registro" class="flex flex-col items-center flex-1 py-2 text-blue-600 font-bold transition">
             <i class="fas fa-edit text-xl mb-1"></i>
             <span class="text-xs">Registrar</span>
         </button>
-        <button onclick="mudarAba('patio')" id="tab-patio" class="flex flex-col items-center flex-1 py-2 text-gray-500 font-bold transition">
+        <button onclick="window.mudarAba('patio')" id="tab-patio" class="flex flex-col items-center flex-1 py-2 text-gray-500 font-bold transition">
             <i class="fas fa-truck text-xl mb-1"></i>
             <span class="text-xs">Pátio</span>
         </button>
-        <button onclick="mudarAba('planilha')" id="tab-planilha" class="flex flex-col items-center flex-1 py-2 text-gray-500 font-bold transition">
+        <button onclick="window.mudarAba('planilha')" id="tab-planilha" class="flex flex-col items-center flex-1 py-2 text-gray-500 font-bold transition">
             <i class="fas fa-table text-xl mb-1"></i>
             <span class="text-xs">Planilha</span>
         </button>
     </nav>
 
-    <!-- MODAL DE SAÍDA -->
     <div id="modal-saida" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden">
             <div class="bg-red-600 text-white p-4 font-bold text-lg text-center">Registrar Saída</div>
             <div class="p-6">
-                <p class="text-sm text-gray-600 mb-4 text-center">Confirmar saída do veículo. O horário será salvo agora.</p>
+                <p class="text-sm text-gray-600 mb-4 text-center">Confirmar saída do veículo. O horário será salvo agora no servidor.</p>
                 <label class="block text-sm font-bold text-gray-700 mb-2">Responsável pela Saída (Visto):</label>
                 <input type="text" id="modal_visto_saida" class="w-full border-2 border-gray-300 p-3 rounded-lg focus:border-red-500 focus:outline-none text-xl mb-6 text-center" placeholder="SEU NOME">
                 
                 <div class="flex space-x-3">
-                    <button onclick="fecharModal()" class="flex-1 bg-gray-200 text-gray-800 font-bold py-3 rounded-lg">Cancelar</button>
-                    <button onclick="confirmarSaida()" class="flex-1 bg-red-600 text-white font-bold py-3 rounded-lg shadow-md">Confirmar</button>
+                    <button onclick="window.fecharModal()" class="flex-1 bg-gray-200 text-gray-800 font-bold py-3 rounded-lg">Cancelar</button>
+                    <button onclick="window.confirmarSaida()" id="btn-confirmar-saida" class="flex-1 bg-red-600 text-white font-bold py-3 rounded-lg shadow-md flex justify-center items-center">Confirmar</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- SCRIPT DE LÓGICA DO APLICATIVO -->
-    <script>
-        // BANCO DE DADOS LOCAL
-        let registros = JSON.parse(localStorage.getItem('patio_db')) || [];
-        
-        // VARIÁVEIS DE ESTADO DO FORMULÁRIO
-        let modoAtual = ''; 
-        let passoAtual = 0;
-        let dadosPasso = {};
-        let registroSelecionadoId = null;
+    <!-- SCRIPT TIPO MODULE PARA INTEGRAÇÃO COM FIREBASE -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, updateDoc, doc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
-        // VARIÁVEIS DA FOTO/CÂMERA
+        // ==========================================
+        // CONFIGURAÇÃO DO FIREBASE (INSIRA SUAS CHAVES AQUI)
+        // ==========================================
+        const firebaseConfig = {
+            apiKey: "SUA_API_KEY",
+            authDomain: "SEU_PROJETO.firebaseapp.com",
+            projectId: "SEU_PROJETO",
+            storageBucket: "SEU_PROJETO.appspot.com",
+            messagingSenderId: "SEU_MESSAGING_ID",
+            appId: "SEU_APP_ID"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // VARIÁVEIS GLOBAIS
+        let registros = [];
+        let registroSelecionadoFirebaseId = null;
         let fotoAtualBase64 = null;
-        let dataHoraMetadata = null; // Armazena a data real da foto
+        let dataHoraMetadata = null; 
+        let ultimoVeiculoEncontrado = null;
 
-        // ESTRUTURA DO PASSO A PASSO
-        const camposEstrutura = [
-            { id: 'local', pergunta: 'Qual o LOCAL DE ENTREGA?', placeholder: 'EX: GALPÃO 1', tipo: 'text' },
-            { id: 'motorista', pergunta: 'Nome do MOTORISTA PRINCIPAL?', placeholder: 'EX: JOÃO SILVA', tipo: 'text' },
-            { id: 'documento', pergunta: 'Número do DOCUMENTO?', placeholder: 'RG OU CPF', tipo: 'text' },
-            { id: 'empresa', pergunta: 'Nome da EMPRESA?', placeholder: 'TRANSPORTADORA X', tipo: 'text' },
-            { id: 'modelo', pergunta: 'MODELO do veículo?', placeholder: 'SELECIONE...', tipo: 'select' },
-            { id: 'placa', pergunta: 'Qual a PLACA? (Tire foto)', placeholder: 'EX: ABC-1234', tipo: 'placa' },
-            { id: 'nota', pergunta: 'Número da NOTA FISCAL?', placeholder: 'EX: 998877', tipo: 'text' },
-            { id: 'visto_entrada', pergunta: 'Seu nome (RESP. ENTRADA)?', placeholder: 'QUEM ESTÁ REGISTRANDO', tipo: 'text' }
-        ];
+        // LISTENER EM TEMPO REAL DO FIREBASE
+        const q = query(collection(db, "registros"), orderBy("id", "desc"));
+        onSnapshot(q, (snapshot) => {
+            registros = [];
+            snapshot.forEach((doc) => {
+                registros.push({ firebase_id: doc.id, ...doc.data() });
+            });
+            window.filtrarListas();
+            document.getElementById('status-conexao').innerHTML = '<i class="fas fa-wifi text-green-400"></i> Online';
+        }, (error) => {
+            console.error("Erro no Firebase:", error);
+            document.getElementById('status-conexao').innerHTML = '<i class="fas fa-exclamation-triangle text-red-400"></i> Erro DB';
+        });
 
-        // --- SISTEMA ANTI-TECLADO ---
-        // Esconde a barra inferior quando o usuário clica num campo, para evitar que ela suba por cima de tudo
+        // SISTEMA ANTI-TECLADO
         const bottomNav = document.getElementById('bottom-nav');
         document.addEventListener('focusin', (e) => {
-            if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') {
-                bottomNav.style.transform = 'translateY(100%)';
-            }
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') bottomNav.style.transform = 'translateY(100%)';
         });
         document.addEventListener('focusout', (e) => {
             bottomNav.style.transform = 'translateY(0)';
         });
 
-        // FORÇAR MAIÚSCULAS VISUALMENTE E NO BANCO
+        // FORÇAR MAIÚSCULAS VISUALMENTE
         document.addEventListener('input', function(e) {
             if(e.target.tagName === 'INPUT' && e.target.type === 'text') {
                 let start = e.target.selectionStart;
@@ -264,220 +258,105 @@
             }
         });
 
-        // NAVEGAÇÃO ENTRE ABAS
-        function mudarAba(aba) {
+        // FUNÇÕES EXPOSTAS PARA O HTML
+        window.mudarAba = function(aba) {
             document.getElementById('view-registro').classList.add('hidden');
             document.getElementById('view-patio').classList.add('hidden');
             document.getElementById('view-planilha').classList.add('hidden');
-            
             document.getElementById('tab-registro').classList.replace('text-blue-600', 'text-gray-500');
             document.getElementById('tab-patio').classList.replace('text-blue-600', 'text-gray-500');
             document.getElementById('tab-planilha').classList.replace('text-blue-600', 'text-gray-500');
-
             document.getElementById(`view-${aba}`).classList.remove('hidden');
             document.getElementById(`tab-${aba}`).classList.replace('text-gray-500', 'text-blue-600');
+        };
 
-            if(aba === 'patio' || aba === 'planilha') renderizarDados();
-        }
-
-        // --- ESCOLHA DE MODO E NAVEGAÇÃO DO REGISTRO ---
-        function iniciarModo(modo) {
-            document.getElementById('escolha-modo').classList.add('hidden');
-            modoAtual = modo;
-            
-            // Limpa dados de câmera residuais
-            fotoAtualBase64 = null;
-            dataHoraMetadata = null; 
-            document.getElementById('status_foto_completo').classList.add('hidden');
-            document.getElementById('status_foto_passo').classList.add('hidden');
-
-            if (modo === 'completo') {
-                document.getElementById('form-completo').classList.remove('hidden');
-                document.getElementById('c_local').focus();
-            } else {
-                document.getElementById('form-passos').classList.remove('hidden');
-                passoAtual = 0;
-                dadosPasso = {};
-                atualizarTelaPasso();
-            }
-        }
-
-        function voltarParaEscolha() {
-            document.getElementById('form-completo').classList.add('hidden');
-            document.getElementById('form-passos').classList.add('hidden');
-            document.getElementById('escolha-modo').classList.remove('hidden');
-            
-            ['c_local','c_motorista','c_documento','c_empresa','c_modelo','c_placa','c_nota','c_visto'].forEach(id => {
-                document.getElementById(id).value = '';
-            });
-        }
-
-        function handleEnter(e, nextFieldId) {
+        window.handleEnter = function(e, nextFieldId) {
             if (e.key === 'Enter') {
                 e.preventDefault();
                 document.getElementById(nextFieldId).focus();
             }
-        }
+        };
 
-        // --- MÓDULO PASSO A PASSO DINÂMICO ---
-        function atualizarTelaPasso() {
-            const campo = camposEstrutura[passoAtual];
-            document.getElementById('passo-contador').innerText = `Passo ${passoAtual + 1}/${camposEstrutura.length}`;
-            document.getElementById('passo-pergunta').innerText = campo.pergunta;
-            
-            const container = document.getElementById('container-input-passo');
-            const valorAtual = dadosPasso[campo.id] || '';
-
-            // Se for o campo Modelo (SELECT)
-            if (campo.tipo === 'select') {
-                container.innerHTML = `
-                    <select id="p_input" class="w-full border-4 border-blue-500 p-6 rounded-2xl text-center text-2xl md:text-3xl font-black focus:outline-none shadow-inner bg-white" onchange="proximoPasso()">
-                        <option value="" disabled selected>SELECIONE...</option>
-                        <option value="CAMINHÃO">CAMINHÃO</option>
-                        <option value="PICAPE">PICAPE</option>
-                        <option value="FIORINO">FIORINO</option>
-                        <option value="SAVEIRO">SAVEIRO</option>
-                        <option value="MOTO">MOTO</option>
-                        <option value="CARRO DE PASSEIO">CARRO DE PASSEIO</option>
-                        <option value="OUTROS">OUTROS</option>
-                    </select>
-                `;
-                if(valorAtual) document.getElementById('p_input').value = valorAtual;
-            } 
-            // Se for o campo da Placa (Com Botão de Câmera)
-            else if (campo.tipo === 'placa') {
-                container.innerHTML = `
-                    <div class="relative flex items-center">
-                        <input type="text" id="p_input" class="w-full border-4 border-blue-500 p-6 pr-16 rounded-2xl text-center text-3xl font-black focus:outline-none shadow-inner bg-white" placeholder="${campo.placeholder}" onkeypress="if(event.key === 'Enter') proximoPasso()" value="${valorAtual}">
-                        <label class="absolute right-3 top-3 bottom-3 bg-blue-100 hover:bg-blue-200 text-blue-600 rounded-xl w-14 flex items-center justify-center cursor-pointer border-2 border-blue-300 transition shadow-sm">
-                            <i class="fas fa-camera text-2xl"></i>
-                            <input type="file" accept="image/*" capture="environment" class="hidden" onchange="processarFotoPlaca(event, 'passo')">
-                        </label>
-                    </div>
-                `;
-            } 
-            // Outros Campos de Texto
-            else {
-                container.innerHTML = `<input type="text" id="p_input" class="w-full border-4 border-blue-500 p-6 rounded-2xl text-center text-3xl font-black focus:outline-none shadow-inner bg-white" placeholder="${campo.placeholder}" onkeypress="if(event.key === 'Enter') proximoPasso()" value="${valorAtual}">`;
-                
-                if(campo.id === 'documento' || campo.id === 'nota') {
-                    document.getElementById('p_input').setAttribute('inputmode', 'text');
-                }
+        window.limparCampo = function(id) {
+            const input = document.getElementById(id);
+            if(input) {
+                input.value = '';
+                input.focus();
             }
+        };
 
-            // Exibir ou Esconder Aviso de Foto/Metadados
-            if(campo.id === 'placa') {
-                document.getElementById('status_foto_passo').classList.remove('hidden');
-                if(!dataHoraMetadata) document.getElementById('status_foto_passo').innerHTML = '<i class="fas fa-info-circle"></i> A IA lerá a placa e os metadados da foto';
+        window.verificarHistorico = function(placaStr) {
+            const placa = placaStr.trim().toUpperCase();
+            if(placa.length < 7) return;
+
+            const historico = registros.filter(r => r.placa === placa);
+            if(historico.length > 0) {
+                ultimoVeiculoEncontrado = historico[0];
+                const texto = `Visitas totais: ${historico.length} <br> Última: ${ultimoVeiculoEncontrado.entrada} <br> Emp: ${ultimoVeiculoEncontrado.empresa}`;
+                document.getElementById('alerta_historico_completo').classList.remove('hidden');
+                document.getElementById('texto_historico_completo').innerHTML = texto;
             } else {
-                document.getElementById('status_foto_passo').classList.add('hidden');
+                document.getElementById('alerta_historico_completo').classList.add('hidden');
+                ultimoVeiculoEncontrado = null;
             }
+        };
 
-            document.getElementById('btn-voltar').classList.toggle('hidden', passoAtual === 0);
-            
-            const btnAvancar = document.getElementById('btn-avancar');
-            if(passoAtual === camposEstrutura.length - 1) {
-                btnAvancar.innerHTML = '<i class="fas fa-save"></i> SALVAR';
-                btnAvancar.classList.replace('bg-blue-600', 'bg-green-600');
-                btnAvancar.classList.replace('active:bg-blue-700', 'active:bg-green-700');
-            } else {
-                btnAvancar.innerHTML = 'AVANÇAR <i class="fas fa-arrow-right"></i>';
-                btnAvancar.classList.replace('bg-green-600', 'bg-blue-600');
-                btnAvancar.classList.replace('active:bg-green-700', 'active:bg-blue-700');
-            }
+        window.aplicarAutopreenchimento = function() {
+            if(!ultimoVeiculoEncontrado) return;
+            document.getElementById('c_local').value = ultimoVeiculoEncontrado.local;
+            document.getElementById('c_motorista').value = ultimoVeiculoEncontrado.motorista;
+            document.getElementById('c_documento').value = ultimoVeiculoEncontrado.documento;
+            document.getElementById('c_empresa').value = ultimoVeiculoEncontrado.empresa;
+            document.getElementById('c_modelo').value = ultimoVeiculoEncontrado.modelo;
+            document.getElementById('alerta_historico_completo').classList.add('hidden');
+        };
 
-            setTimeout(() => {
-                const pInput = document.getElementById('p_input');
-                if(pInput && campo.tipo !== 'select') pInput.focus();
-            }, 100);
-        }
-
-        function proximoPasso() {
-            const input = document.getElementById('p_input');
-            const valor = input.value.trim();
-            
-            if(!valor && passoAtual !== camposEstrutura.length - 1) { 
-                alert('Preencha o campo para avançar.');
-                return;
-            }
-            dadosPasso[camposEstrutura[passoAtual].id] = valor;
-
-            if (passoAtual < camposEstrutura.length - 1) {
-                passoAtual++;
-                atualizarTelaPasso();
-            } else {
-                salvarRegistroPassos();
-            }
-        }
-
-        function passoAnterior() {
-            if (passoAtual > 0) {
-                passoAtual--;
-                atualizarTelaPasso();
-            }
-        }
-
-        // --- SISTEMA DE FOTO E METADADOS EXIF ---
-        function processarFotoPlaca(event, origem) {
+        window.processarFotoPlaca = function(event) {
             const file = event.target.files[0];
             if(!file) return;
 
-            const statusLabel = origem === 'completo' ? document.getElementById('status_foto_completo') : document.getElementById('status_foto_passo');
+            const statusLabel = document.getElementById('status_foto_completo');
             statusLabel.classList.remove('hidden');
-            statusLabel.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Lendo metadados EXIF da foto...';
+            statusLabel.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Lendo metadados EXIF...';
             statusLabel.classList.replace('text-green-700', 'text-orange-600');
 
-            // 1. Extração da Data via EXIF-JS
             EXIF.getData(file, function() {
                 const exifDate = EXIF.getTag(this, "DateTimeOriginal");
-                
                 if (exifDate) {
-                    // EXIF date format is usually "YYYY:MM:DD HH:MM:SS"
                     const partes = exifDate.split(' ');
                     const dataPartes = partes[0].split(':');
                     const horaPartes = partes[1].split(':');
-                    
                     dataHoraMetadata = `${dataPartes[2]}/${dataPartes[1]}/${dataPartes[0]} ${horaPartes[0]}:${horaPartes[1]}`;
-                    
-                    statusLabel.innerHTML = `<i class="fas fa-check-circle"></i> Metadados Reais: ${dataHoraMetadata}`;
+                    statusLabel.innerHTML = `<i class="fas fa-check-circle"></i> EXIF: ${dataHoraMetadata}`;
                     statusLabel.classList.replace('text-orange-600', 'text-green-700');
                 } else {
-                    // Falha ao achar o EXIF (o celular pode ter bloqueado ou o arquivo não possui)
                     const fallbackDate = new Date(file.lastModified);
                     dataHoraMetadata = fallbackDate.toLocaleDateString('pt-BR') + ' ' + fallbackDate.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
-                    
-                    statusLabel.innerHTML = `<i class="fas fa-exclamation-triangle"></i> EXIF bloqueado. Usando data de arquivo: ${dataHoraMetadata}`;
+                    statusLabel.innerHTML = `<i class="fas fa-exclamation-triangle"></i> EXIF falhou. Usando arquivo.`;
                 }
 
-                // 2. Compressão e Salvar a Imagem
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     const img = new Image();
                     img.onload = function() {
                         const canvas = document.createElement('canvas');
                         const ctx = canvas.getContext('2d');
-                        const MAX_WIDTH = 400; // Reduz a imagem
+                        const MAX_WIDTH = 400;
                         const scaleSize = MAX_WIDTH / img.width;
                         canvas.width = MAX_WIDTH;
                         canvas.height = img.height * scaleSize;
                         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                        
-                        // Imagem salva em cache Base64
                         fotoAtualBase64 = canvas.toDataURL('image/jpeg', 0.6);
 
-                        // 3. Simular Leitura da IA
                         statusLabel.innerHTML += ' | Lendo Placa...';
                         setTimeout(() => {
                             const placaSugerida = "BRA" + Math.floor(1000 + Math.random() * 9000);
                             const confirmacao = prompt("IA Vision detectou a placa na imagem. Confirme:", placaSugerida);
-                            
-                            const inputAlvo = origem === 'completo' ? document.getElementById('c_placa') : document.getElementById('p_input');
+                            const inputAlvo = document.getElementById('c_placa');
                             
                             if(confirmacao) {
                                 inputAlvo.value = confirmacao.toUpperCase();
-                                if(origem === 'passo') {
-                                    statusLabel.innerHTML = `<i class="fas fa-check-circle"></i> EXIF: ${dataHoraMetadata} | Placa: Lida com sucesso`;
-                                }
+                                window.verificarHistorico(confirmacao);
                             }
                         }, 500);
                     };
@@ -485,9 +364,8 @@
                 };
                 reader.readAsDataURL(file);
             });
-        }
+        };
 
-        // Retorna a hora atual apenas caso a foto não tenha sido tirada (para fallback)
         function getDataHoraAtualNavegador() {
             const now = new Date();
             const data = now.toLocaleDateString('pt-BR');
@@ -495,94 +373,73 @@
             return `${data} ${hora}`;
         }
 
-        function salvarRegistroPassos() {
-            // O horário de entrada vem PRIMEIRO do Metadado da Foto
-            const horarioDefinitivo = dataHoraMetadata ? dataHoraMetadata + " (EXIF)" : getDataHoraAtualNavegador() + " (Navegador)";
-            
-            const novo = {
-                id: Date.now(),
-                ...dadosPasso,
-                entrada: horarioDefinitivo,
-                saida: '',
-                visto_saida: '',
-                foto: fotoAtualBase64
-            };
-            registros.unshift(novo);
-            finalizarSalvamento();
-        }
+        window.salvarRegistro = async function() {
+            const btn = document.getElementById('btn-salvar-entrada');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> SALVANDO...';
+            btn.disabled = true;
 
-        function salvarRegistro() {
             const horarioDefinitivo = dataHoraMetadata ? dataHoraMetadata + " (EXIF)" : getDataHoraAtualNavegador() + " (Navegador)";
-            
             const novo = {
                 id: Date.now(),
                 local: document.getElementById('c_local').value.trim(),
                 motorista: document.getElementById('c_motorista').value.trim(),
                 documento: document.getElementById('c_documento').value.trim(),
                 empresa: document.getElementById('c_empresa').value.trim(),
-                modelo: document.getElementById('c_modelo').value,
+                modelo: document.getElementById('c_modelo').value || '',
                 placa: document.getElementById('c_placa').value.trim(),
                 nota: document.getElementById('c_nota').value.trim(),
                 visto_entrada: document.getElementById('c_visto').value.trim(),
-                entrada: horarioDefinitivo,
-                saida: '',
-                visto_saida: '',
-                foto: fotoAtualBase64
+                entrada: horarioDefinitivo, 
+                saida: '', 
+                visto_saida: '', 
+                foto: fotoAtualBase64 || ''
             };
-            registros.unshift(novo);
-            finalizarSalvamento();
-        }
 
-        function finalizarSalvamento() {
-            localStorage.setItem('patio_db', JSON.stringify(registros));
-            alert('Registro Efetuado!\nData de Entrada gravada: ' + registros[0].entrada);
-            voltarParaEscolha();
-            mudarAba('patio');
-        }
+            try {
+                await addDoc(collection(db, "registros"), novo);
+                
+                // Limpar Form
+                ['c_local','c_motorista','c_documento','c_empresa','c_modelo','c_placa','c_nota','c_visto'].forEach(id => document.getElementById(id).value = '');
+                fotoAtualBase64 = null;
+                dataHoraMetadata = null;
+                document.getElementById('status_foto_completo').classList.add('hidden');
+                document.getElementById('alerta_historico_completo').classList.add('hidden');
+                
+                window.mudarAba('patio');
+            } catch (e) {
+                alert("Erro ao salvar no banco de dados: " + e.message);
+            } finally {
+                btn.innerHTML = '<i class="fas fa-save mr-2"></i> SALVAR ENTRADA';
+                btn.disabled = false;
+            }
+        };
 
-        // --- RENDERIZAÇÃO E FILTRO ---
-        function renderizarDados() {
-            filtrarListas();
-        }
-
-        function filtrarListas() {
+        window.filtrarListas = function() {
             const termoPatio = document.getElementById('busca-patio').value.toUpperCase();
             const termoPlanilha = document.getElementById('busca-planilha').value.toUpperCase();
-            
             const listaPatio = document.getElementById('lista-patio');
             const listaPlanilha = document.getElementById('lista-planilha');
             
             listaPatio.innerHTML = '';
             listaPlanilha.innerHTML = '';
-
             let countPatio = 0, countPlanilha = 0;
 
             registros.forEach(r => {
                 const pendente = !r.saida;
-
-                // Match de Pesquisa Universal
                 const matchPatio = !termoPatio || (r.placa.includes(termoPatio) || r.empresa.includes(termoPatio) || r.motorista.includes(termoPatio));
                 const matchPlanilha = !termoPlanilha || (r.placa.includes(termoPlanilha) || r.empresa.includes(termoPlanilha) || r.motorista.includes(termoPlanilha));
+                const imgThumb = r.foto ? `<img src="${r.foto}" class="w-12 h-12 object-cover rounded-lg border shadow-sm">` : `<div class="w-12 h-12 bg-gray-100 rounded-lg flex flex-col items-center justify-center text-gray-400 text-[10px] border"><i class="fas fa-camera mb-1"></i>SEM FOTO</div>`;
 
-                // Componente Visual da Imagem
-                const imgThumb = r.foto ? `<img src="${r.foto}" class="w-12 h-12 object-cover rounded-lg border border-gray-300 shadow-sm" onclick="window.open('${r.foto}')">` : `<div class="w-12 h-12 bg-gray-100 rounded-lg flex flex-col items-center justify-center text-gray-400 text-[10px] border border-gray-200"><i class="fas fa-camera mb-1"></i>SEM FOTO</div>`;
-
-                // 1. CARDS DO PÁTIO (Premium)
                 if(matchPatio) {
                     countPatio++;
                     const card = document.createElement('div');
                     card.className = `bg-white rounded-xl shadow-sm border-l-8 ${pendente ? 'border-blue-500' : 'border-green-500'} p-4 flex flex-col relative`;
-                    
-                    let btnSaida = pendente ? `<button onclick="abrirModalSaida(${r.id})" class="mt-3 w-full bg-red-100 hover:bg-red-200 text-red-700 font-bold py-3 rounded-lg border border-red-300 transition text-sm shadow-sm"><i class="fas fa-sign-out-alt"></i> REGISTRAR SAÍDA</button>` : `<div class="mt-3 text-green-700 font-bold text-center bg-green-50 py-3 rounded-lg border border-green-200 shadow-sm">✅ SAIU: ${r.saida}</div>`;
-
+                    let btnSaida = pendente ? `<button onclick="window.abrirModalSaida('${r.firebase_id}')" class="mt-3 w-full bg-red-100 hover:bg-red-200 text-red-700 font-bold py-3 rounded-lg border border-red-300 transition text-sm shadow-sm"><i class="fas fa-sign-out-alt"></i> REGISTRAR SAÍDA</button>` : `<div class="mt-3 text-green-700 font-bold text-center bg-green-50 py-3 rounded-lg border border-green-200 shadow-sm">✅ SAIU: ${r.saida}</div>`;
                     card.innerHTML = `
                         <div class="flex justify-between items-start border-b pb-3 mb-3">
                             <div class="flex items-center gap-3">
                                 ${imgThumb}
-                                <div>
-                                    <div class="font-black text-xl text-gray-800 leading-none mb-1">${r.placa || 'SEM PLACA'}</div>
-                                    <div class="text-xs font-bold text-gray-500 uppercase">${r.modelo || 'VEÍCULO'} • ${r.empresa}</div>
-                                </div>
+                                <div><div class="font-black text-xl text-gray-800 leading-none mb-1">${r.placa}</div><div class="text-xs font-bold text-gray-500 uppercase">${r.modelo} • ${r.empresa}</div></div>
                             </div>
                             <div class="text-right">
                                 <div class="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Entrada (Autenticada)</div>
@@ -600,68 +457,64 @@
                     listaPatio.appendChild(card);
                 }
 
-                // 2. LINHAS DA PLANILHA
                 if(matchPlanilha) {
                     countPlanilha++;
                     const tr = document.createElement('tr');
                     tr.className = "hover:bg-gray-50 transition";
-                    
-                    let acaoPlanilha = pendente ? `<button onclick="abrirModalSaida(${r.id})" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded text-xs font-bold shadow-sm transition">DAR SAÍDA</button>` : `<span class="text-green-600 font-bold"><i class="fas fa-check-circle"></i> CONCLUÍDO</span>`;
-
+                    let acaoPlanilha = pendente ? `<button onclick="window.abrirModalSaida('${r.firebase_id}')" class="bg-red-500 text-white px-3 py-1.5 rounded text-xs font-bold shadow-sm">DAR SAÍDA</button>` : `<span class="text-green-600 font-bold"><i class="fas fa-check-circle"></i> CONCLUÍDO</span>`;
                     tr.innerHTML = `
-                        <td class="px-3 py-3 border-r text-center">${acaoPlanilha}</td>
-                        <td class="px-3 py-3 border-r text-center align-middle">${imgThumb}</td>
-                        <td class="px-3 py-3 border-r font-bold text-blue-700 whitespace-nowrap">${r.entrada}</td>
-                        <td class="px-3 py-3 border-r font-bold ${pendente ? 'text-gray-400' : 'text-green-600'} whitespace-nowrap">${r.saida || '-- AGUARDANDO --'}</td>
-                        <td class="px-3 py-3 border-r uppercase">${r.local}</td>
-                        <td class="px-3 py-3 border-r uppercase">${r.motorista}</td>
-                        <td class="px-3 py-3 border-r uppercase">${r.documento}</td>
-                        <td class="px-3 py-3 border-r uppercase">${r.empresa}</td>
-                        <td class="px-3 py-3 border-r uppercase font-bold text-gray-600">${r.modelo}</td>
-                        <td class="px-3 py-3 border-r font-black text-gray-900 text-base">${r.placa}</td>
-                        <td class="px-3 py-3 border-r uppercase">${r.nota}</td>
+                        <td class="px-3 py-3 border-r text-center">${acaoPlanilha}</td><td class="px-3 py-3 border-r text-center align-middle">${imgThumb}</td>
+                        <td class="px-3 py-3 border-r font-bold text-blue-700 whitespace-nowrap">${r.entrada}</td><td class="px-3 py-3 border-r font-bold ${pendente ? 'text-gray-400' : 'text-green-600'} whitespace-nowrap">${r.saida || '-- AGUARDANDO --'}</td>
+                        <td class="px-3 py-3 border-r uppercase">${r.local}</td><td class="px-3 py-3 border-r uppercase">${r.motorista}</td><td class="px-3 py-3 border-r uppercase">${r.documento}</td>
+                        <td class="px-3 py-3 border-r uppercase">${r.empresa}</td><td class="px-3 py-3 border-r uppercase font-bold text-gray-600">${r.modelo}</td>
+                        <td class="px-3 py-3 border-r font-black text-gray-900 text-base">${r.placa}</td><td class="px-3 py-3 border-r uppercase">${r.nota}</td>
                         <td class="px-3 py-3 uppercase text-gray-600 text-[10px] leading-tight"><b>Ent:</b> ${r.visto_entrada} <br> <b>Saí:</b> ${r.visto_saida || '...'}</td>
                     `;
                     listaPlanilha.appendChild(tr);
                 }
             });
 
-            if(countPatio === 0) listaPatio.innerHTML = '<p class="text-center text-gray-500 py-10 font-bold"><i class="fas fa-check-circle text-4xl block mb-2 text-green-200"></i>Nenhum veículo encontrado.</p>';
+            if(countPatio === 0) listaPatio.innerHTML = '<p class="text-center text-gray-500 py-10 font-bold">Nenhum veículo encontrado.</p>';
             if(countPlanilha === 0) listaPlanilha.innerHTML = '<tr><td colspan="12" class="text-center py-6 font-bold text-gray-500">Nenhum registro encontrado.</td></tr>';
-        }
+        };
 
-        // --- SISTEMA DE SAÍDA ---
-        function abrirModalSaida(id) {
-            registroSelecionadoId = id;
+        window.abrirModalSaida = function(firebase_id) {
+            registroSelecionadoFirebaseId = firebase_id;
             document.getElementById('modal_visto_saida').value = '';
             document.getElementById('modal-saida').classList.remove('hidden');
             setTimeout(() => document.getElementById('modal_visto_saida').focus(), 100);
-        }
+        };
 
-        function fecharModal() {
+        window.fecharModal = function() {
             document.getElementById('modal-saida').classList.add('hidden');
-            registroSelecionadoId = null;
-        }
+            registroSelecionadoFirebaseId = null;
+        };
 
-        function confirmarSaida() {
+        window.confirmarSaida = async function() {
             const visto = document.getElementById('modal_visto_saida').value.trim().toUpperCase();
-            if(!visto) {
-                alert("Por favor, preencha o Responsável pela Saída.");
-                return;
-            }
+            if(!visto) { alert("Por favor, preencha o Responsável pela Saída."); return; }
+            
+            const btn = document.getElementById('btn-confirmar-saida');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            btn.disabled = true;
 
-            const index = registros.findIndex(r => r.id === registroSelecionadoId);
-            if(index !== -1) {
-                registros[index].saida = getDataHoraAtualNavegador(); // Saída usa o horário do clique
-                registros[index].visto_saida = visto;
-                localStorage.setItem('patio_db', JSON.stringify(registros));
-                fecharModal();
-                renderizarDados(); // Atualiza a tela instantaneamente
+            try {
+                const docRef = doc(db, "registros", registroSelecionadoFirebaseId);
+                await updateDoc(docRef, {
+                    saida: getDataHoraAtualNavegador(),
+                    visto_saida: visto
+                });
+                window.fecharModal();
+            } catch (e) {
+                alert("Erro ao registrar saída na nuvem: " + e.message);
+            } finally {
+                btn.innerHTML = 'Confirmar';
+                btn.disabled = false;
             }
-        }
+        };
 
         // INICIALIZAÇÃO
-        mudarAba('registro');
+        window.mudarAba('registro');
     </script>
 </body>
 </html>
