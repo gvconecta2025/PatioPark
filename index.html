@@ -20,41 +20,53 @@
         /* REGRAS DE IMPRESSÃO (PDF / PAISAGEM) */
         @media print {
             @page { size: A4 landscape; margin: 10mm; }
-            
-            /* Esconde os elementos do aplicativo na hora da impressão */
             body, main { height: auto !important; overflow: visible !important; background-color: white !important; }
-            header, nav, #view-registro, #view-patio, #view-config, .no-print, .modal { display: none !important; }
-            
-            /* Força a exibição apenas da Planilha */
+            header, nav, #view-registro, #view-patio, #view-config, #view-login, .no-print, .modal { display: none !important; }
             #view-planilha { display: block !important; position: absolute; left: 0; top: 0; width: 100%; height: auto !important; }
-            
-            /* Remove fundos e sombras, adapta a tabela */
             .bg-white { box-shadow: none !important; border: none !important; }
             .overflow-x-auto { overflow: visible !important; }
             table { width: 100% !important; border-collapse: collapse !important; }
             th, td { border: 1px solid #000 !important; padding: 4px !important; font-size: 10px !important; white-space: normal !important; color: black !important; background: white !important; }
             th { background-color: #e5e7eb !important; font-weight: bold !important; -webkit-print-color-adjust: exact; }
-            
-            /* Remove imagens e botões da tabela na impressão para economizar tinta e espaço */
             td img, td button { display: none !important; }
         }
     </style>
 </head>
 <body class="h-[100dvh] flex flex-col overflow-hidden text-gray-800">
 
-    <header class="bg-blue-900 text-white p-4 shadow-md flex-shrink-0 z-10 flex justify-between items-center no-print">
-        <h1 class="text-xl font-bold uppercase"><i class="fas fa-truck"></i> PÁTIOPARK</h1>
-        <div id="status-conexao" class="text-xs font-bold text-yellow-300"><i class="fas fa-spinner fa-spin"></i> Conectando...</div>
+    <!-- TELA DE LOGIN -->
+    <div id="view-login" class="fixed inset-0 z-[200] bg-blue-900 flex items-center justify-center p-4 fade-in">
+        <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-sm text-center">
+            <i class="fas fa-truck text-5xl text-blue-600 mb-2"></i>
+            <h1 class="text-3xl font-black text-gray-800 tracking-tight mb-1 uppercase">PátioPark</h1>
+            <p class="text-sm text-gray-500 mb-8 uppercase font-bold">Controle de Acesso</p>
+            
+            <div class="space-y-4">
+                <input type="text" id="login-usuario" placeholder="NOME DO USUÁRIO" class="w-full border-2 border-gray-300 p-3 rounded-lg focus:border-blue-500 focus:outline-none uppercase bg-gray-50 text-center font-bold">
+                <input type="password" id="login-senha" placeholder="SENHA" class="w-full border-2 border-gray-300 p-3 rounded-lg focus:border-blue-500 focus:outline-none uppercase bg-gray-50 text-center font-bold" onkeypress="if(event.key === 'Enter') window.fazerLogin()">
+                <button onclick="window.fazerLogin()" id="btn-login" class="w-full bg-blue-600 active:bg-blue-700 text-white font-bold p-4 rounded-lg mt-2 text-lg shadow-md uppercase transition">Entrar no Sistema</button>
+            </div>
+            <div id="login-status" class="mt-4 text-xs font-bold text-yellow-600 h-4"></div>
+        </div>
+    </div>
+
+    <!-- CABEÇALHO DA APLICAÇÃO -->
+    <header id="app-header" class="hidden bg-blue-900 text-white p-4 shadow-md flex-shrink-0 z-10 flex justify-between items-center no-print">
+        <div class="flex items-center">
+            <h1 class="text-xl font-bold uppercase"><i class="fas fa-truck mr-2"></i>PÁTIOPARK</h1>
+        </div>
+        <div class="flex items-center space-x-3 text-xs font-bold">
+            <span id="nome-usuario-header" class="text-blue-200 border-r border-blue-700 pr-3"><i class="fas fa-user-circle"></i> ...</span>
+            <div id="status-conexao" class="text-yellow-300"><i class="fas fa-spinner fa-spin"></i> Conectando</div>
+        </div>
     </header>
 
-    <main class="flex-1 overflow-y-auto p-4 relative" id="main-content">
+    <main class="hidden flex-1 overflow-y-auto p-4 relative" id="main-content">
 
         <!-- ABA 1: REGISTRAR (Gerado Dinamicamente) -->
         <div id="view-registro" class="block pb-20 fade-in no-print">
             <h2 class="text-xl font-bold mb-4 flex items-center uppercase"><i class="fas fa-edit mr-2"></i> Novo Registro</h2>
-            <div class="space-y-4 bg-white p-4 rounded-lg shadow" id="formulario-dinamico">
-                <!-- O Formulário será injetado aqui pelo JS -->
-            </div>
+            <div class="space-y-4 bg-white p-4 rounded-lg shadow" id="formulario-dinamico"></div>
             <button onclick="window.salvarRegistro()" id="btn-salvar-entrada" class="w-full bg-green-600 active:bg-green-700 text-white font-bold p-4 rounded-lg mt-4 text-xl shadow flex justify-center items-center uppercase transition">
                 <i class="fas fa-save mr-2"></i> SALVAR ENTRADA
             </button>
@@ -63,7 +75,6 @@
         <!-- ABA 2: PÁTIO -->
         <div id="view-patio" class="hidden pb-20 fade-in no-print">
             <h2 class="text-xl font-bold mb-4 flex items-center uppercase"><i class="fas fa-truck-loading mr-2"></i> Pátio Atual</h2>
-            
             <div class="bg-white p-3 rounded-lg shadow-sm mb-4 border border-gray-200">
                 <div class="grid grid-cols-2 gap-2 mb-2">
                     <select id="filtro-status-patio" onchange="window.filtrarListas()" class="w-full p-2 border border-gray-300 rounded text-sm uppercase bg-gray-50 font-bold">
@@ -84,7 +95,6 @@
                     <input type="text" id="busca-patio" onkeyup="window.filtrarListas()" placeholder="Pesquisar Placa, Motorista..." class="w-full pl-10 pr-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none font-bold uppercase">
                 </div>
             </div>
-
             <div id="lista-patio" class="space-y-4"></div>
         </div>
 
@@ -92,19 +102,12 @@
         <div id="view-planilha" class="hidden pb-20 fade-in">
             <div class="flex justify-between items-center mb-4 no-print">
                 <h2 class="text-xl font-bold flex items-center uppercase"><i class="fas fa-table mr-2"></i> Histórico</h2>
-                
-                <!-- BOTÃO DE IMPRIMIR E EXCLUIR LOTE -->
                 <div class="flex space-x-2">
-                    <button onclick="window.print()" class="bg-gray-700 text-white font-bold px-3 py-2 rounded text-xs shadow hover:bg-gray-800 transition">
-                        <i class="fas fa-print"></i> Imprimir PDF
-                    </button>
-                    <button id="btn-excluir-lote" onclick="window.excluirEmLote()" class="hidden bg-red-600 text-white font-bold px-3 py-2 rounded text-xs shadow hover:bg-red-700 transition">
-                        <i class="fas fa-trash-alt"></i> Excluir Lote
-                    </button>
+                    <button onclick="window.print()" class="bg-gray-700 text-white font-bold px-3 py-2 rounded text-xs shadow hover:bg-gray-800 transition"><i class="fas fa-print"></i> PDF</button>
+                    <button id="btn-excluir-lote" onclick="window.excluirEmLote()" class="hidden bg-red-600 text-white font-bold px-3 py-2 rounded text-xs shadow hover:bg-red-700 transition"><i class="fas fa-trash-alt"></i> Excluir Lote</button>
                 </div>
             </div>
 
-            <!-- FILTROS (Escondidos na impressão) -->
             <div class="bg-white p-3 rounded-lg shadow-sm mb-4 border border-gray-200 no-print">
                 <div class="grid grid-cols-2 gap-2 mb-2">
                     <select id="filtro-status-planilha" onchange="window.filtrarListas()" class="w-full p-2 border border-gray-300 rounded text-sm uppercase bg-gray-50 font-bold">
@@ -126,17 +129,11 @@
                 </div>
             </div>
 
-            <!-- TABELA PARA IMPRESSÃO -->
             <div class="bg-white rounded-lg shadow overflow-hidden" id="tabela-impressao">
                 <div class="overflow-x-auto no-scrollbar">
                     <table class="min-w-full text-sm text-left">
-                        <thead class="bg-blue-800 text-white text-xs uppercase font-bold whitespace-nowrap">
-                            <tr id="cabecalho-planilha">
-                                <!-- Gerado Dinamicamente -->
-                            </tr>
-                        </thead>
-                        <tbody id="lista-planilha" class="divide-y divide-gray-200 whitespace-nowrap text-xs">
-                        </tbody>
+                        <thead class="bg-blue-800 text-white text-xs uppercase font-bold whitespace-nowrap"><tr id="cabecalho-planilha"></tr></thead>
+                        <tbody id="lista-planilha" class="divide-y divide-gray-200 whitespace-nowrap text-xs"></tbody>
                     </table>
                 </div>
             </div>
@@ -146,12 +143,31 @@
         <div id="view-config" class="hidden pb-20 fade-in no-print">
             <h2 class="text-xl font-bold mb-4 flex items-center uppercase text-red-600"><i class="fas fa-cogs mr-2"></i> Painel de Administração</h2>
             <div class="space-y-6">
+                
+                <!-- GESTÃO DE USUÁRIOS -->
+                <div class="bg-white p-4 rounded-lg shadow border border-gray-200 border-l-4 border-l-purple-500">
+                    <h3 class="font-bold text-gray-800 uppercase border-b pb-2 mb-3"><i class="fas fa-users text-purple-600"></i> Gestão de Usuários</h3>
+                    <p class="text-xs text-gray-500 mb-4">Crie contas para os funcionários. A senha mestra e a conta "ADMIN" são inalteráveis.</p>
+                    
+                    <div id="lista-usuarios-admin" class="space-y-2 mb-4 max-h-40 overflow-y-auto"></div>
+
+                    <div class="border-t pt-4 mt-2">
+                        <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Cadastrar Novo Usuário</label>
+                        <div class="flex space-x-2">
+                            <input type="text" id="novo-user-nome" placeholder="NOME" class="w-1/2 border-2 border-gray-300 p-2 rounded text-sm uppercase focus:border-purple-500 focus:outline-none">
+                            <input type="password" id="novo-user-senha" placeholder="SENHA" class="w-1/2 border-2 border-gray-300 p-2 rounded text-sm uppercase focus:border-purple-500 focus:outline-none">
+                            <button onclick="window.criarUsuario()" class="bg-purple-600 text-white px-4 rounded font-bold uppercase hover:bg-purple-700"><i class="fas fa-plus"></i></button>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Backup -->
                 <div class="bg-white p-4 rounded-lg shadow border border-gray-200">
                     <h3 class="font-bold text-gray-800 uppercase border-b pb-2 mb-3"><i class="fas fa-database"></i> Backup do Sistema</h3>
                     <p class="text-xs text-gray-500 mb-4">Faça o download de toda a base de dados do Firebase em formato JSON para segurança.</p>
-                    <button onclick="window.gerarBackupNuvem()" class="w-full bg-blue-600 text-white font-bold py-3 rounded uppercase shadow"><i class="fas fa-cloud-download-alt"></i> Baixar Backup Completo</button>
+                    <button onclick="window.gerarBackupNuvem()" class="w-full bg-blue-600 text-white font-bold py-3 rounded uppercase shadow hover:bg-blue-700"><i class="fas fa-cloud-download-alt"></i> Baixar Backup Completo</button>
                 </div>
+
                 <!-- Construtor de Campos -->
                 <div class="bg-white p-4 rounded-lg shadow border border-gray-200">
                     <h3 class="font-bold text-gray-800 uppercase border-b pb-2 mb-3"><i class="fas fa-list-ol"></i> Estrutura de Campos</h3>
@@ -165,18 +181,19 @@
                                 <option value="text">Texto</option>
                                 <option value="textarea">Observação</option>
                             </select>
-                            <button onclick="window.adicionarCampo()" class="bg-green-600 text-white px-4 rounded font-bold uppercase"><i class="fas fa-plus"></i></button>
+                            <button onclick="window.adicionarCampo()" class="bg-green-600 text-white px-4 rounded font-bold uppercase hover:bg-green-700"><i class="fas fa-plus"></i></button>
                         </div>
                     </div>
                 </div>
-                <button onclick="window.sairAdmin()" class="w-full bg-gray-200 text-gray-800 font-bold py-4 rounded-lg shadow mt-4 uppercase"><i class="fas fa-sign-out-alt"></i> Sair do Modo Admin</button>
+
+                <button onclick="window.fazerLogoff()" class="w-full bg-red-100 text-red-700 font-bold py-4 rounded-lg shadow mt-4 uppercase border border-red-300 hover:bg-red-200"><i class="fas fa-sign-out-alt"></i> Sair da Conta (Logoff)</button>
             </div>
         </div>
 
     </main>
 
     <!-- MENU INFERIOR -->
-    <nav id="bottom-nav" class="bg-white border-t border-gray-200 flex justify-around p-2 fixed bottom-0 w-full shadow-[0_-10px_20px_rgba(0,0,0,0.05)] z-20 transition-transform duration-300 uppercase no-print">
+    <nav id="bottom-nav" class="hidden bg-white border-t border-gray-200 flex justify-around p-2 fixed bottom-0 w-full shadow-[0_-10px_20px_rgba(0,0,0,0.05)] z-20 transition-transform duration-300 uppercase no-print">
         <button onclick="window.mudarAba('registro')" id="tab-registro" class="flex flex-col items-center flex-1 py-2 text-blue-600 font-bold transition"><i class="fas fa-edit text-xl mb-1"></i><span class="text-[10px] md:text-xs">Registrar</span></button>
         <button onclick="window.mudarAba('patio')" id="tab-patio" class="flex flex-col items-center flex-1 py-2 text-gray-500 font-bold transition"><i class="fas fa-truck text-xl mb-1"></i><span class="text-[10px] md:text-xs">Pátio</span></button>
         <button onclick="window.mudarAba('planilha')" id="tab-planilha" class="flex flex-col items-center flex-1 py-2 text-gray-500 font-bold transition"><i class="fas fa-table text-xl mb-1"></i><span class="text-[10px] md:text-xs">Planilha</span></button>
@@ -220,12 +237,10 @@
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden">
             <div class="bg-red-600 text-white p-4 font-bold text-lg text-center uppercase">Registrar Saída</div>
             <div class="p-6">
-                <p class="text-sm text-gray-600 mb-4 text-center">Confirmar saída do veículo.</p>
-                <label class="block text-sm font-bold text-gray-700 mb-2 uppercase">Resp. Saída (Visto):</label>
-                <input type="text" id="modal_visto_saida" class="w-full border-2 border-gray-300 p-3 rounded-lg focus:border-red-500 focus:outline-none text-xl mb-6 text-center uppercase">
+                <p class="text-sm text-gray-600 mb-4 text-center">A saída será carimbada com o seu usuário automaticamente na nuvem.</p>
                 <div class="flex space-x-3">
                     <button onclick="window.fecharModalSaida()" class="flex-1 bg-gray-200 text-gray-800 font-bold py-3 rounded-lg uppercase">Cancelar</button>
-                    <button onclick="window.confirmarSaida()" id="btn-confirmar-saida" class="flex-1 bg-red-600 text-white font-bold py-3 rounded-lg shadow-md uppercase">Confirmar</button>
+                    <button onclick="window.confirmarSaida()" id="btn-confirmar-saida" class="flex-1 bg-red-600 text-white font-bold py-3 rounded-lg shadow-md uppercase">Confirmar Saída</button>
                 </div>
             </div>
         </div>
@@ -237,7 +252,7 @@
         import { getFirestore, collection, addDoc, updateDoc, doc, deleteDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
         // ==========================================
-        // CREDENCIAIS
+        // CREDENCIAIS (INCLUINDO SENHA MESTRA E IMGBB)
         // ==========================================
         const firebaseConfig = {
             apiKey: "AIzaSyDYXFu-soolSOoCAxNYlVVgeJVwzJef_fk",
@@ -256,14 +271,117 @@
 
         // VARIÁVEIS GLOBAIS
         let registros = [];
+        let usuarios = [];
+        let usuarioLogado = null; // Guarda quem está usando o app
         let registroSelecionadoFirebaseId = null;
         let fotoAtualUrl = null; 
         let dataHoraMetadata = null; 
         let gpsLocalizacao = null; 
         let isAdmin = false;
+        let ultimoVeiculoEncontrado = null;
 
         // ==========================================
-        // SISTEMA DE CAMPOS DINÂMICOS
+        // SISTEMA DE USUÁRIOS E LOGIN
+        // ==========================================
+        onSnapshot(collection(db, "usuarios"), (snapshot) => {
+            usuarios = [];
+            snapshot.forEach((doc) => usuarios.push({ id: doc.id, ...doc.data() }));
+            window.renderizarUsuarios();
+        });
+
+        window.fazerLogin = function() {
+            const status = document.getElementById('login-status');
+            const u = document.getElementById('login-usuario').value.trim().toUpperCase();
+            const s = document.getElementById('login-senha').value;
+            
+            status.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Autenticando...';
+            
+            // Bypass Super Admin
+            if(u === 'ADMIN' && s === SENHA_ADMIN) {
+                usuarioLogado = 'ADMINISTRADOR';
+                isAdmin = true;
+                iniciarAplicativo();
+                return;
+            }
+
+            // Busca na lista do Firestore
+            const func = usuarios.find(user => user.nome === u && user.senha === s);
+            if(func) {
+                usuarioLogado = func.nome;
+                isAdmin = false;
+                iniciarAplicativo();
+            } else {
+                status.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Usuário ou Senha incorretos.';
+            }
+        };
+
+        function iniciarAplicativo() {
+            document.getElementById('view-login').classList.add('hidden');
+            document.getElementById('app-header').classList.remove('hidden');
+            document.getElementById('main-content').classList.remove('hidden');
+            document.getElementById('bottom-nav').classList.remove('hidden');
+            document.getElementById('nome-usuario-header').innerHTML = `<i class="fas fa-user-circle"></i> ${usuarioLogado}`;
+            
+            if(isAdmin) document.getElementById('tab-config').classList.replace('text-gray-300', 'text-red-600');
+            else document.getElementById('tab-config').classList.replace('text-red-600', 'text-gray-300');
+
+            window.mudarAba('registro');
+            window.renderizarTudo();
+        }
+
+        window.fazerLogoff = function() {
+            usuarioLogado = null; isAdmin = false;
+            document.getElementById('login-usuario').value = '';
+            document.getElementById('login-senha').value = '';
+            document.getElementById('login-status').innerHTML = '';
+            
+            document.getElementById('view-login').classList.remove('hidden');
+            document.getElementById('app-header').classList.add('hidden');
+            document.getElementById('main-content').classList.add('hidden');
+            document.getElementById('bottom-nav').classList.add('hidden');
+        };
+
+        window.criarUsuario = async function() {
+            const nome = document.getElementById('novo-user-nome').value.trim().toUpperCase();
+            const senha = document.getElementById('novo-user-senha').value.trim();
+            if(!nome || !senha) return alert("Preencha o Nome e a Senha.");
+            if(usuarios.find(u => u.nome === nome)) return alert("Já existe um usuário com esse nome.");
+            
+            try {
+                await addDoc(collection(db, "usuarios"), { nome, senha, data: getDataHoraAtualNavegador() });
+                document.getElementById('novo-user-nome').value = '';
+                document.getElementById('novo-user-senha').value = '';
+            } catch(e) { alert("Erro ao criar usuário."); }
+        };
+
+        window.excluirUsuario = async function(id, nome) {
+            if(confirm(`Excluir o acesso do funcionário ${nome}?`)) {
+                try { await deleteDoc(doc(db, "usuarios", id)); } catch(e) { alert("Erro."); }
+            }
+        };
+
+        window.renderizarUsuarios = function() {
+            const container = document.getElementById('lista-usuarios-admin');
+            if(!container) return;
+            container.innerHTML = '';
+            if(usuarios.length === 0) {
+                container.innerHTML = '<div class="text-xs text-gray-400 italic">Nenhum usuário cadastrado. Apenas o Admin tem acesso.</div>';
+            }
+            usuarios.forEach(u => {
+                container.innerHTML += `
+                    <div class="flex justify-between items-center bg-gray-50 border p-2 rounded">
+                        <div>
+                            <div class="font-bold text-sm uppercase text-gray-800"><i class="fas fa-user text-purple-500 mr-1"></i> ${u.nome}</div>
+                            <div class="text-[10px] text-gray-500">Senha: ${u.senha}</div>
+                        </div>
+                        <button onclick="window.excluirUsuario('${u.id}', '${u.nome}')" class="text-red-500 hover:text-red-700 p-2"><i class="fas fa-trash"></i></button>
+                    </div>
+                `;
+            });
+        };
+
+        // ==========================================
+        // SISTEMA DE CAMPOS DINÂMICOS (S/ VISTO MANUAL)
         // ==========================================
         const camposPadrao = [
             { id: "placa", nome: "Placa", tipo: "placa", fixo: true },
@@ -273,7 +391,6 @@
             { id: "empresa", nome: "Nome da Empresa", tipo: "text", fixo: false },
             { id: "modelo", nome: "Modelo do Veículo", tipo: "select_modelo", fixo: false },
             { id: "nota", nome: "Nota Fiscal", tipo: "text", fixo: false },
-            { id: "visto", nome: "Resp. Entrada", tipo: "text", fixo: false },
             { id: "observacoes", nome: "Observações", tipo: "textarea", fixo: false }
         ];
 
@@ -284,12 +401,9 @@
             window.renderizarTudo();
         }
 
-        // ==========================================
-        // RENDERIZAR O APLICATIVO
-        // ==========================================
         window.renderizarTudo = function() {
-            // 1. Renderiza o Formulário Principal
             const formContainer = document.getElementById('formulario-dinamico');
+            if(!formContainer) return;
             formContainer.innerHTML = '';
             
             schemaCampos.forEach((campo, index) => {
@@ -297,20 +411,15 @@
                 if(campo.tipo === 'placa') {
                     html = `
                         <div class="mb-4">
-                            <label class="block text-sm font-bold text-gray-700 uppercase">${index+1}. ${campo.nome} (Tire Foto)</label>
+                            <label class="block text-sm font-bold text-gray-700 uppercase">${index+1}. ${campo.nome} (Tire Foto p/ Registrar)</label>
                             <div class="relative flex items-center mt-1 no-print">
                                 <input type="text" id="campo_${campo.id}" class="w-full border-2 border-gray-300 p-3 pr-24 rounded-lg focus:border-blue-500 focus:outline-none uppercase" onblur="window.verificarHistorico(this.value)" placeholder="ABC-1234">
                                 <div class="absolute right-2 top-1/2 -translate-y-1/2 flex space-x-1">
-                                    <label class="bg-blue-100 text-blue-600 rounded w-10 h-10 flex items-center justify-center cursor-pointer border shadow-sm">
-                                        <i class="fas fa-camera text-lg"></i><input type="file" accept="image/*" capture="environment" class="hidden" onchange="window.processarFotoPlaca(event)">
-                                    </label>
-                                    <label class="bg-purple-100 text-purple-600 rounded w-10 h-10 flex items-center justify-center cursor-pointer border shadow-sm">
-                                        <i class="fas fa-image text-lg"></i><input type="file" accept="image/*" class="hidden" onchange="window.processarFotoPlaca(event)">
-                                    </label>
+                                    <label class="bg-blue-100 text-blue-600 rounded w-10 h-10 flex items-center justify-center cursor-pointer border shadow-sm"><i class="fas fa-camera text-lg"></i><input type="file" accept="image/*" capture="environment" class="hidden" onchange="window.processarFotoPlaca(event)"></label>
+                                    <label class="bg-purple-100 text-purple-600 rounded w-10 h-10 flex items-center justify-center cursor-pointer border shadow-sm"><i class="fas fa-image text-lg"></i><input type="file" accept="image/*" class="hidden" onchange="window.processarFotoPlaca(event)"></label>
                                 </div>
                             </div>
                             
-                            <!-- PAINEL DE PREVIEW DA FOTO (CORRIGIDO PARA O USUÁRIO VER) -->
                             <div id="preview-container" class="hidden mt-2 p-2 border rounded bg-gray-50 flex items-center justify-between shadow-inner">
                                 <img id="preview-img" src="" class="h-16 w-16 object-cover rounded border border-gray-300">
                                 <div class="text-[10px] text-gray-500 font-bold text-right ml-2 leading-tight uppercase" id="preview-info"></div>
@@ -325,98 +434,60 @@
                             </div>
                         </div>`;
                 } else if(campo.tipo === 'select_modelo') {
-                    html = `
-                        <div class="mb-4">
-                            <label class="block text-sm font-bold text-gray-700 uppercase">${index+1}. ${campo.nome}</label>
-                            <select id="campo_${campo.id}" onchange="window.verificarModeloOutros(this.value, '${campo.id}')" class="w-full border-2 border-gray-300 p-3 rounded-lg mt-1 bg-white uppercase focus:border-blue-500 focus:outline-none">
-                                <option value="" disabled selected>SELECIONE...</option>
-                                <option value="CAMINHÃO">CAMINHÃO</option><option value="PICAPE">PICAPE</option>
-                                <option value="FIORINO">FIORINO</option><option value="SAVEIRO">SAVEIRO</option>
-                                <option value="MOTO">MOTO</option><option value="CARRO DE PASSEIO">CARRO DE PASSEIO</option>
-                                <option value="OUTROS">OUTROS</option>
-                            </select>
-                            <input type="text" id="campo_${campo.id}_obs" class="w-full border-2 border-blue-300 p-3 mt-2 rounded-lg hidden uppercase focus:border-blue-500 focus:outline-none" placeholder="DIGITE O MODELO">
-                        </div>`;
+                    html = `<div class="mb-4"><label class="block text-sm font-bold text-gray-700 uppercase">${index+1}. ${campo.nome}</label><select id="campo_${campo.id}" onchange="window.verificarModeloOutros(this.value, '${campo.id}')" class="w-full border-2 border-gray-300 p-3 rounded-lg mt-1 bg-white uppercase focus:border-blue-500 focus:outline-none"><option value="" disabled selected>SELECIONE...</option><option value="CAMINHÃO">CAMINHÃO</option><option value="PICAPE">PICAPE</option><option value="FIORINO">FIORINO</option><option value="SAVEIRO">SAVEIRO</option><option value="MOTO">MOTO</option><option value="CARRO DE PASSEIO">CARRO DE PASSEIO</option><option value="OUTROS">OUTROS</option></select><input type="text" id="campo_${campo.id}_obs" class="w-full border-2 border-blue-300 p-3 mt-2 rounded-lg hidden uppercase focus:border-blue-500 focus:outline-none" placeholder="DIGITE O MODELO"></div>`;
                 } else if(campo.tipo === 'textarea') {
-                    html = `
-                        <div class="mb-4">
-                            <label class="block text-sm font-bold text-gray-700 uppercase">${index+1}. ${campo.nome}</label>
-                            <textarea id="campo_${campo.id}" rows="3" class="w-full border-2 border-gray-300 p-3 rounded-lg mt-1 uppercase focus:border-blue-500 focus:outline-none"></textarea>
-                            <button tabindex="-1" onclick="window.limparCampo('campo_${campo.id}')" class="text-red-400 text-xs mt-1 uppercase font-bold"><i class="fas fa-eraser"></i> Limpar</button>
-                        </div>`;
+                    html = `<div class="mb-4"><label class="block text-sm font-bold text-gray-700 uppercase">${index+1}. ${campo.nome}</label><textarea id="campo_${campo.id}" rows="3" class="w-full border-2 border-gray-300 p-3 rounded-lg mt-1 uppercase focus:border-blue-500 focus:outline-none"></textarea><button tabindex="-1" onclick="window.limparCampo('campo_${campo.id}')" class="text-red-400 text-xs mt-1 uppercase font-bold"><i class="fas fa-eraser"></i> Limpar</button></div>`;
                 } else {
-                    html = `
-                        <div class="mb-4">
-                            <label class="block text-sm font-bold text-gray-700 uppercase">${index+1}. ${campo.nome}</label>
-                            <div class="relative flex items-center mt-1">
-                                <input type="text" id="campo_${campo.id}" class="w-full border-2 border-gray-300 p-3 pr-10 rounded-lg focus:border-blue-500 focus:outline-none uppercase">
-                                <button tabindex="-1" onclick="window.limparCampo('campo_${campo.id}')" class="absolute right-3 text-red-400"><i class="fas fa-times-circle text-xl"></i></button>
-                            </div>
-                        </div>`;
+                    html = `<div class="mb-4"><label class="block text-sm font-bold text-gray-700 uppercase">${index+1}. ${campo.nome}</label><div class="relative flex items-center mt-1"><input type="text" id="campo_${campo.id}" class="w-full border-2 border-gray-300 p-3 pr-10 rounded-lg focus:border-blue-500 focus:outline-none uppercase"><button tabindex="-1" onclick="window.limparCampo('campo_${campo.id}')" class="absolute right-3 text-red-400"><i class="fas fa-times-circle text-xl"></i></button></div></div>`;
                 }
                 formContainer.insertAdjacentHTML('beforeend', html);
             });
 
-            // 2. Renderiza Cabeçalho da Planilha
             const cabecalho = document.getElementById('cabecalho-planilha');
-            cabecalho.innerHTML = `<th class="px-3 py-2 border-r border-blue-700 w-10 no-print ${isAdmin ? '' : 'hidden'}"><i class="fas fa-check-square"></i></th><th class="px-3 py-2 border-r border-blue-700 no-print">Ações</th><th class="px-3 py-2 border-r border-blue-700">Foto</th><th class="px-3 py-2 border-r border-blue-700">Entrada</th><th class="px-3 py-2 border-r border-blue-700">Saída</th>`;
+            cabecalho.innerHTML = `<th class="px-3 py-2 border-r border-blue-700 w-10 no-print ${isAdmin ? '' : 'hidden'}"><i class="fas fa-check-square"></i></th><th class="px-3 py-2 border-r border-blue-700 no-print">Ações</th><th class="px-3 py-2 border-r border-blue-700">Foto</th><th class="px-3 py-2 border-r border-blue-700">Entrada</th><th class="px-3 py-2 border-r border-blue-700">Saída</th><th class="px-3 py-2 border-r border-blue-700">Visto (Ent/Saí)</th>`;
             schemaCampos.forEach(c => {
                 if(c.tipo !== 'placa') cabecalho.innerHTML += `<th class="px-3 py-2 border-r border-blue-700">${c.nome}</th>`;
                 else cabecalho.innerHTML += `<th class="px-3 py-2 border-r border-blue-700">PLACA</th>`;
             });
             cabecalho.innerHTML += `<th class="px-3 py-2 no-print">GPS</th>`;
 
-            // 3. Renderiza Painel Admin (Campos)
             const painelCampos = document.getElementById('lista-campos-admin');
             if(painelCampos) {
                 painelCampos.innerHTML = '';
                 schemaCampos.forEach((c, index) => {
                     painelCampos.innerHTML += `
                         <div class="flex items-center justify-between bg-gray-50 border p-2 rounded">
-                            <div class="flex flex-col text-xs space-y-1">
-                                <button onclick="window.moverCampo(${index}, -1)" ${index===0?'disabled':''} class="text-gray-400 hover:text-blue-600 disabled:opacity-30"><i class="fas fa-chevron-up"></i></button>
-                                <button onclick="window.moverCampo(${index}, 1)" ${index===schemaCampos.length-1?'disabled':''} class="text-gray-400 hover:text-blue-600 disabled:opacity-30"><i class="fas fa-chevron-down"></i></button>
-                            </div>
-                            <div class="flex-1 px-3">
-                                <div class="font-bold text-sm uppercase">${c.nome}</div>
-                                <div class="text-[10px] text-gray-500 uppercase">${c.tipo}</div>
-                            </div>
+                            <div class="flex flex-col text-xs space-y-1"><button onclick="window.moverCampo(${index}, -1)" ${index===0?'disabled':''} class="text-gray-400 hover:text-blue-600 disabled:opacity-30"><i class="fas fa-chevron-up"></i></button><button onclick="window.moverCampo(${index}, 1)" ${index===schemaCampos.length-1?'disabled':''} class="text-gray-400 hover:text-blue-600 disabled:opacity-30"><i class="fas fa-chevron-down"></i></button></div>
+                            <div class="flex-1 px-3"><div class="font-bold text-sm uppercase">${c.nome}</div><div class="text-[10px] text-gray-500 uppercase">${c.tipo}</div></div>
                             ${!c.fixo ? `<button onclick="window.excluirCampo(${index})" class="text-red-500 p-2"><i class="fas fa-trash"></i></button>` : '<span class="text-gray-400 text-xs px-2"><i class="fas fa-lock"></i> Fixo</span>'}
                         </div>`;
                 });
             }
 
             window.filtrarListas();
+            window.renderizarUsuarios();
         };
 
         // ==========================================
-        // FIREBASE REALTIME LISTENER
+        // FIREBASE LISTENER DE REGISTROS
         // ==========================================
         const q = query(collection(db, "registros"), orderBy("id", "desc"));
         onSnapshot(q, (snapshot) => {
             registros = [];
             snapshot.forEach((doc) => registros.push({ firebase_id: doc.id, ...doc.data() }));
             window.filtrarListas();
-            document.getElementById('status-conexao').innerHTML = '<i class="fas fa-wifi text-green-400"></i> Online';
-        }, (error) => {
-            document.getElementById('status-conexao').innerHTML = '<i class="fas fa-exclamation-triangle text-red-400"></i> Erro DB';
-        });
+        }, (error) => { console.error(error); });
 
         // ==========================================
-        // FUNÇÕES INTERATIVAS DO FORMULÁRIO
+        // EVENTOS GERAIS
         // ==========================================
-        const bottomNav = document.getElementById('bottom-nav');
-        document.addEventListener('focusin', (e) => {
-            if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') bottomNav.style.transform = 'translateY(100%)';
-        });
-        document.addEventListener('focusout', (e) => {
-            bottomNav.style.transform = 'translateY(0)';
-        });
+        const botNav = document.getElementById('bottom-nav');
+        document.addEventListener('focusin', (e) => { if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') botNav.style.transform = 'translateY(100%)'; });
+        document.addEventListener('focusout', (e) => { botNav.style.transform = 'translateY(0)'; });
 
         document.addEventListener('input', function(e) {
             if((e.target.tagName === 'INPUT' && e.target.type === 'text') || e.target.tagName === 'TEXTAREA') {
-                let start = e.target.selectionStart;
-                let end = e.target.selectionEnd;
+                let start = e.target.selectionStart; let end = e.target.selectionEnd;
                 e.target.value = e.target.value.toUpperCase();
                 e.target.setSelectionRange(start, end);
             }
@@ -438,21 +509,14 @@
             }
         };
 
-        window.limparCampo = function(id) {
-            const input = document.getElementById(id);
-            if(input) { input.value = ''; input.focus(); }
-        };
+        window.limparCampo = (id) => { const input = document.getElementById(id); if(input) { input.value = ''; input.focus(); } };
+        window.handleEnter = (e, nextId) => { if (e.key === 'Enter') { e.preventDefault(); document.getElementById(nextId).focus(); } };
 
         window.verificarModeloOutros = function(valor, id) {
             const obsInput = document.getElementById('campo_' + id + '_obs');
             if(obsInput) {
-                if(valor === 'OUTROS') {
-                    obsInput.classList.remove('hidden');
-                    obsInput.focus();
-                } else {
-                    obsInput.classList.add('hidden');
-                    obsInput.value = '';
-                }
+                if(valor === 'OUTROS') { obsInput.classList.remove('hidden'); obsInput.focus(); } 
+                else { obsInput.classList.add('hidden'); obsInput.value = ''; }
             }
         };
 
@@ -467,8 +531,6 @@
                 const texto = `Visitas: ${historico.length} <br> Última: ${ultimoVeiculoEncontrado.entrada.split(' ')[0]} <br> Emp: ${empresa}`;
                 document.getElementById('alerta_historico_completo').classList.remove('hidden');
                 document.getElementById('texto_historico_completo').innerHTML = texto;
-                
-                // Grava temporariamente na window para o botão de autopreencher
                 window._veiculo_temp = ultimoVeiculoEncontrado;
             } else {
                 document.getElementById('alerta_historico_completo').classList.add('hidden');
@@ -478,7 +540,6 @@
 
         window.aplicarAutopreenchimento = function() {
             if(!window._veiculo_temp) return;
-            
             schemaCampos.forEach(c => {
                 const input = document.getElementById('campo_' + c.id);
                 if(input && c.id !== 'placa') {
@@ -486,75 +547,51 @@
                     if(c.tipo === 'select_modelo') {
                         const options = Array.from(input.options).map(opt => opt.value);
                         if(options.includes(valorSalvo)) {
-                            input.value = valorSalvo;
-                            window.verificarModeloOutros(valorSalvo, c.id);
+                            input.value = valorSalvo; window.verificarModeloOutros(valorSalvo, c.id);
                         } else {
-                            input.value = 'OUTROS';
-                            window.verificarModeloOutros('OUTROS', c.id);
+                            input.value = 'OUTROS'; window.verificarModeloOutros('OUTROS', c.id);
                             const obsInput = document.getElementById('campo_' + c.id + '_obs');
                             if(obsInput) obsInput.value = valorSalvo;
                         }
-                    } else {
-                        input.value = valorSalvo;
-                    }
+                    } else { input.value = valorSalvo; }
                 }
             });
             document.getElementById('alerta_historico_completo').classList.add('hidden');
         };
 
-        // ==========================================
-        // ADMIN LÓGICA
-        // ==========================================
+        // ADMIN SETTINGS
         window.tentarAdmin = function() {
-            if(isAdmin) { window.mudarAba('config'); document.getElementById('view-config').classList.remove('hidden'); return; }
-            const p = prompt("Digite a senha do Administrador:");
-            if(p === SENHA_ADMIN) {
-                isAdmin = true;
-                document.getElementById('tab-config').classList.replace('text-gray-300', 'text-red-600');
-                document.getElementById('btn-excluir-lote').classList.remove('hidden');
-                window.renderizarTudo();
-                window.mudarAba('config');
-                document.getElementById('view-config').classList.remove('hidden');
-            } else if (p !== null) { alert("Senha Incorreta."); }
+            if(!isAdmin) { alert("Apenas o Administrador pode acessar o painel de Configurações."); return; }
+            window.renderizarTudo();
+            window.mudarAba('config');
+            document.getElementById('view-config').classList.remove('hidden');
         };
 
-        window.sairAdmin = function() {
-            isAdmin = false;
-            document.getElementById('tab-config').classList.replace('text-red-600', 'text-gray-300');
-            document.getElementById('btn-excluir-lote').classList.add('hidden');
-            window.renderizarTudo();
-            window.mudarAba('registro');
-        };
+        window.sairAdmin = function() { window.mudarAba('registro'); };
 
         window.adicionarCampo = function() {
             const nome = document.getElementById('novo-campo-nome').value.trim();
             const tipo = document.getElementById('novo-campo-tipo').value;
             if(!nome) return alert("Digite um nome.");
-            const id = "custom_" + Date.now();
-            schemaCampos.push({ id, nome, tipo, fixo: false });
+            schemaCampos.push({ id: "custom_" + Date.now(), nome, tipo, fixo: false });
             document.getElementById('novo-campo-nome').value = '';
             salvarSchema();
         };
 
         window.excluirCampo = function(index) {
-            if(confirm("Excluir o campo " + schemaCampos[index].nome + "? (Os dados antigos no Banco permanecerão intactos)")) {
-                schemaCampos.splice(index, 1);
-                salvarSchema();
-            }
+            if(confirm("Excluir o campo " + schemaCampos[index].nome + "?")) { schemaCampos.splice(index, 1); salvarSchema(); }
         };
 
         window.moverCampo = function(index, dir) {
-            const novoIndex = index + dir;
-            if(novoIndex >= 0 && novoIndex < schemaCampos.length) {
-                const temp = schemaCampos[index];
-                schemaCampos[index] = schemaCampos[novoIndex];
-                schemaCampos[novoIndex] = temp;
+            const nIndex = index + dir;
+            if(nIndex >= 0 && nIndex < schemaCampos.length) {
+                const temp = schemaCampos[index]; schemaCampos[index] = schemaCampos[nIndex]; schemaCampos[nIndex] = temp;
                 salvarSchema();
             }
         };
 
         // ==========================================
-        // UPLOAD (IMGBB + FALLBACK BASE64) E GPS
+        // COMPRESSÃO WEBP, UPLOAD IMGBB, E FALLBACK REMOVIDO
         // ==========================================
         window.processarFotoPlaca = async function(event) {
             const file = event.target.files[0];
@@ -566,7 +603,7 @@
             const previewInfo = document.getElementById('preview-info');
 
             statusLabel.classList.remove('hidden');
-            statusLabel.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Preparando foto...';
+            statusLabel.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Preparando foto WebP...';
             statusLabel.classList.replace('text-green-700', 'text-orange-600');
 
             EXIF.getData(file, function() {
@@ -587,56 +624,53 @@
                     statusLabel.innerHTML = '<i class="fas fa-cloud-upload-alt fa-bounce"></i> Subindo p/ Nuvem...';
                     
                     const canvas = document.createElement('canvas');
-                    const MAX_WIDTH = 800; // Suficiente para zoom e clareza
+                    const MAX_WIDTH = 800; 
                     const scaleSize = MAX_WIDTH / img.width;
                     canvas.width = MAX_WIDTH; canvas.height = img.height * scaleSize;
                     canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
                     
-                    // Mostra na tela para o usuário saber que a foto está com o app
-                    const base64DataStr = canvas.toDataURL('image/jpeg', 0.8);
-                    previewImg.src = base64DataStr;
+                    // COMPRESSÃO WEBP ULTRA LEVE
+                    const webpDataStr = canvas.toDataURL('image/webp', 0.8);
+                    previewImg.src = webpDataStr;
                     previewCont.classList.remove('hidden');
                     
-                    const base64Data = base64DataStr.split(',')[1];
-                    let imgbbSucesso = false;
+                    const base64Data = webpDataStr.split(',')[1];
                     
                     try {
-                        // TENTA IMGBB PRIMEIRO
                         const formData = new FormData();
                         formData.append("image", base64Data);
                         const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, { method: "POST", body: formData });
                         const json = await res.json();
                         
                         if(json.success) {
-                            fotoAtualUrl = json.data.url;
-                            imgbbSucesso = true;
+                            fotoAtualUrl = json.data.url; // SALVA SOMENTE A URL NO FIREBASE
+                            statusLabel.innerHTML = `<i class="fas fa-satellite-dish fa-spin"></i> Foto Salva! Buscando GPS...`;
+                            
+                            if (navigator.geolocation) {
+                                navigator.geolocation.getCurrentPosition(
+                                    (pos) => { 
+                                        gpsLocalizacao = `${pos.coords.latitude}, ${pos.coords.longitude}`; 
+                                        statusLabel.innerHTML = `<i class="fas fa-check-circle text-green-600"></i> Foto e GPS OK!`; 
+                                        previewInfo.innerHTML = "GPS OK<br><span class='text-green-600'><i class='fas fa-check'></i> Anexada</span>";
+                                    },
+                                    (err) => { 
+                                        gpsLocalizacao = "Sem Permissão de GPS"; 
+                                        statusLabel.innerHTML = `<i class="fas fa-check-circle text-green-600"></i> Foto Salva (GPS Bloqueado).`; 
+                                        previewInfo.innerHTML = "SEM GPS<br><span class='text-green-600'><i class='fas fa-check'></i> Anexada</span>";
+                                    },
+                                    { timeout: 5000 }
+                                );
+                            } else { 
+                                gpsLocalizacao = "Sem suporte a GPS"; 
+                                statusLabel.innerHTML = `<i class="fas fa-check-circle text-green-600"></i> Foto Salva.`; 
+                                previewInfo.innerHTML = "SEM GPS<br><span class='text-green-600'><i class='fas fa-check'></i> Anexada</span>";
+                            }
                         } else throw new Error();
                     } catch (err) { 
-                        // FALLBACK: Se o ImgBB der erro (ou CORS), salva em Base64 comprimido no próprio Firebase!
-                        fotoAtualUrl = canvas.toDataURL('image/jpeg', 0.5); 
-                        console.log("Fallback Base64 Ativado.");
-                    }
-
-                    // TENTA GPS
-                    statusLabel.innerHTML = `<i class="fas fa-satellite-dish fa-spin"></i> Pegando GPS...`;
-                    if (navigator.geolocation) {
-                        navigator.geolocation.getCurrentPosition(
-                            (pos) => { 
-                                gpsLocalizacao = `${pos.coords.latitude}, ${pos.coords.longitude}`; 
-                                statusLabel.innerHTML = `<i class="fas fa-check-circle text-green-600"></i> Foto e GPS OK!`; 
-                                previewInfo.innerHTML = "GPS OK<br><span class='text-green-600'><i class='fas fa-check'></i> Anexada</span>";
-                            },
-                            (err) => { 
-                                gpsLocalizacao = "Sem Permissão de GPS"; 
-                                statusLabel.innerHTML = `<i class="fas fa-check-circle text-green-600"></i> Foto Salva (GPS Bloqueado).`; 
-                                previewInfo.innerHTML = "SEM GPS<br><span class='text-green-600'><i class='fas fa-check'></i> Anexada</span>";
-                            },
-                            { timeout: 5000 }
-                        );
-                    } else { 
-                        gpsLocalizacao = "Sem suporte a GPS"; 
-                        statusLabel.innerHTML = `<i class="fas fa-check-circle text-green-600"></i> Foto Salva.`; 
-                        previewInfo.innerHTML = "SEM GPS<br><span class='text-green-600'><i class='fas fa-check'></i> Anexada</span>";
+                        // SEM FALLBACK BASE64 PARA ECONOMIZAR ESPAÇO. EXIGE INTERNET.
+                        fotoAtualUrl = null;
+                        statusLabel.innerHTML = `<i class="fas fa-times-circle text-red-600"></i> Erro de Conexão com a Nuvem de Imagens.`; 
+                        previewInfo.innerHTML = "FALHA<br><span class='text-red-600'><i class='fas fa-times'></i> Não anexada</span>";
                     }
                 };
                 img.src = e.target.result;
@@ -686,6 +720,7 @@
                 entrada: entrada,
                 dia_particao: diaParticao,
                 saida: '',
+                visto_entrada: usuarioLogado, // PREENCHIMENTO AUTOMÁTICO
                 visto_saida: '',
                 foto: fotoAtualUrl || '', 
                 gps: gpsLocalizacao || 'Sem registro',
@@ -695,7 +730,6 @@
             try {
                 await addDoc(collection(db, "registros"), novo);
                 
-                // Limpar Form
                 schemaCampos.forEach(c => {
                     const inp = document.getElementById('campo_' + c.id);
                     if(inp) inp.value = '';
@@ -716,7 +750,7 @@
         };
 
         // ==========================================
-        // FILTROS E PARTICIONAMENTO
+        // RENDERIZAÇÃO
         // ==========================================
         window.verificarFiltroData = function(origem) {
             const select = document.getElementById(`filtro-data-${origem}`);
@@ -774,7 +808,6 @@
                 }
                 if(termoPlanilha && !textoBusca.includes(termoPlanilha)) showPlanilha = false;
 
-                // Esconde a coluna foto na impressão
                 const imgThumb = r.foto ? `<img src="${r.foto}" onclick="event.stopPropagation(); window.abrirZoom('${r.foto}')" class="w-12 h-12 object-cover rounded-lg border shadow-sm cursor-zoom-in no-print">` : `<div class="w-12 h-12 bg-gray-100 rounded flex flex-col items-center justify-center text-gray-400 text-[10px] no-print"><i class="fas fa-camera"></i></div>`;
                 const btnEdit = isAdmin ? `<button onclick="event.stopPropagation(); window.abrirEdicao('${r.firebase_id}')" class="text-blue-500 hover:text-blue-700 bg-blue-50 p-2 rounded mr-1 no-print"><i class="fas fa-pen"></i></button>` : '';
                 const btnDel = isAdmin ? `<button onclick="event.stopPropagation(); window.excluirIndiv('${r.firebase_id}')" class="text-red-500 hover:text-red-700 bg-red-50 p-2 rounded no-print"><i class="fas fa-trash"></i></button>` : '';
@@ -813,7 +846,8 @@
                                    <td class="px-2 py-2 border-r text-center no-print whitespace-nowrap">${btnEdit}${btnDel} ${acao}</td>
                                    <td class="px-2 py-2 border-r text-center no-print">${imgThumb}</td>
                                    <td class="px-2 py-2 border-r font-bold text-blue-700 whitespace-nowrap">${r.entrada}</td>
-                                   <td class="px-2 py-2 border-r font-bold ${pendente ? 'text-gray-400' : 'text-green-600'} whitespace-nowrap">${r.saida || '...'}</td>`;
+                                   <td class="px-2 py-2 border-r font-bold ${pendente ? 'text-gray-400' : 'text-green-600'} whitespace-nowrap">${r.saida || '...'}</td>
+                                   <td class="px-2 py-2 border-r uppercase text-[10px] whitespace-nowrap text-gray-500 font-bold">E: ${r.visto_entrada}<br>S: ${r.visto_saida || '...'}</td>`;
                     
                     schemaCampos.forEach(c => {
                         if(c.tipo === 'placa') rowHtml += `<td class="px-3 py-2 border-r font-black text-base">${r.placa}</td>`;
@@ -831,7 +865,7 @@
         };
 
         // ==========================================
-        // DETALHES, ZOOM, EXCLUIR E EDITAR
+        // DETALHES GERAIS
         // ==========================================
         window.abrirZoom = function(url) {
             document.getElementById('img-zoom').src = url;
@@ -858,8 +892,8 @@
                 <div class="text-center mb-2"><div class="text-4xl font-black tracking-wider">${r.placa}</div></div>
                 ${imgHtml}
                 <div class="grid grid-cols-2 gap-2 mt-4 text-sm">
-                    <div class="bg-blue-50 p-2 rounded border border-blue-100"><span class="block text-[10px] text-blue-600 font-black uppercase">Entrada</span><span class="font-bold text-sm block">${r.entrada}</span></div>
-                    <div class="bg-${pendente?'yellow':'green'}-50 p-2 rounded border border-${pendente?'yellow':'green'}-100"><span class="block text-[10px] text-${pendente?'yellow':'green'}-600 font-black uppercase">Saída</span><span class="font-bold text-sm block">${r.saida || 'Aguardando...'}</span></div>
+                    <div class="bg-blue-50 p-2 rounded border border-blue-100"><span class="block text-[10px] text-blue-600 font-black uppercase">Entrada</span><span class="font-bold text-sm block">${r.entrada}</span><span class="block text-[10px] text-gray-500 mt-1 font-bold uppercase">Operador: ${r.visto_entrada}</span></div>
+                    <div class="bg-${pendente?'yellow':'green'}-50 p-2 rounded border border-${pendente?'yellow':'green'}-100"><span class="block text-[10px] text-${pendente?'yellow':'green'}-600 font-black uppercase">Saída</span><span class="font-bold text-sm block">${r.saida || 'Aguardando...'}</span>${r.visto_saida ? `<span class="block text-[10px] text-gray-500 mt-1 font-bold uppercase">Operador: ${r.visto_saida}</span>` : ''}</div>
                 </div>
                 <div class="mt-4 bg-white p-3 border rounded shadow-sm">${infos}</div>
                 <div class="mt-2 text-xs text-gray-500 text-center font-bold no-print"><i class="fas fa-map-marker-alt"></i> GPS: ${r.gps} ${gpsLink}</div>
@@ -945,25 +979,20 @@
         };
 
         // ==========================================
-        // SAÍDA E INÍCIO
+        // SAÍDA E ASSINATURA AUTOMÁTICA
         // ==========================================
-        window.abrirModalSaida = (id) => { registroSelecionadoFirebaseId = id; document.getElementById('modal_visto_saida').value = ''; document.getElementById('modal-saida').classList.remove('hidden'); setTimeout(()=>document.getElementById('modal_visto_saida').focus(), 100); };
+        window.abrirModalSaida = (id) => { registroSelecionadoFirebaseId = id; document.getElementById('modal-saida').classList.remove('hidden'); };
         window.fecharModalSaida = () => { document.getElementById('modal-saida').classList.add('hidden'); };
         
         window.confirmarSaida = async function() {
-            const visto = document.getElementById('modal_visto_saida').value.trim().toUpperCase();
-            if(!visto) return alert("Preencha o visto.");
             document.getElementById('btn-confirmar-saida').innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
             try {
-                await updateDoc(doc(db, "registros", registroSelecionadoFirebaseId), { saida: getDataHoraAtualNavegador(), visto_saida: visto });
+                await updateDoc(doc(db, "registros", registroSelecionadoFirebaseId), { saida: getDataHoraAtualNavegador(), visto_saida: usuarioLogado }); // CARIMBADO PELO USUÁRIO LOGADO
                 window.fecharModalSaida();
             } catch (e) { alert("Erro."); } 
-            finally { document.getElementById('btn-confirmar-saida').innerHTML = 'CONFIRMAR'; }
+            finally { document.getElementById('btn-confirmar-saida').innerHTML = 'Confirmar Saída'; }
         };
 
-        // Iniciar
-        window.renderizarTudo();
-        window.mudarAba('registro');
     </script>
 </body>
 </html>
