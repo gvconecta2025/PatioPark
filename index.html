@@ -22,11 +22,16 @@
             @page { size: A4 landscape; margin: 10mm; }
             body, main { height: auto !important; overflow: visible !important; background-color: white !important; }
             header, nav, #view-registro, #view-patio, #view-config, #view-login, .no-print, .modal { display: none !important; }
+            
             #view-planilha { display: block !important; position: absolute; left: 0; top: 0; width: 100%; height: auto !important; }
+            
+            /* Mostra o cabeçalho oficial de impressão */
+            #cabecalho-impressao { display: block !important; text-align: center; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #000; }
+            
             .bg-white { box-shadow: none !important; border: none !important; }
             .overflow-x-auto { overflow: visible !important; }
             table { width: 100% !important; border-collapse: collapse !important; }
-            th, td { border: 1px solid #000 !important; padding: 4px !important; font-size: 10px !important; white-space: normal !important; color: black !important; background: white !important; }
+            th, td { border: 1px solid #000 !important; padding: 6px !important; font-size: 10px !important; white-space: normal !important; color: black !important; background: white !important; }
             th { background-color: #e5e7eb !important; font-weight: bold !important; -webkit-print-color-adjust: exact; }
             td img, td button { display: none !important; }
         }
@@ -46,7 +51,7 @@
                 <input type="password" id="login-senha" placeholder="SENHA" class="w-full border-2 border-gray-300 p-3 rounded-lg focus:border-blue-500 focus:outline-none uppercase bg-gray-50 text-center font-bold" onkeypress="if(event.key === 'Enter') window.fazerLogin()">
                 <button onclick="window.fazerLogin()" id="btn-login" class="w-full bg-blue-600 active:bg-blue-700 text-white font-bold p-4 rounded-lg mt-2 text-lg shadow-md uppercase transition">Entrar no Sistema</button>
             </div>
-            <div id="login-status" class="mt-4 text-xs font-bold text-yellow-600 h-4"></div>
+            <div id="login-status" class="mt-4 text-xs font-bold text-red-600 min-h-[16px]"></div>
         </div>
     </div>
 
@@ -57,13 +62,13 @@
         </div>
         <div class="flex items-center space-x-3 text-xs font-bold">
             <span id="nome-usuario-header" class="text-blue-200 border-r border-blue-700 pr-3"><i class="fas fa-user-circle"></i> ...</span>
-            <div id="status-conexao" class="text-yellow-300"><i class="fas fa-spinner fa-spin"></i> Conectando</div>
+            <div id="status-conexao" class="text-yellow-300"><i class="fas fa-spinner fa-spin"></i> Conectando...</div>
         </div>
     </header>
 
     <main class="hidden flex-1 overflow-y-auto p-4 relative" id="main-content">
 
-        <!-- ABA 1: REGISTRAR (Gerado Dinamicamente) -->
+        <!-- ABA 1: REGISTRAR -->
         <div id="view-registro" class="block pb-20 fade-in no-print">
             <h2 class="text-xl font-bold mb-4 flex items-center uppercase"><i class="fas fa-edit mr-2"></i> Novo Registro</h2>
             <div class="space-y-4 bg-white p-4 rounded-lg shadow" id="formulario-dinamico"></div>
@@ -103,11 +108,12 @@
             <div class="flex justify-between items-center mb-4 no-print">
                 <h2 class="text-xl font-bold flex items-center uppercase"><i class="fas fa-table mr-2"></i> Histórico</h2>
                 <div class="flex space-x-2">
-                    <button onclick="window.print()" class="bg-gray-700 text-white font-bold px-3 py-2 rounded text-xs shadow hover:bg-gray-800 transition"><i class="fas fa-print"></i> PDF</button>
+                    <button onclick="window.imprimirRelatorio()" class="bg-gray-700 text-white font-bold px-3 py-2 rounded text-xs shadow hover:bg-gray-800 transition"><i class="fas fa-print"></i> Imprimir PDF</button>
                     <button id="btn-excluir-lote" onclick="window.excluirEmLote()" class="hidden bg-red-600 text-white font-bold px-3 py-2 rounded text-xs shadow hover:bg-red-700 transition"><i class="fas fa-trash-alt"></i> Excluir Lote</button>
                 </div>
             </div>
 
+            <!-- FILTROS -->
             <div class="bg-white p-3 rounded-lg shadow-sm mb-4 border border-gray-200 no-print">
                 <div class="grid grid-cols-2 gap-2 mb-2">
                     <select id="filtro-status-planilha" onchange="window.filtrarListas()" class="w-full p-2 border border-gray-300 rounded text-sm uppercase bg-gray-50 font-bold">
@@ -129,6 +135,12 @@
                 </div>
             </div>
 
+            <!-- CABEÇALHO INVISÍVEL PARA IMPRESSÃO -->
+            <div id="cabecalho-impressao" class="hidden">
+                <h1 class="text-2xl font-black uppercase tracking-widest text-gray-900">Relatório PátioPark</h1>
+                <p class="text-sm font-bold text-gray-600 uppercase" id="data-impressao"></p>
+            </div>
+
             <div class="bg-white rounded-lg shadow overflow-hidden" id="tabela-impressao">
                 <div class="overflow-x-auto no-scrollbar">
                     <table class="min-w-full text-sm text-left">
@@ -144,13 +156,10 @@
             <h2 class="text-xl font-bold mb-4 flex items-center uppercase text-red-600"><i class="fas fa-cogs mr-2"></i> Painel de Administração</h2>
             <div class="space-y-6">
                 
-                <!-- GESTÃO DE USUÁRIOS -->
                 <div class="bg-white p-4 rounded-lg shadow border border-gray-200 border-l-4 border-l-purple-500">
                     <h3 class="font-bold text-gray-800 uppercase border-b pb-2 mb-3"><i class="fas fa-users text-purple-600"></i> Gestão de Usuários</h3>
                     <p class="text-xs text-gray-500 mb-4">Crie contas para os funcionários. A senha mestra e a conta "ADMIN" são inalteráveis.</p>
-                    
                     <div id="lista-usuarios-admin" class="space-y-2 mb-4 max-h-40 overflow-y-auto"></div>
-
                     <div class="border-t pt-4 mt-2">
                         <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Cadastrar Novo Usuário</label>
                         <div class="flex space-x-2">
@@ -161,25 +170,20 @@
                     </div>
                 </div>
 
-                <!-- Backup -->
                 <div class="bg-white p-4 rounded-lg shadow border border-gray-200">
                     <h3 class="font-bold text-gray-800 uppercase border-b pb-2 mb-3"><i class="fas fa-database"></i> Backup do Sistema</h3>
-                    <p class="text-xs text-gray-500 mb-4">Faça o download de toda a base de dados do Firebase em formato JSON para segurança.</p>
                     <button onclick="window.gerarBackupNuvem()" class="w-full bg-blue-600 text-white font-bold py-3 rounded uppercase shadow hover:bg-blue-700"><i class="fas fa-cloud-download-alt"></i> Baixar Backup Completo</button>
                 </div>
 
-                <!-- Construtor de Campos -->
                 <div class="bg-white p-4 rounded-lg shadow border border-gray-200">
                     <h3 class="font-bold text-gray-800 uppercase border-b pb-2 mb-3"><i class="fas fa-list-ol"></i> Estrutura de Campos</h3>
-                    <p class="text-xs text-gray-500 mb-4">Adicione, exclua ou reordene os campos do formulário.</p>
                     <div id="lista-campos-admin" class="space-y-2 mb-4"></div>
                     <div class="border-t pt-4 mt-2">
                         <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Criar Novo Campo</label>
                         <div class="flex space-x-2">
-                            <input type="text" id="novo-campo-nome" placeholder="NOME DO CAMPO" class="flex-1 border-2 border-gray-300 p-2 rounded text-sm uppercase focus:border-blue-500 focus:outline-none">
+                            <input type="text" id="novo-campo-nome" placeholder="NOME" class="flex-1 border-2 border-gray-300 p-2 rounded text-sm uppercase focus:border-blue-500 focus:outline-none">
                             <select id="novo-campo-tipo" class="border-2 border-gray-300 p-2 rounded text-sm uppercase bg-gray-50">
-                                <option value="text">Texto</option>
-                                <option value="textarea">Observação</option>
+                                <option value="text">Texto</option><option value="textarea">Observação</option>
                             </select>
                             <button onclick="window.adicionarCampo()" class="bg-green-600 text-white px-4 rounded font-bold uppercase hover:bg-green-700"><i class="fas fa-plus"></i></button>
                         </div>
@@ -252,7 +256,7 @@
         import { getFirestore, collection, addDoc, updateDoc, doc, deleteDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
         // ==========================================
-        // CREDENCIAIS (INCLUINDO SENHA MESTRA E IMGBB)
+        // CREDENCIAIS
         // ==========================================
         const firebaseConfig = {
             apiKey: "AIzaSyDYXFu-soolSOoCAxNYlVVgeJVwzJef_fk",
@@ -269,10 +273,9 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // VARIÁVEIS GLOBAIS
         let registros = [];
         let usuarios = [];
-        let usuarioLogado = null; // Guarda quem está usando o app
+        let usuarioLogado = null;
         let registroSelecionadoFirebaseId = null;
         let fotoAtualUrl = null; 
         let dataHoraMetadata = null; 
@@ -287,6 +290,8 @@
             usuarios = [];
             snapshot.forEach((doc) => usuarios.push({ id: doc.id, ...doc.data() }));
             window.renderizarUsuarios();
+        }, (error) => {
+            document.getElementById('login-status').innerHTML = '<i class="fas fa-exclamation-triangle"></i> Sem permissão. Configure as regras do Firestore.';
         });
 
         window.fazerLogin = function() {
@@ -296,7 +301,6 @@
             
             status.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Autenticando...';
             
-            // Bypass Super Admin
             if(u === 'ADMIN' && s === SENHA_ADMIN) {
                 usuarioLogado = 'ADMINISTRADOR';
                 isAdmin = true;
@@ -304,7 +308,6 @@
                 return;
             }
 
-            // Busca na lista do Firestore
             const func = usuarios.find(user => user.nome === u && user.senha === s);
             if(func) {
                 usuarioLogado = func.nome;
@@ -364,24 +367,18 @@
             const container = document.getElementById('lista-usuarios-admin');
             if(!container) return;
             container.innerHTML = '';
-            if(usuarios.length === 0) {
-                container.innerHTML = '<div class="text-xs text-gray-400 italic">Nenhum usuário cadastrado. Apenas o Admin tem acesso.</div>';
-            }
+            if(usuarios.length === 0) container.innerHTML = '<div class="text-xs text-gray-400 italic">Nenhum usuário cadastrado. Apenas o Admin tem acesso.</div>';
             usuarios.forEach(u => {
                 container.innerHTML += `
                     <div class="flex justify-between items-center bg-gray-50 border p-2 rounded">
-                        <div>
-                            <div class="font-bold text-sm uppercase text-gray-800"><i class="fas fa-user text-purple-500 mr-1"></i> ${u.nome}</div>
-                            <div class="text-[10px] text-gray-500">Senha: ${u.senha}</div>
-                        </div>
+                        <div><div class="font-bold text-sm uppercase text-gray-800"><i class="fas fa-user text-purple-500 mr-1"></i> ${u.nome}</div><div class="text-[10px] text-gray-500">Senha: ${u.senha}</div></div>
                         <button onclick="window.excluirUsuario('${u.id}', '${u.nome}')" class="text-red-500 hover:text-red-700 p-2"><i class="fas fa-trash"></i></button>
-                    </div>
-                `;
+                    </div>`;
             });
         };
 
         // ==========================================
-        // SISTEMA DE CAMPOS DINÂMICOS (S/ VISTO MANUAL)
+        // SISTEMA DE CAMPOS DINÂMICOS
         // ==========================================
         const camposPadrao = [
             { id: "placa", nome: "Placa", tipo: "placa", fixo: true },
@@ -395,11 +392,7 @@
         ];
 
         let schemaCampos = JSON.parse(localStorage.getItem('patiopark_schema')) || camposPadrao;
-
-        function salvarSchema() {
-            localStorage.setItem('patiopark_schema', JSON.stringify(schemaCampos));
-            window.renderizarTudo();
-        }
+        function salvarSchema() { localStorage.setItem('patiopark_schema', JSON.stringify(schemaCampos)); window.renderizarTudo(); }
 
         window.renderizarTudo = function() {
             const formContainer = document.getElementById('formulario-dinamico');
@@ -419,18 +412,13 @@
                                     <label class="bg-purple-100 text-purple-600 rounded w-10 h-10 flex items-center justify-center cursor-pointer border shadow-sm"><i class="fas fa-image text-lg"></i><input type="file" accept="image/*" class="hidden" onchange="window.processarFotoPlaca(event)"></label>
                                 </div>
                             </div>
-                            
                             <div id="preview-container" class="hidden mt-2 p-2 border rounded bg-gray-50 flex items-center justify-between shadow-inner">
                                 <img id="preview-img" src="" class="h-16 w-16 object-cover rounded border border-gray-300">
                                 <div class="text-[10px] text-gray-500 font-bold text-right ml-2 leading-tight uppercase" id="preview-info"></div>
                             </div>
-
                             <div id="status_foto_completo" class="text-xs font-bold text-orange-600 mt-1 hidden"><i class="fas fa-info-circle"></i> Processando...</div>
                             <div id="alerta_historico_completo" class="hidden bg-blue-50 border-l-4 border-blue-500 p-3 mt-2 rounded shadow-sm">
-                                <div class="flex justify-between items-center">
-                                    <div><h3 class="font-bold text-blue-800 text-xs uppercase"><i class="fas fa-history"></i> Veículo Conhecido</h3><p id="texto_historico_completo" class="text-[10px] text-blue-600 uppercase"></p></div>
-                                    <button type="button" onclick="window.aplicarAutopreenchimento()" class="bg-blue-600 text-white text-[10px] font-bold px-2 py-2 rounded shadow uppercase">Autopreencher</button>
-                                </div>
+                                <div class="flex justify-between items-center"><div><h3 class="font-bold text-blue-800 text-xs uppercase"><i class="fas fa-history"></i> Veículo Conhecido</h3><p id="texto_historico_completo" class="text-[10px] text-blue-600 uppercase"></p></div><button type="button" onclick="window.aplicarAutopreenchimento()" class="bg-blue-600 text-white text-[10px] font-bold px-2 py-2 rounded shadow uppercase">Autopreencher</button></div>
                             </div>
                         </div>`;
                 } else if(campo.tipo === 'select_modelo') {
@@ -444,7 +432,7 @@
             });
 
             const cabecalho = document.getElementById('cabecalho-planilha');
-            cabecalho.innerHTML = `<th class="px-3 py-2 border-r border-blue-700 w-10 no-print ${isAdmin ? '' : 'hidden'}"><i class="fas fa-check-square"></i></th><th class="px-3 py-2 border-r border-blue-700 no-print">Ações</th><th class="px-3 py-2 border-r border-blue-700">Foto</th><th class="px-3 py-2 border-r border-blue-700">Entrada</th><th class="px-3 py-2 border-r border-blue-700">Saída</th><th class="px-3 py-2 border-r border-blue-700">Visto (Ent/Saí)</th>`;
+            cabecalho.innerHTML = `<th class="px-3 py-2 border-r border-blue-700 w-10 no-print ${isAdmin ? '' : 'hidden'}"><i class="fas fa-check-square"></i></th><th class="px-3 py-2 border-r border-blue-700 no-print">Ações</th><th class="px-3 py-2 border-r border-blue-700 no-print">Foto</th><th class="px-3 py-2 border-r border-blue-700">Entrada</th><th class="px-3 py-2 border-r border-blue-700">Saída</th><th class="px-3 py-2 border-r border-blue-700">Responsável</th>`;
             schemaCampos.forEach(c => {
                 if(c.tipo !== 'placa') cabecalho.innerHTML += `<th class="px-3 py-2 border-r border-blue-700">${c.nome}</th>`;
                 else cabecalho.innerHTML += `<th class="px-3 py-2 border-r border-blue-700">PLACA</th>`;
@@ -463,20 +451,19 @@
                         </div>`;
                 });
             }
-
             window.filtrarListas();
-            window.renderizarUsuarios();
         };
 
         // ==========================================
-        // FIREBASE LISTENER DE REGISTROS
+        // FIREBASE REGISTROS
         // ==========================================
         const q = query(collection(db, "registros"), orderBy("id", "desc"));
         onSnapshot(q, (snapshot) => {
             registros = [];
             snapshot.forEach((doc) => registros.push({ firebase_id: doc.id, ...doc.data() }));
             window.filtrarListas();
-        }, (error) => { console.error(error); });
+            document.getElementById('status-conexao').innerHTML = '<i class="fas fa-wifi text-green-400"></i> Online';
+        }, (error) => { document.getElementById('status-conexao').innerHTML = '<i class="fas fa-exclamation-triangle text-red-400"></i> Erro DB'; });
 
         // ==========================================
         // EVENTOS GERAIS
@@ -488,8 +475,7 @@
         document.addEventListener('input', function(e) {
             if((e.target.tagName === 'INPUT' && e.target.type === 'text') || e.target.tagName === 'TEXTAREA') {
                 let start = e.target.selectionStart; let end = e.target.selectionEnd;
-                e.target.value = e.target.value.toUpperCase();
-                e.target.setSelectionRange(start, end);
+                e.target.value = e.target.value.toUpperCase(); e.target.setSelectionRange(start, end);
             }
         });
 
@@ -526,7 +512,7 @@
 
             const historico = registros.filter(r => r.placa === placa);
             if(historico.length > 0) {
-                let ultimoVeiculoEncontrado = historico[0];
+                ultimoVeiculoEncontrado = historico[0];
                 const empresa = ultimoVeiculoEncontrado.dados_dinamicos?.empresa || 'S/ EMPRESA';
                 const texto = `Visitas: ${historico.length} <br> Última: ${ultimoVeiculoEncontrado.entrada.split(' ')[0]} <br> Emp: ${empresa}`;
                 document.getElementById('alerta_historico_completo').classList.remove('hidden');
@@ -546,20 +532,17 @@
                     const valorSalvo = window._veiculo_temp.dados_dinamicos?.[c.id] || '';
                     if(c.tipo === 'select_modelo') {
                         const options = Array.from(input.options).map(opt => opt.value);
-                        if(options.includes(valorSalvo)) {
-                            input.value = valorSalvo; window.verificarModeloOutros(valorSalvo, c.id);
-                        } else {
-                            input.value = 'OUTROS'; window.verificarModeloOutros('OUTROS', c.id);
-                            const obsInput = document.getElementById('campo_' + c.id + '_obs');
-                            if(obsInput) obsInput.value = valorSalvo;
-                        }
+                        if(options.includes(valorSalvo)) { input.value = valorSalvo; window.verificarModeloOutros(valorSalvo, c.id); } 
+                        else { input.value = 'OUTROS'; window.verificarModeloOutros('OUTROS', c.id); const obsInput = document.getElementById('campo_' + c.id + '_obs'); if(obsInput) obsInput.value = valorSalvo; }
                     } else { input.value = valorSalvo; }
                 }
             });
             document.getElementById('alerta_historico_completo').classList.add('hidden');
         };
 
-        // ADMIN SETTINGS
+        // ==========================================
+        // ADMIN LÓGICA (CAMPOS)
+        // ==========================================
         window.tentarAdmin = function() {
             if(!isAdmin) { alert("Apenas o Administrador pode acessar o painel de Configurações."); return; }
             window.renderizarTudo();
@@ -574,24 +557,18 @@
             const tipo = document.getElementById('novo-campo-tipo').value;
             if(!nome) return alert("Digite um nome.");
             schemaCampos.push({ id: "custom_" + Date.now(), nome, tipo, fixo: false });
-            document.getElementById('novo-campo-nome').value = '';
-            salvarSchema();
+            document.getElementById('novo-campo-nome').value = ''; salvarSchema();
         };
-
-        window.excluirCampo = function(index) {
-            if(confirm("Excluir o campo " + schemaCampos[index].nome + "?")) { schemaCampos.splice(index, 1); salvarSchema(); }
-        };
-
+        window.excluirCampo = function(index) { if(confirm("Excluir campo?")) { schemaCampos.splice(index, 1); salvarSchema(); } };
         window.moverCampo = function(index, dir) {
             const nIndex = index + dir;
             if(nIndex >= 0 && nIndex < schemaCampos.length) {
-                const temp = schemaCampos[index]; schemaCampos[index] = schemaCampos[nIndex]; schemaCampos[nIndex] = temp;
-                salvarSchema();
+                const temp = schemaCampos[index]; schemaCampos[index] = schemaCampos[nIndex]; schemaCampos[nIndex] = temp; salvarSchema();
             }
         };
 
         // ==========================================
-        // COMPRESSÃO WEBP, UPLOAD IMGBB, E FALLBACK REMOVIDO
+        // UPLOAD WEBP IMGBB
         // ==========================================
         window.processarFotoPlaca = async function(event) {
             const file = event.target.files[0];
@@ -603,7 +580,7 @@
             const previewInfo = document.getElementById('preview-info');
 
             statusLabel.classList.remove('hidden');
-            statusLabel.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Preparando foto WebP...';
+            statusLabel.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Preparando foto...';
             statusLabel.classList.replace('text-green-700', 'text-orange-600');
 
             EXIF.getData(file, function() {
@@ -622,14 +599,12 @@
                 const img = new Image();
                 img.onload = async function() {
                     statusLabel.innerHTML = '<i class="fas fa-cloud-upload-alt fa-bounce"></i> Subindo p/ Nuvem...';
-                    
                     const canvas = document.createElement('canvas');
                     const MAX_WIDTH = 800; 
                     const scaleSize = MAX_WIDTH / img.width;
                     canvas.width = MAX_WIDTH; canvas.height = img.height * scaleSize;
                     canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
                     
-                    // COMPRESSÃO WEBP ULTRA LEVE
                     const webpDataStr = canvas.toDataURL('image/webp', 0.8);
                     previewImg.src = webpDataStr;
                     previewCont.classList.remove('hidden');
@@ -643,7 +618,7 @@
                         const json = await res.json();
                         
                         if(json.success) {
-                            fotoAtualUrl = json.data.url; // SALVA SOMENTE A URL NO FIREBASE
+                            fotoAtualUrl = json.data.url; 
                             statusLabel.innerHTML = `<i class="fas fa-satellite-dish fa-spin"></i> Foto Salva! Buscando GPS...`;
                             
                             if (navigator.geolocation) {
@@ -667,9 +642,8 @@
                             }
                         } else throw new Error();
                     } catch (err) { 
-                        // SEM FALLBACK BASE64 PARA ECONOMIZAR ESPAÇO. EXIGE INTERNET.
                         fotoAtualUrl = null;
-                        statusLabel.innerHTML = `<i class="fas fa-times-circle text-red-600"></i> Erro de Conexão com a Nuvem de Imagens.`; 
+                        statusLabel.innerHTML = `<i class="fas fa-times-circle text-red-600"></i> Erro de Conexão com ImgBB.`; 
                         previewInfo.innerHTML = "FALHA<br><span class='text-red-600'><i class='fas fa-times'></i> Não anexada</span>";
                     }
                 };
@@ -720,7 +694,7 @@
                 entrada: entrada,
                 dia_particao: diaParticao,
                 saida: '',
-                visto_entrada: usuarioLogado, // PREENCHIMENTO AUTOMÁTICO
+                visto_entrada: usuarioLogado,
                 visto_saida: '',
                 foto: fotoAtualUrl || '', 
                 gps: gpsLocalizacao || 'Sem registro',
@@ -750,8 +724,14 @@
         };
 
         // ==========================================
-        // RENDERIZAÇÃO
+        // RENDERIZAÇÃO E IMPRESSÃO
         // ==========================================
+        window.imprimirRelatorio = function() {
+            const now = new Date();
+            document.getElementById('data-impressao').innerText = 'Gerado em: ' + now.toLocaleDateString('pt-BR') + ' às ' + now.toLocaleTimeString('pt-BR') + ' por ' + usuarioLogado;
+            window.print();
+        };
+
         window.verificarFiltroData = function(origem) {
             const select = document.getElementById(`filtro-data-${origem}`);
             const inputDate = document.getElementById(`data-especifica-${origem}`);
@@ -903,7 +883,7 @@
         };
         window.fecharDetalhes = () => document.getElementById('modal-detalhes').classList.add('hidden');
 
-        // ADMIN: EXCLUIR
+        // ADMIN: EXCLUIR E EDITAR
         window.excluirIndiv = async function(id) {
             if(confirm("Confirmar exclusão DEFINITIVA deste registro?")) {
                 try { await deleteDoc(doc(db, "registros", id)); } 
@@ -924,7 +904,6 @@
             }
         };
 
-        // ADMIN: EDITAR
         window.abrirEdicao = function(id) {
             const r = registros.find(reg => reg.firebase_id === id);
             if(!r) return;
@@ -968,7 +947,6 @@
             finally { btn.innerHTML = 'SALVAR ALTERAÇÕES'; btn.disabled = false; }
         };
 
-        // ADMIN: BACKUP
         window.gerarBackupNuvem = function() {
             if(registros.length === 0) return alert("Banco vazio.");
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(registros, null, 2));
@@ -987,7 +965,7 @@
         window.confirmarSaida = async function() {
             document.getElementById('btn-confirmar-saida').innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
             try {
-                await updateDoc(doc(db, "registros", registroSelecionadoFirebaseId), { saida: getDataHoraAtualNavegador(), visto_saida: usuarioLogado }); // CARIMBADO PELO USUÁRIO LOGADO
+                await updateDoc(doc(db, "registros", registroSelecionadoFirebaseId), { saida: getDataHoraAtualNavegador(), visto_saida: usuarioLogado });
                 window.fecharModalSaida();
             } catch (e) { alert("Erro."); } 
             finally { document.getElementById('btn-confirmar-saida').innerHTML = 'Confirmar Saída'; }
