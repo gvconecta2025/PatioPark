@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PátioPark - Controle de Nuvem</title>
+    <title>PátioPark - Gestão Avançada</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/exif-js"></script>
@@ -14,6 +14,9 @@
         input::placeholder, select::placeholder, textarea::placeholder { font-weight: normal; color: #6b7280; text-transform: none; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        /* Transições suaves */
+        .fade-in { animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
 <body class="h-[100dvh] flex flex-col overflow-hidden text-gray-800">
@@ -25,149 +28,83 @@
 
     <main class="flex-1 overflow-y-auto p-4 relative" id="main-content">
 
-        <!-- ABA 1: REGISTRAR -->
-        <div id="view-registro" class="block pb-20">
+        <!-- ABA 1: REGISTRAR (Formulário Gerado Dinamicamente) -->
+        <div id="view-registro" class="block pb-20 fade-in">
             <h2 class="text-xl font-bold mb-4 flex items-center uppercase"><i class="fas fa-edit mr-2"></i> Novo Registro</h2>
-            
-            <div class="space-y-4 bg-white p-4 rounded-lg shadow">
-                
-                <div>
-                    <label class="block text-sm font-bold text-gray-700 uppercase">1. Placa (Tire a foto p/ registrar)</label>
-                    <div class="relative flex items-center">
-                        <input type="text" id="c_placa" class="w-full border-2 border-gray-300 p-3 pr-24 rounded-lg focus:border-blue-500 focus:outline-none uppercase" onblur="window.verificarHistorico(this.value)" onkeypress="window.handleEnter(event, 'c_local')" placeholder="ABC-1234">
-                        
-                        <div class="absolute right-2 top-1/2 -translate-y-1/2 flex space-x-1">
-                            <label title="Abrir Câmera" class="bg-blue-100 hover:bg-blue-200 text-blue-600 rounded w-10 h-10 flex items-center justify-center cursor-pointer border border-blue-300 shadow-sm">
-                                <i class="fas fa-camera text-lg"></i>
-                                <input type="file" accept="image/*" capture="environment" class="hidden" onchange="window.processarFotoPlaca(event)">
-                            </label>
-                            <label title="Abrir Galeria" class="bg-purple-100 hover:bg-purple-200 text-purple-600 rounded w-10 h-10 flex items-center justify-center cursor-pointer border border-purple-300 shadow-sm">
-                                <i class="fas fa-image text-lg"></i>
-                                <input type="file" accept="image/*" class="hidden" onchange="window.processarFotoPlaca(event)">
-                            </label>
-                        </div>
-                    </div>
-                    <div id="status_foto_completo" class="text-xs font-bold text-orange-600 mt-2 hidden">
-                        <i class="fas fa-info-circle"></i> Aguardando imagem...
-                    </div>
-                </div>
-
-                <div id="alerta_historico_completo" class="hidden bg-blue-50 border-l-4 border-blue-500 p-3 rounded-r-lg shadow-sm">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <h3 class="font-bold text-blue-800 text-sm uppercase"><i class="fas fa-history"></i> Veículo Conhecido</h3>
-                            <p id="texto_historico_completo" class="text-xs text-blue-600 mt-1 uppercase"></p>
-                        </div>
-                        <button type="button" onclick="window.aplicarAutopreenchimento()" class="bg-blue-600 text-white text-xs font-bold px-3 py-2 rounded shadow hover:bg-blue-700 uppercase">
-                            Autopreencher
-                        </button>
-                    </div>
-                </div>
-
-                <div>
-                    <label class="block text-sm font-bold text-gray-700 uppercase">2. Local de Entrega</label>
-                    <div class="relative flex items-center">
-                        <input type="text" id="c_local" class="w-full border-2 border-gray-300 p-3 pr-10 rounded-lg focus:border-blue-500 focus:outline-none uppercase" onkeypress="window.handleEnter(event, 'c_motorista')">
-                        <button tabindex="-1" onclick="window.limparCampo('c_local')" class="absolute right-3 text-red-400 hover:text-red-600"><i class="fas fa-times-circle text-xl"></i></button>
-                    </div>
-                </div>
-
-                <div>
-                    <label class="block text-sm font-bold text-gray-700 uppercase">3. Motorista Principal</label>
-                    <div class="relative flex items-center">
-                        <input type="text" id="c_motorista" class="w-full border-2 border-gray-300 p-3 pr-10 rounded-lg focus:border-blue-500 focus:outline-none uppercase" onkeypress="window.handleEnter(event, 'c_documento')">
-                        <button tabindex="-1" onclick="window.limparCampo('c_motorista')" class="absolute right-3 text-red-400 hover:text-red-600"><i class="fas fa-times-circle text-xl"></i></button>
-                    </div>
-                </div>
-
-                <div>
-                    <label class="block text-sm font-bold text-gray-700 uppercase">4. Documento</label>
-                    <div class="relative flex items-center">
-                        <input type="text" inputmode="text" id="c_documento" class="w-full border-2 border-gray-300 p-3 pr-10 rounded-lg focus:border-blue-500 focus:outline-none uppercase" onkeypress="window.handleEnter(event, 'c_empresa')">
-                        <button tabindex="-1" onclick="window.limparCampo('c_documento')" class="absolute right-3 text-red-400 hover:text-red-600"><i class="fas fa-times-circle text-xl"></i></button>
-                    </div>
-                </div>
-
-                <div>
-                    <label class="block text-sm font-bold text-gray-700 uppercase">5. Nome da Empresa</label>
-                    <div class="relative flex items-center">
-                        <input type="text" id="c_empresa" class="w-full border-2 border-gray-300 p-3 pr-10 rounded-lg focus:border-blue-500 focus:outline-none uppercase" onkeypress="window.handleEnter(event, 'c_modelo')">
-                        <button tabindex="-1" onclick="window.limparCampo('c_empresa')" class="absolute right-3 text-red-400 hover:text-red-600"><i class="fas fa-times-circle text-xl"></i></button>
-                    </div>
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-bold text-gray-700 uppercase">6. Modelo do Veículo</label>
-                    <select id="c_modelo" onchange="window.verificarModeloOutros(this.value)" class="w-full border-2 border-gray-300 p-3 rounded-lg focus:border-blue-500 focus:outline-none bg-white uppercase">
-                        <option value="" disabled selected>SELECIONE O TIPO</option>
-                        <option value="CAMINHÃO">CAMINHÃO</option>
-                        <option value="PICAPE">PICAPE</option>
-                        <option value="FIORINO">FIORINO</option>
-                        <option value="SAVEIRO">SAVEIRO</option>
-                        <option value="MOTO">MOTO</option>
-                        <option value="CARRO DE PASSEIO">CARRO DE PASSEIO</option>
-                        <option value="OUTROS">OUTROS</option>
-                    </select>
-                </div>
-
-                <div id="container_modelo_obs" class="hidden p-3 bg-gray-50 border border-gray-200 rounded-lg">
-                    <label class="block text-xs font-bold text-blue-700 uppercase mb-1">Qual o modelo do veículo?</label>
-                    <input type="text" id="c_modelo_obs" class="w-full border-2 border-blue-300 p-2 rounded focus:border-blue-500 focus:outline-none uppercase" placeholder="DIGITE O MODELO">
-                </div>
-
-                <div>
-                    <label class="block text-sm font-bold text-gray-700 uppercase">7. Nota Fiscal</label>
-                    <input type="text" id="c_nota" class="w-full border-2 border-gray-300 p-3 rounded-lg focus:border-blue-500 focus:outline-none uppercase" onkeypress="window.handleEnter(event, 'c_visto')">
-                </div>
-                <div>
-                    <label class="block text-sm font-bold text-gray-700 uppercase">8. Resp. pela Entrada (Visto)</label>
-                    <input type="text" id="c_visto" class="w-full border-2 border-gray-300 p-3 rounded-lg focus:border-blue-500 focus:outline-none uppercase" onkeypress="if(event.key === 'Enter') window.salvarRegistro()">
-                </div>
-                
-                <button onclick="window.salvarRegistro()" id="btn-salvar-entrada" class="w-full bg-green-600 active:bg-green-700 text-white font-bold p-4 rounded-lg mt-4 text-xl shadow flex justify-center items-center uppercase">
-                    <i class="fas fa-save mr-2"></i> SALVAR ENTRADA
-                </button>
+            <div class="space-y-4 bg-white p-4 rounded-lg shadow" id="formulario-dinamico">
+                <!-- O Formulario sera injetado aqui pelo JS baseado nas configurações -->
             </div>
+            <button onclick="window.salvarRegistro()" id="btn-salvar-entrada" class="w-full bg-green-600 active:bg-green-700 text-white font-bold p-4 rounded-lg mt-4 text-xl shadow flex justify-center items-center uppercase transition">
+                <i class="fas fa-save mr-2"></i> SALVAR ENTRADA
+            </button>
         </div>
 
         <!-- ABA 2: PÁTIO -->
-        <div id="view-patio" class="hidden pb-20">
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="text-xl font-bold flex items-center uppercase"><i class="fas fa-truck-loading mr-2"></i> Pátio Atual</h2>
+        <div id="view-patio" class="hidden pb-20 fade-in">
+            <h2 class="text-xl font-bold mb-4 flex items-center uppercase"><i class="fas fa-truck-loading mr-2"></i> Pátio Atual</h2>
+            
+            <!-- PAINEL DE FILTROS -->
+            <div class="bg-white p-3 rounded-lg shadow-sm mb-4 border border-gray-200">
+                <div class="grid grid-cols-2 gap-2 mb-2">
+                    <select id="filtro-status-patio" onchange="window.filtrarListas()" class="w-full p-2 border border-gray-300 rounded text-sm uppercase bg-gray-50 font-bold">
+                        <option value="NO_PATIO">No Pátio (Aguardando)</option>
+                        <option value="TODOS">Todos os Status</option>
+                        <option value="SAIRAM">Já Saíram</option>
+                    </select>
+                    <select id="filtro-data-patio" onchange="window.verificarFiltroData('patio')" class="w-full p-2 border border-gray-300 rounded text-sm uppercase bg-gray-50 font-bold">
+                        <option value="TODAS">Qualquer Data</option>
+                        <option value="HOJE">Somente Hoje</option>
+                        <option value="ONTEM">Somente Ontem</option>
+                        <option value="ESPECIFICA">Escolher Dia...</option>
+                    </select>
+                </div>
+                <input type="date" id="data-especifica-patio" onchange="window.filtrarListas()" class="w-full p-2 border border-gray-300 rounded text-sm uppercase bg-gray-50 font-bold hidden mb-2">
+                
+                <div class="relative">
+                    <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                    <input type="text" id="busca-patio" onkeyup="window.filtrarListas()" placeholder="Pesquisar Placa, Motorista..." class="w-full pl-10 pr-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none font-bold uppercase">
+                </div>
             </div>
-            <div class="mb-4 relative">
-                <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
-                <input type="text" id="busca-patio" onkeyup="window.filtrarListas()" placeholder="Buscar Placa, Empresa ou Motorista..." class="w-full pl-10 pr-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none font-bold uppercase">
-            </div>
+
             <div id="lista-patio" class="space-y-4"></div>
         </div>
 
         <!-- ABA 3: PLANILHA -->
-        <div id="view-planilha" class="hidden pb-20">
+        <div id="view-planilha" class="hidden pb-20 fade-in">
             <div class="flex justify-between items-center mb-4">
-                <h2 class="text-xl font-bold flex items-center uppercase"><i class="fas fa-table mr-2"></i> Histórico Geral</h2>
+                <h2 class="text-xl font-bold flex items-center uppercase"><i class="fas fa-table mr-2"></i> Histórico</h2>
+                <button id="btn-excluir-lote" onclick="window.excluirEmLote()" class="hidden bg-red-600 text-white font-bold px-3 py-2 rounded text-xs shadow"><i class="fas fa-trash-alt"></i> Excluir Selecionados</button>
             </div>
-            <div class="mb-4 relative">
-                <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
-                <input type="text" id="busca-planilha" onkeyup="window.filtrarListas()" placeholder="Buscar Placa, Empresa ou Motorista..." class="w-full pl-10 pr-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none font-bold uppercase">
+
+            <!-- PAINEL DE FILTROS PLANILHA -->
+            <div class="bg-white p-3 rounded-lg shadow-sm mb-4 border border-gray-200">
+                <div class="grid grid-cols-2 gap-2 mb-2">
+                    <select id="filtro-status-planilha" onchange="window.filtrarListas()" class="w-full p-2 border border-gray-300 rounded text-sm uppercase bg-gray-50 font-bold">
+                        <option value="TODOS">Todos os Status</option>
+                        <option value="NO_PATIO">No Pátio (Aguardando)</option>
+                        <option value="SAIRAM">Já Saíram</option>
+                    </select>
+                    <select id="filtro-data-planilha" onchange="window.verificarFiltroData('planilha')" class="w-full p-2 border border-gray-300 rounded text-sm uppercase bg-gray-50 font-bold">
+                        <option value="TODAS">Qualquer Data</option>
+                        <option value="HOJE">Somente Hoje</option>
+                        <option value="ONTEM">Somente Ontem</option>
+                        <option value="ESPECIFICA">Escolher Dia...</option>
+                    </select>
+                </div>
+                <input type="date" id="data-especifica-planilha" onchange="window.filtrarListas()" class="w-full p-2 border border-gray-300 rounded text-sm uppercase bg-gray-50 font-bold hidden mb-2">
+                
+                <div class="relative">
+                    <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                    <input type="text" id="busca-planilha" onkeyup="window.filtrarListas()" placeholder="Pesquisar Placa, Motorista..." class="w-full pl-10 pr-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none font-bold uppercase">
+                </div>
             </div>
+
             <div class="bg-white rounded-lg shadow overflow-hidden">
                 <div class="overflow-x-auto no-scrollbar">
                     <table class="min-w-full text-sm text-left">
                         <thead class="bg-blue-800 text-white text-xs uppercase font-bold whitespace-nowrap">
-                            <tr>
-                                <th class="px-3 py-2 border-r border-blue-700">Ação / Status</th>
-                                <th class="px-3 py-2 border-r border-blue-700">Foto</th>
-                                <th class="px-3 py-2 border-r border-blue-700">Entrada</th>
-                                <th class="px-3 py-2 border-r border-blue-700">Saída</th>
-                                <th class="px-3 py-2 border-r border-blue-700">Local Entrega</th>
-                                <th class="px-3 py-2 border-r border-blue-700">Motorista</th>
-                                <th class="px-3 py-2 border-r border-blue-700">Documento</th>
-                                <th class="px-3 py-2 border-r border-blue-700">Empresa</th>
-                                <th class="px-3 py-2 border-r border-blue-700">Modelo</th>
-                                <th class="px-3 py-2 border-r border-blue-700">Placa</th>
-                                <th class="px-3 py-2 border-r border-blue-700">Nota Fiscal</th>
-                                <th class="px-3 py-2">Visto (Ent/Saí)</th>
+                            <tr id="cabecalho-planilha">
+                                <!-- Gerado Dinamicamente pelo JS -->
                             </tr>
                         </thead>
                         <tbody id="lista-planilha" class="divide-y divide-gray-200 whitespace-nowrap text-xs">
@@ -177,38 +114,90 @@
             </div>
         </div>
 
+        <!-- ABA 4: CONFIGURAÇÕES / ADMIN -->
+        <div id="view-config" class="hidden pb-20 fade-in">
+            <h2 class="text-xl font-bold mb-4 flex items-center uppercase text-red-600"><i class="fas fa-cogs mr-2"></i> Painel de Administração</h2>
+            
+            <div class="space-y-6">
+                <!-- Backup -->
+                <div class="bg-white p-4 rounded-lg shadow border border-gray-200">
+                    <h3 class="font-bold text-gray-800 uppercase border-b pb-2 mb-3"><i class="fas fa-database"></i> Backup do Sistema</h3>
+                    <p class="text-xs text-gray-500 mb-4">Faça o download de toda a base de dados do Firebase em formato JSON para segurança.</p>
+                    <button onclick="window.gerarBackupNuvem()" class="w-full bg-blue-600 text-white font-bold py-3 rounded uppercase shadow"><i class="fas fa-cloud-download-alt"></i> Baixar Backup Completo</button>
+                </div>
+
+                <!-- Construtor de Campos -->
+                <div class="bg-white p-4 rounded-lg shadow border border-gray-200">
+                    <h3 class="font-bold text-gray-800 uppercase border-b pb-2 mb-3"><i class="fas fa-list-ol"></i> Estrutura de Campos</h3>
+                    <p class="text-xs text-gray-500 mb-4">Adicione, exclua ou reordene os campos do formulário.</p>
+                    
+                    <div id="lista-campos-admin" class="space-y-2 mb-4">
+                        <!-- Gerado pelo JS -->
+                    </div>
+
+                    <div class="border-t pt-4 mt-2">
+                        <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Criar Novo Campo</label>
+                        <div class="flex space-x-2">
+                            <input type="text" id="novo-campo-nome" placeholder="NOME DO CAMPO" class="flex-1 border-2 border-gray-300 p-2 rounded text-sm uppercase focus:border-blue-500 focus:outline-none">
+                            <select id="novo-campo-tipo" class="border-2 border-gray-300 p-2 rounded text-sm uppercase bg-gray-50">
+                                <option value="text">Texto</option>
+                                <option value="textarea">Observação</option>
+                            </select>
+                            <button onclick="window.adicionarCampo()" class="bg-green-600 text-white px-4 rounded font-bold uppercase"><i class="fas fa-plus"></i></button>
+                        </div>
+                    </div>
+                </div>
+
+                <button onclick="window.sairAdmin()" class="w-full bg-gray-200 text-gray-800 font-bold py-4 rounded-lg shadow mt-4 uppercase"><i class="fas fa-sign-out-alt"></i> Sair do Modo Admin</button>
+            </div>
+        </div>
+
     </main>
 
     <!-- MENU INFERIOR -->
     <nav id="bottom-nav" class="bg-white border-t border-gray-200 flex justify-around p-2 fixed bottom-0 w-full shadow-[0_-10px_20px_rgba(0,0,0,0.05)] z-20 transition-transform duration-300 uppercase">
         <button onclick="window.mudarAba('registro')" id="tab-registro" class="flex flex-col items-center flex-1 py-2 text-blue-600 font-bold transition">
-            <i class="fas fa-edit text-xl mb-1"></i>
-            <span class="text-xs">Registrar</span>
+            <i class="fas fa-edit text-xl mb-1"></i><span class="text-[10px] md:text-xs">Registrar</span>
         </button>
         <button onclick="window.mudarAba('patio')" id="tab-patio" class="flex flex-col items-center flex-1 py-2 text-gray-500 font-bold transition">
-            <i class="fas fa-truck text-xl mb-1"></i>
-            <span class="text-xs">Pátio</span>
+            <i class="fas fa-truck text-xl mb-1"></i><span class="text-[10px] md:text-xs">Pátio</span>
         </button>
         <button onclick="window.mudarAba('planilha')" id="tab-planilha" class="flex flex-col items-center flex-1 py-2 text-gray-500 font-bold transition">
-            <i class="fas fa-table text-xl mb-1"></i>
-            <span class="text-xs">Planilha</span>
+            <i class="fas fa-table text-xl mb-1"></i><span class="text-[10px] md:text-xs">Planilha</span>
+        </button>
+        <button onclick="window.tentarAdmin()" id="tab-config" class="flex flex-col items-center flex-1 py-2 text-gray-300 font-bold transition hover:text-red-500">
+            <i class="fas fa-cog text-xl mb-1"></i><span class="text-[10px] md:text-xs">Config</span>
         </button>
     </nav>
 
+    <!-- MODAL ZOOM IMAGEM -->
+    <div id="modal-zoom" class="hidden fixed inset-0 z-[100] bg-black bg-opacity-95 flex items-center justify-center p-2 backdrop-blur-md" onclick="window.fecharZoom()">
+        <button class="absolute top-4 right-4 text-white text-4xl">&times;</button>
+        <img id="img-zoom" src="" class="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl">
+    </div>
+
     <!-- MODAL DE DETALHES GIGANTE (95%) -->
     <div id="modal-detalhes" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80 backdrop-blur-sm p-2">
-        <div class="bg-white rounded-xl shadow-2xl w-[95vw] h-[95vh] flex flex-col overflow-hidden relative">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-[500px] h-[95vh] flex flex-col overflow-hidden relative">
             <div class="bg-blue-900 text-white p-4 flex justify-between items-center flex-shrink-0">
                 <h3 class="font-bold text-lg uppercase"><i class="fas fa-file-alt"></i> Ficha do Veículo</h3>
                 <button onclick="window.fecharDetalhes()" class="text-white text-3xl leading-none">&times;</button>
             </div>
-            
-            <div class="flex-1 overflow-y-auto p-4 space-y-4" id="conteudo-detalhes">
-                <!-- Gerado Dinamicamente -->
+            <div class="flex-1 overflow-y-auto p-4 space-y-4" id="conteudo-detalhes"></div>
+            <div class="p-4 border-t bg-gray-50 flex-shrink-0" id="rodape-detalhes"></div>
+        </div>
+    </div>
+
+    <!-- MODAL EDIÇÃO DE REGISTRO (ADMIN) -->
+    <div id="modal-edicao" class="hidden fixed inset-0 z-[60] bg-black bg-opacity-80 flex items-center justify-center p-2">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-[500px] max-h-[90vh] flex flex-col overflow-hidden relative">
+            <div class="bg-yellow-500 text-white p-4 flex justify-between items-center flex-shrink-0">
+                <h3 class="font-bold text-lg uppercase"><i class="fas fa-pen"></i> Editar Registro</h3>
+                <button onclick="window.fecharEdicao()" class="text-white text-3xl leading-none">&times;</button>
             </div>
-            
-            <div class="p-4 border-t bg-gray-50 flex-shrink-0" id="rodape-detalhes">
-                <!-- Botões Gerados Dinamicamente -->
+            <div class="flex-1 overflow-y-auto p-4 space-y-3" id="formulario-edicao"></div>
+            <div class="p-4 border-t bg-gray-50 flex-shrink-0">
+                <button onclick="window.salvarEdicao()" id="btn-salvar-edicao" class="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-3 rounded-lg shadow-md uppercase">Salvar Alterações</button>
             </div>
         </div>
     </div>
@@ -218,26 +207,24 @@
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden">
             <div class="bg-red-600 text-white p-4 font-bold text-lg text-center uppercase">Registrar Saída</div>
             <div class="p-6">
-                <p class="text-sm text-gray-600 mb-4 text-center">Confirmar saída do veículo. O horário será salvo agora no servidor.</p>
-                <label class="block text-sm font-bold text-gray-700 mb-2 uppercase">Responsável pela Saída (Visto):</label>
-                <input type="text" id="modal_visto_saida" class="w-full border-2 border-gray-300 p-3 rounded-lg focus:border-red-500 focus:outline-none text-xl mb-6 text-center uppercase" placeholder="SEU NOME">
-                
+                <p class="text-sm text-gray-600 mb-4 text-center">Confirmar saída do veículo.</p>
+                <label class="block text-sm font-bold text-gray-700 mb-2 uppercase">Resp. Saída (Visto):</label>
+                <input type="text" id="modal_visto_saida" class="w-full border-2 border-gray-300 p-3 rounded-lg focus:border-red-500 focus:outline-none text-xl mb-6 text-center uppercase">
                 <div class="flex space-x-3">
                     <button onclick="window.fecharModalSaida()" class="flex-1 bg-gray-200 text-gray-800 font-bold py-3 rounded-lg uppercase">Cancelar</button>
-                    <button onclick="window.confirmarSaida()" id="btn-confirmar-saida" class="flex-1 bg-red-600 text-white font-bold py-3 rounded-lg shadow-md flex justify-center items-center uppercase">Confirmar</button>
+                    <button onclick="window.confirmarSaida()" id="btn-confirmar-saida" class="flex-1 bg-red-600 text-white font-bold py-3 rounded-lg shadow-md uppercase">Confirmar</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- SCRIPT TIPO MODULE PARA INTEGRAÇÃO COM FIREBASE E IA -->
+    <!-- SCRIPT TIPO MODULE -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
-        import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-analytics.js";
-        import { getFirestore, collection, addDoc, updateDoc, doc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, updateDoc, doc, deleteDoc, onSnapshot, query, orderBy, getDocs } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
         // ==========================================
-        // CREDENCIAIS DO SISTEMA
+        // CREDENCIAIS
         // ==========================================
         const firebaseConfig = {
             apiKey: "AIzaSyDYXFu-soolSOoCAxNYlVVgeJVwzJef_fk",
@@ -249,136 +236,223 @@
             measurementId: "G-VBR7GZ7BYW"
         };
         const IMGBB_API_KEY = "eb75e9530b3092570067d4e63d367ad2";
-        // ==========================================
+        const SENHA_ADMIN = "Biguidu2013@lhpm";
 
         const app = initializeApp(firebaseConfig);
-        const analytics = getAnalytics(app);
         const db = getFirestore(app);
 
+        // VARIÁVEIS GLOBAIS
         let registros = [];
         let registroSelecionadoFirebaseId = null;
         let fotoAtualUrl = null; 
         let dataHoraMetadata = null; 
         let gpsLocalizacao = null; 
-        let ultimoVeiculoEncontrado = null;
+        let isAdmin = false;
 
+        // ==========================================
+        // SISTEMA DE CAMPOS DINÂMICOS
+        // ==========================================
+        const camposPadrao = [
+            { id: "placa", nome: "Placa", tipo: "placa", fixo: true },
+            { id: "local", nome: "Local de Entrega", tipo: "text", fixo: false },
+            { id: "motorista", nome: "Motorista Principal", tipo: "text", fixo: false },
+            { id: "documento", nome: "Documento", tipo: "text", fixo: false },
+            { id: "empresa", nome: "Nome da Empresa", tipo: "text", fixo: false },
+            { id: "modelo", nome: "Modelo do Veículo", tipo: "select_modelo", fixo: false },
+            { id: "nota", nome: "Nota Fiscal", tipo: "text", fixo: false },
+            { id: "visto", nome: "Resp. Entrada", tipo: "text", fixo: false },
+            { id: "observacoes", nome: "Observações", tipo: "textarea", fixo: false }
+        ];
+
+        let schemaCampos = JSON.parse(localStorage.getItem('patiopark_schema')) || camposPadrao;
+
+        function salvarSchema() {
+            localStorage.setItem('patiopark_schema', JSON.stringify(schemaCampos));
+            window.renderizarTudo();
+        }
+
+        // ==========================================
+        // RENDERIZAR O APLICATIVO
+        // ==========================================
+        window.renderizarTudo = function() {
+            // 1. Renderiza o Formulário Principal
+            const formContainer = document.getElementById('formulario-dinamico');
+            formContainer.innerHTML = '';
+            
+            schemaCampos.forEach((campo, index) => {
+                let html = '';
+                if(campo.tipo === 'placa') {
+                    html = `
+                        <div class="mb-4">
+                            <label class="block text-sm font-bold text-gray-700 uppercase">${index+1}. ${campo.nome} (Tire Foto)</label>
+                            <div class="relative flex items-center mt-1">
+                                <input type="text" id="campo_${campo.id}" class="w-full border-2 border-gray-300 p-3 pr-24 rounded-lg focus:border-blue-500 focus:outline-none uppercase" onblur="window.verificarHistorico(this.value)" placeholder="ABC-1234">
+                                <div class="absolute right-2 top-1/2 -translate-y-1/2 flex space-x-1">
+                                    <label class="bg-blue-100 text-blue-600 rounded w-10 h-10 flex items-center justify-center cursor-pointer border shadow-sm">
+                                        <i class="fas fa-camera text-lg"></i><input type="file" accept="image/*" capture="environment" class="hidden" onchange="window.processarFotoPlaca(event)">
+                                    </label>
+                                    <label class="bg-purple-100 text-purple-600 rounded w-10 h-10 flex items-center justify-center cursor-pointer border shadow-sm">
+                                        <i class="fas fa-image text-lg"></i><input type="file" accept="image/*" class="hidden" onchange="window.processarFotoPlaca(event)">
+                                    </label>
+                                </div>
+                            </div>
+                            <div id="status_foto_completo" class="text-xs font-bold text-orange-600 mt-1 hidden"><i class="fas fa-info-circle"></i> Aguardando imagem...</div>
+                            <div id="alerta_historico_completo" class="hidden bg-blue-50 border-l-4 border-blue-500 p-3 mt-2 rounded shadow-sm">
+                                <div class="flex justify-between items-center">
+                                    <div><h3 class="font-bold text-blue-800 text-xs uppercase"><i class="fas fa-history"></i> Veículo Conhecido</h3><p id="texto_historico_completo" class="text-[10px] text-blue-600 uppercase"></p></div>
+                                    <button type="button" onclick="window.aplicarAutopreenchimento()" class="bg-blue-600 text-white text-[10px] font-bold px-2 py-2 rounded shadow uppercase">Autopreencher</button>
+                                </div>
+                            </div>
+                        </div>`;
+                } else if(campo.tipo === 'select_modelo') {
+                    html = `
+                        <div class="mb-4">
+                            <label class="block text-sm font-bold text-gray-700 uppercase">${index+1}. ${campo.nome}</label>
+                            <select id="campo_${campo.id}" onchange="window.verificarModeloOutros(this.value, '${campo.id}')" class="w-full border-2 border-gray-300 p-3 rounded-lg mt-1 bg-white uppercase focus:border-blue-500 focus:outline-none">
+                                <option value="" disabled selected>SELECIONE...</option>
+                                <option value="CAMINHÃO">CAMINHÃO</option><option value="PICAPE">PICAPE</option>
+                                <option value="FIORINO">FIORINO</option><option value="SAVEIRO">SAVEIRO</option>
+                                <option value="MOTO">MOTO</option><option value="CARRO DE PASSEIO">CARRO DE PASSEIO</option>
+                                <option value="OUTROS">OUTROS</option>
+                            </select>
+                            <input type="text" id="campo_${campo.id}_obs" class="w-full border-2 border-blue-300 p-3 mt-2 rounded-lg hidden uppercase focus:border-blue-500 focus:outline-none" placeholder="DIGITE O MODELO">
+                        </div>`;
+                } else if(campo.tipo === 'textarea') {
+                    html = `
+                        <div class="mb-4">
+                            <label class="block text-sm font-bold text-gray-700 uppercase">${index+1}. ${campo.nome}</label>
+                            <textarea id="campo_${campo.id}" rows="3" class="w-full border-2 border-gray-300 p-3 rounded-lg mt-1 uppercase focus:border-blue-500 focus:outline-none"></textarea>
+                            <button tabindex="-1" onclick="window.limparCampo('campo_${campo.id}')" class="text-red-400 text-xs mt-1 uppercase font-bold"><i class="fas fa-eraser"></i> Limpar</button>
+                        </div>`;
+                } else {
+                    html = `
+                        <div class="mb-4">
+                            <label class="block text-sm font-bold text-gray-700 uppercase">${index+1}. ${campo.nome}</label>
+                            <div class="relative flex items-center mt-1">
+                                <input type="text" id="campo_${campo.id}" class="w-full border-2 border-gray-300 p-3 pr-10 rounded-lg focus:border-blue-500 focus:outline-none uppercase">
+                                <button tabindex="-1" onclick="window.limparCampo('campo_${campo.id}')" class="absolute right-3 text-red-400"><i class="fas fa-times-circle text-xl"></i></button>
+                            </div>
+                        </div>`;
+                }
+                formContainer.insertAdjacentHTML('beforeend', html);
+            });
+
+            // 2. Renderiza Cabeçalho da Planilha
+            const cabecalho = document.getElementById('cabecalho-planilha');
+            cabecalho.innerHTML = `<th class="px-3 py-2 border-r border-blue-700 w-10 ${isAdmin ? '' : 'hidden'}"><i class="fas fa-check-square"></i></th><th class="px-3 py-2 border-r border-blue-700">Ações</th><th class="px-3 py-2 border-r border-blue-700">Foto</th><th class="px-3 py-2 border-r border-blue-700">Entrada</th><th class="px-3 py-2 border-r border-blue-700">Saída</th>`;
+            schemaCampos.forEach(c => {
+                if(c.tipo !== 'placa') cabecalho.innerHTML += `<th class="px-3 py-2 border-r border-blue-700">${c.nome}</th>`;
+                else cabecalho.innerHTML += `<th class="px-3 py-2 border-r border-blue-700">PLACA</th>`;
+            });
+            cabecalho.innerHTML += `<th class="px-3 py-2">GPS</th>`;
+
+            // 3. Renderiza Painel Admin (Campos)
+            const painelCampos = document.getElementById('lista-campos-admin');
+            if(painelCampos) {
+                painelCampos.innerHTML = '';
+                schemaCampos.forEach((c, index) => {
+                    painelCampos.innerHTML += `
+                        <div class="flex items-center justify-between bg-gray-50 border p-2 rounded">
+                            <div class="flex flex-col text-xs space-y-1">
+                                <button onclick="window.moverCampo(${index}, -1)" ${index===0?'disabled':''} class="text-gray-400 hover:text-blue-600 disabled:opacity-30"><i class="fas fa-chevron-up"></i></button>
+                                <button onclick="window.moverCampo(${index}, 1)" ${index===schemaCampos.length-1?'disabled':''} class="text-gray-400 hover:text-blue-600 disabled:opacity-30"><i class="fas fa-chevron-down"></i></button>
+                            </div>
+                            <div class="flex-1 px-3">
+                                <div class="font-bold text-sm uppercase">${c.nome}</div>
+                                <div class="text-[10px] text-gray-500 uppercase">${c.tipo}</div>
+                            </div>
+                            ${!c.fixo ? `<button onclick="window.excluirCampo(${index})" class="text-red-500 p-2"><i class="fas fa-trash"></i></button>` : '<span class="text-gray-400 text-xs px-2"><i class="fas fa-lock"></i> Fixo</span>'}
+                        </div>`;
+                });
+            }
+
+            window.filtrarListas();
+        };
+
+        // ==========================================
+        // FIREBASE REALTIME LISTENER
+        // ==========================================
         const q = query(collection(db, "registros"), orderBy("id", "desc"));
         onSnapshot(q, (snapshot) => {
             registros = [];
-            snapshot.forEach((doc) => {
-                registros.push({ firebase_id: doc.id, ...doc.data() });
-            });
+            snapshot.forEach((doc) => registros.push({ firebase_id: doc.id, ...doc.data() }));
             window.filtrarListas();
             document.getElementById('status-conexao').innerHTML = '<i class="fas fa-wifi text-green-400"></i> Online';
         }, (error) => {
             document.getElementById('status-conexao').innerHTML = '<i class="fas fa-exclamation-triangle text-red-400"></i> Erro DB';
         });
 
-        const bottomNav = document.getElementById('bottom-nav');
-        document.addEventListener('focusin', (e) => {
-            if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') bottomNav.style.transform = 'translateY(100%)';
-        });
-        document.addEventListener('focusout', (e) => {
-            bottomNav.style.transform = 'translateY(0)';
-        });
-
-        document.addEventListener('input', function(e) {
-            if(e.target.tagName === 'INPUT' && e.target.type === 'text') {
-                let start = e.target.selectionStart;
-                let end = e.target.selectionEnd;
-                e.target.value = e.target.value.toUpperCase();
-                e.target.setSelectionRange(start, end);
-            }
-        });
-
-        window.mudarAba = function(aba) {
-            document.getElementById('view-registro').classList.add('hidden');
-            document.getElementById('view-patio').classList.add('hidden');
-            document.getElementById('view-planilha').classList.add('hidden');
-            document.getElementById('tab-registro').classList.replace('text-blue-600', 'text-gray-500');
-            document.getElementById('tab-patio').classList.replace('text-blue-600', 'text-gray-500');
-            document.getElementById('tab-planilha').classList.replace('text-blue-600', 'text-gray-500');
-            document.getElementById(`view-${aba}`).classList.remove('hidden');
-            document.getElementById(`tab-${aba}`).classList.replace('text-gray-500', 'text-blue-600');
-        };
-
-        window.handleEnter = function(e, nextFieldId) {
-            if (e.key === 'Enter') { e.preventDefault(); document.getElementById(nextFieldId).focus(); }
-        };
-
-        window.limparCampo = function(id) {
-            const input = document.getElementById(id);
-            if(input) { input.value = ''; input.focus(); }
-        };
-
-        window.verificarModeloOutros = function(valor) {
-            const obsContainer = document.getElementById('container_modelo_obs');
-            if(valor === 'OUTROS') {
-                obsContainer.classList.remove('hidden');
-                document.getElementById('c_modelo_obs').focus();
-            } else {
-                obsContainer.classList.add('hidden');
-                document.getElementById('c_modelo_obs').value = '';
+        // ==========================================
+        // ADMIN & CAMPOS LÓGICA
+        // ==========================================
+        window.tentarAdmin = function() {
+            if(isAdmin) { window.mudarAba('config'); return; }
+            const p = prompt("Digite a senha do Administrador:");
+            if(p === SENHA_ADMIN) {
+                isAdmin = true;
+                document.getElementById('tab-config').classList.replace('text-gray-300', 'text-red-600');
+                document.getElementById('btn-excluir-lote').classList.remove('hidden');
+                window.renderizarTudo();
+                window.mudarAba('config');
+            } else if (p !== null) {
+                alert("Senha Incorreta.");
             }
         };
 
-        window.verificarHistorico = function(placaStr) {
-            const placa = placaStr.trim().toUpperCase();
-            if(placa.length < 7) return;
+        window.sairAdmin = function() {
+            isAdmin = false;
+            document.getElementById('tab-config').classList.replace('text-red-600', 'text-gray-300');
+            document.getElementById('btn-excluir-lote').classList.add('hidden');
+            window.renderizarTudo();
+            window.mudarAba('registro');
+        };
 
-            const historico = registros.filter(r => r.placa === placa);
-            if(historico.length > 0) {
-                ultimoVeiculoEncontrado = historico[0];
-                const texto = `Visitas totais: ${historico.length} <br> Última: ${ultimoVeiculoEncontrado.entrada} <br> Emp: ${ultimoVeiculoEncontrado.empresa}`;
-                document.getElementById('alerta_historico_completo').classList.remove('hidden');
-                document.getElementById('texto_historico_completo').innerHTML = texto;
-            } else {
-                document.getElementById('alerta_historico_completo').classList.add('hidden');
-                ultimoVeiculoEncontrado = null;
+        window.adicionarCampo = function() {
+            const nome = document.getElementById('novo-campo-nome').value.trim();
+            const tipo = document.getElementById('novo-campo-tipo').value;
+            if(!nome) return alert("Digite um nome.");
+            const id = "custom_" + Date.now();
+            schemaCampos.push({ id, nome, tipo, fixo: false });
+            document.getElementById('novo-campo-nome').value = '';
+            salvarSchema();
+        };
+
+        window.excluirCampo = function(index) {
+            if(confirm("Tem certeza que deseja excluir o campo " + schemaCampos[index].nome + "? (Os dados antigos permanecerão no BD)")) {
+                schemaCampos.splice(index, 1);
+                salvarSchema();
             }
         };
 
-        window.aplicarAutopreenchimento = function() {
-            if(!ultimoVeiculoEncontrado) return;
-            document.getElementById('c_local').value = ultimoVeiculoEncontrado.local;
-            document.getElementById('c_motorista').value = ultimoVeiculoEncontrado.motorista;
-            document.getElementById('c_documento').value = ultimoVeiculoEncontrado.documento;
-            document.getElementById('c_empresa').value = ultimoVeiculoEncontrado.empresa;
-            
-            const modeloEncontrado = ultimoVeiculoEncontrado.modelo;
-            const selectOptions = Array.from(document.getElementById('c_modelo').options).map(opt => opt.value);
-            
-            if(selectOptions.includes(modeloEncontrado)) {
-                document.getElementById('c_modelo').value = modeloEncontrado;
-                window.verificarModeloOutros(modeloEncontrado);
-            } else {
-                document.getElementById('c_modelo').value = 'OUTROS';
-                window.verificarModeloOutros('OUTROS');
-                document.getElementById('c_modelo_obs').value = modeloEncontrado;
+        window.moverCampo = function(index, dir) {
+            const novoIndex = index + dir;
+            if(novoIndex >= 0 && novoIndex < schemaCampos.length) {
+                const temp = schemaCampos[index];
+                schemaCampos[index] = schemaCampos[novoIndex];
+                schemaCampos[novoIndex] = temp;
+                salvarSchema();
             }
-            document.getElementById('alerta_historico_completo').classList.add('hidden');
         };
 
-        // GESTÃO DA FOTO, IMGBB E GPS
+        // ==========================================
+        // UPLOAD & GPS (ENTRADA)
+        // ==========================================
         window.processarFotoPlaca = async function(event) {
             const file = event.target.files[0];
             if(!file) return;
 
             const statusLabel = document.getElementById('status_foto_completo');
             statusLabel.classList.remove('hidden');
-            statusLabel.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processando arquivo...';
-            statusLabel.classList.replace('text-green-700', 'text-orange-600');
+            statusLabel.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Preparando foto...';
 
             EXIF.getData(file, function() {
                 const exifDate = EXIF.getTag(this, "DateTimeOriginal");
                 if (exifDate) {
                     const partes = exifDate.split(' ');
-                    const dataPartes = partes[0].split(':');
-                    const horaPartes = partes[1].split(':');
-                    dataHoraMetadata = `${dataPartes[2]}/${dataPartes[1]}/${dataPartes[0]} ${horaPartes[0]}:${horaPartes[1]}`;
+                    dataHoraMetadata = `${partes[0].replace(/:/g,'/')} ${partes[1].substring(0,5)}`;
                 } else {
-                    const fallbackDate = new Date(file.lastModified);
-                    dataHoraMetadata = fallbackDate.toLocaleDateString('pt-BR') + ' ' + fallbackDate.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
+                    const fallback = new Date(file.lastModified);
+                    dataHoraMetadata = fallback.toLocaleDateString('pt-BR') + ' ' + fallback.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
                 }
             });
 
@@ -386,277 +460,354 @@
             reader.onload = function(e) {
                 const img = new Image();
                 img.onload = async function() {
-                    statusLabel.innerHTML = '<i class="fas fa-cloud-upload-alt fa-bounce"></i> Fazendo upload para a nuvem...';
-                    
+                    statusLabel.innerHTML = '<i class="fas fa-cloud-upload-alt fa-bounce"></i> Salvando na nuvem...';
                     const canvas = document.createElement('canvas');
-                    const ctx = canvas.getContext('2d');
                     const MAX_WIDTH = 800;
                     const scaleSize = MAX_WIDTH / img.width;
                     canvas.width = MAX_WIDTH;
                     canvas.height = img.height * scaleSize;
-                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                    
-                    const base64Data = canvas.toDataURL('image/jpeg', 0.8).split(',')[1];
+                    canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
                     
                     try {
                         const formData = new FormData();
-                        formData.append("image", base64Data);
-                        const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
-                            method: "POST",
-                            body: formData
-                        });
-                        const imgbbData = await response.json();
+                        formData.append("image", canvas.toDataURL('image/jpeg', 0.8).split(',')[1]);
+                        const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, { method: "POST", body: formData });
+                        const json = await res.json();
                         
-                        if(imgbbData.success) {
-                            fotoAtualUrl = imgbbData.data.url;
-                            statusLabel.innerHTML = `<i class="fas fa-satellite-dish fa-spin"></i> Foto salva! Buscando GPS...`;
+                        if(json.success) {
+                            fotoAtualUrl = json.data.url;
+                            statusLabel.innerHTML = `<i class="fas fa-satellite-dish fa-spin"></i> Pegando GPS...`;
                             
                             if (navigator.geolocation) {
                                 navigator.geolocation.getCurrentPosition(
-                                    (position) => {
-                                        gpsLocalizacao = `${position.coords.latitude}, ${position.coords.longitude}`;
-                                        statusLabel.innerHTML = `<i class="fas fa-check-circle"></i> Upload OK e GPS capturado.`;
-                                        statusLabel.classList.replace('text-orange-600', 'text-green-700');
-                                    },
-                                    (error) => {
-                                        gpsLocalizacao = "GPS não autorizado/indisponível";
-                                        statusLabel.innerHTML = `<i class="fas fa-check-circle"></i> Upload OK (Sem permissão de GPS).`;
-                                        statusLabel.classList.replace('text-orange-600', 'text-green-700');
-                                    },
-                                    { enableHighAccuracy: true, timeout: 5000 }
+                                    (pos) => { gpsLocalizacao = `${pos.coords.latitude}, ${pos.coords.longitude}`; statusLabel.innerHTML = `<i class="fas fa-check-circle text-green-600"></i> Pronto!`; },
+                                    () => { gpsLocalizacao = "Sem GPS"; statusLabel.innerHTML = `<i class="fas fa-check-circle text-green-600"></i> Foto OK. GPS bloqueado.`; },
+                                    { timeout: 5000 }
                                 );
-                            } else {
-                                gpsLocalizacao = "GPS não suportado";
-                                statusLabel.innerHTML = `<i class="fas fa-check-circle"></i> Upload OK.`;
-                                statusLabel.classList.replace('text-orange-600', 'text-green-700');
-                            }
-
-                        } else {
-                            throw new Error("Falha no ImgBB");
-                        }
-                    } catch (err) {
-                        statusLabel.innerHTML = `<i class="fas fa-exclamation-triangle text-red-500"></i> Erro no upload. Verifique conexão.`;
-                    }
+                            } else { gpsLocalizacao = "Sem GPS"; statusLabel.innerHTML = `<i class="fas fa-check-circle text-green-600"></i> Pronto!`; }
+                        } else throw new Error();
+                    } catch (err) { statusLabel.innerHTML = `<i class="fas fa-times-circle text-red-600"></i> Erro de Upload.`; }
                 };
                 img.src = e.target.result;
             };
             reader.readAsDataURL(file);
         };
 
-        function getDataHoraAtualNavegador() {
-            const now = new Date();
-            const data = now.toLocaleDateString('pt-BR');
-            const hora = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-            return `${data} ${hora}`;
-        }
-
         window.salvarRegistro = async function() {
             const btn = document.getElementById('btn-salvar-entrada');
             btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> SALVANDO...';
             btn.disabled = true;
 
-            let modeloFinal = document.getElementById('c_modelo').value || '';
-            if(modeloFinal === 'OUTROS') {
-                modeloFinal = document.getElementById('c_modelo_obs').value.trim() || 'OUTROS';
+            const dados = {};
+            schemaCampos.forEach(c => {
+                let val = document.getElementById('campo_' + c.id).value.trim();
+                if(c.tipo === 'select_modelo' && val === 'OUTROS') {
+                    val = document.getElementById('campo_' + c.id + '_obs').value.trim() || 'OUTROS';
+                }
+                dados[c.id] = val.toUpperCase();
+            });
+
+            if(!dados['placa']) {
+                alert("A Placa é obrigatória!");
+                btn.innerHTML = '<i class="fas fa-save mr-2"></i> SALVAR ENTRADA';
+                btn.disabled = false;
+                return;
             }
 
-            const horarioDefinitivo = dataHoraMetadata ? dataHoraMetadata + " (EXIF)" : getDataHoraAtualNavegador() + " (Navegador)";
+            const now = new Date();
+            const entrada = dataHoraMetadata ? dataHoraMetadata + " (EXIF)" : `${now.toLocaleDateString('pt-BR')} ${now.toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'})} (Sist)`;
+            const diaParticao = entrada.substring(0, 10); // "DD/MM/YYYY"
+
             const novo = {
                 id: Date.now(),
-                local: document.getElementById('c_local').value.trim(),
-                motorista: document.getElementById('c_motorista').value.trim(),
-                documento: document.getElementById('c_documento').value.trim(),
-                empresa: document.getElementById('c_empresa').value.trim(),
-                modelo: modeloFinal.toUpperCase(),
-                placa: document.getElementById('c_placa').value.trim(),
-                nota: document.getElementById('c_nota').value.trim(),
-                visto_entrada: document.getElementById('c_visto').value.trim(),
-                entrada: horarioDefinitivo, 
-                saida: '', 
-                visto_saida: '', 
+                placa: dados['placa'],
+                entrada: entrada,
+                dia_particao: diaParticao,
+                saida: '',
+                visto_saida: '',
                 foto: fotoAtualUrl || '', 
-                gps: gpsLocalizacao || 'Sem registro'
+                gps: gpsLocalizacao || 'Sem registro',
+                dados_dinamicos: dados
             };
 
             try {
                 await addDoc(collection(db, "registros"), novo);
-                
-                ['c_local','c_motorista','c_documento','c_empresa','c_modelo','c_modelo_obs','c_placa','c_nota','c_visto'].forEach(id => document.getElementById(id).value = '');
-                window.verificarModeloOutros(''); 
-                fotoAtualUrl = null;
-                dataHoraMetadata = null;
-                gpsLocalizacao = null;
+                schemaCampos.forEach(c => document.getElementById('campo_' + c.id).value = '');
+                if(document.getElementById('campo_modelo_obs')) {
+                    document.getElementById('campo_modelo_obs').value = '';
+                    document.getElementById('container_modelo_obs').classList.add('hidden');
+                }
+                fotoAtualUrl = null; dataHoraMetadata = null; gpsLocalizacao = null;
                 document.getElementById('status_foto_completo').classList.add('hidden');
-                document.getElementById('alerta_historico_completo').classList.add('hidden');
-                
                 window.mudarAba('patio');
-            } catch (e) {
-                alert("Erro ao salvar no banco de dados: " + e.message);
-            } finally {
-                btn.innerHTML = '<i class="fas fa-save mr-2"></i> SALVAR ENTRADA';
-                btn.disabled = false;
-            }
+            } catch (e) { alert("Erro: " + e.message); } 
+            finally { btn.innerHTML = '<i class="fas fa-save mr-2"></i> SALVAR ENTRADA'; btn.disabled = false; }
         };
+
+        // ==========================================
+        // FILTROS E PARTICIONAMENTO
+        // ==========================================
+        window.verificarFiltroData = function(origem) {
+            const select = document.getElementById(`filtro-data-${origem}`);
+            const inputDate = document.getElementById(`data-especifica-${origem}`);
+            if(select.value === 'ESPECIFICA') inputDate.classList.remove('hidden');
+            else inputDate.classList.add('hidden');
+            window.filtrarListas();
+        };
+
+        function extrairDataFormatada(dateObj) {
+            return dateObj.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        }
 
         window.filtrarListas = function() {
             const termoPatio = document.getElementById('busca-patio').value.toUpperCase();
+            const statusPatio = document.getElementById('filtro-status-patio').value;
+            const dataPatioSel = document.getElementById('filtro-data-patio').value;
+            const dataPatioEsp = document.getElementById('data-especifica-patio').value;
+
             const termoPlanilha = document.getElementById('busca-planilha').value.toUpperCase();
+            const statusPlanilha = document.getElementById('filtro-status-planilha').value;
+            const dataPlanilhaSel = document.getElementById('filtro-data-planilha').value;
+            const dataPlanilhaEsp = document.getElementById('data-especifica-planilha').value;
+
             const listaPatio = document.getElementById('lista-patio');
             const listaPlanilha = document.getElementById('lista-planilha');
             
-            listaPatio.innerHTML = '';
-            listaPlanilha.innerHTML = '';
+            listaPatio.innerHTML = ''; listaPlanilha.innerHTML = '';
             let countPatio = 0, countPlanilha = 0;
+
+            const hoje = new Date();
+            const strHoje = extrairDataFormatada(hoje);
+            const ontem = new Date(hoje); ontem.setDate(ontem.getDate() - 1);
+            const strOntem = extrairDataFormatada(ontem);
 
             registros.forEach(r => {
                 const pendente = !r.saida;
-                const matchPatio = !termoPatio || (r.placa.includes(termoPatio) || r.empresa.includes(termoPatio) || r.motorista.includes(termoPatio));
-                const matchPlanilha = !termoPlanilha || (r.placa.includes(termoPlanilha) || r.empresa.includes(termoPlanilha) || r.motorista.includes(termoPlanilha));
-                const imgThumb = r.foto ? `<img src="${r.foto}" class="w-12 h-12 object-cover rounded-lg border shadow-sm">` : `<div class="w-12 h-12 bg-gray-100 rounded-lg flex flex-col items-center justify-center text-gray-400 text-[10px] border"><i class="fas fa-camera mb-1"></i>S/ FOTO</div>`;
+                let textoBusca = Object.values(r.dados_dinamicos || {}).join(" ").toUpperCase() + " " + r.placa;
+                const rData = r.dia_particao || r.entrada.substring(0, 10);
 
-                if(matchPatio) {
+                // Check Pátio
+                let showPatio = true;
+                if(statusPatio === 'NO_PATIO' && !pendente) showPatio = false;
+                if(statusPatio === 'SAIRAM' && pendente) showPatio = false;
+                if(dataPatioSel === 'HOJE' && rData !== strHoje) showPatio = false;
+                if(dataPatioSel === 'ONTEM' && rData !== strOntem) showPatio = false;
+                if(dataPatioSel === 'ESPECIFICA' && dataPatioEsp) {
+                    const espPartes = dataPatioEsp.split('-');
+                    const formatedEsp = `${espPartes[2]}/${espPartes[1]}/${espPartes[0]}`;
+                    if(rData !== formatedEsp) showPatio = false;
+                }
+                if(termoPatio && !textoBusca.includes(termoPatio)) showPatio = false;
+
+                // Check Planilha
+                let showPlanilha = true;
+                if(statusPlanilha === 'NO_PATIO' && !pendente) showPlanilha = false;
+                if(statusPlanilha === 'SAIRAM' && pendente) showPlanilha = false;
+                if(dataPlanilhaSel === 'HOJE' && rData !== strHoje) showPlanilha = false;
+                if(dataPlanilhaSel === 'ONTEM' && rData !== strOntem) showPlanilha = false;
+                if(dataPlanilhaSel === 'ESPECIFICA' && dataPlanilhaEsp) {
+                    const espPartes = dataPlanilhaEsp.split('-');
+                    const formatedEsp = `${espPartes[2]}/${espPartes[1]}/${espPartes[0]}`;
+                    if(rData !== formatedEsp) showPlanilha = false;
+                }
+                if(termoPlanilha && !textoBusca.includes(termoPlanilha)) showPlanilha = false;
+
+                const imgThumb = r.foto ? `<img src="${r.foto}" onclick="event.stopPropagation(); window.abrirZoom('${r.foto}')" class="w-12 h-12 object-cover rounded-lg border shadow-sm cursor-zoom-in">` : `<div class="w-12 h-12 bg-gray-100 rounded flex flex-col items-center justify-center text-gray-400 text-[10px]"><i class="fas fa-camera"></i></div>`;
+                
+                // Funções exclusivas Admin
+                const btnEdit = isAdmin ? `<button onclick="event.stopPropagation(); window.abrirEdicao('${r.firebase_id}')" class="text-blue-500 hover:text-blue-700 bg-blue-50 p-2 rounded mr-1"><i class="fas fa-pen"></i></button>` : '';
+                const btnDel = isAdmin ? `<button onclick="event.stopPropagation(); window.excluirIndiv('${r.firebase_id}')" class="text-red-500 hover:text-red-700 bg-red-50 p-2 rounded"><i class="fas fa-trash"></i></button>` : '';
+
+                if(showPatio) {
                     countPatio++;
+                    const subTitle = (r.dados_dinamicos?.modelo || '') + ' • ' + (r.dados_dinamicos?.empresa || '');
+                    
                     const card = document.createElement('div');
                     card.className = `bg-white rounded-xl shadow-sm border-l-8 ${pendente ? 'border-blue-500' : 'border-green-500'} p-4 flex flex-col relative cursor-pointer hover:bg-gray-50 transition`;
                     card.setAttribute('onclick', `window.abrirDetalhes('${r.firebase_id}')`);
 
-                    let btnSaida = pendente ? `<button onclick="event.stopPropagation(); window.abrirModalSaida('${r.firebase_id}')" class="mt-3 w-full bg-red-100 hover:bg-red-200 text-red-700 font-bold py-3 rounded-lg border border-red-300 transition text-sm shadow-sm uppercase"><i class="fas fa-sign-out-alt"></i> Registrar Saída</button>` : `<div class="mt-3 text-green-700 font-bold text-center bg-green-50 py-3 rounded-lg border border-green-200 shadow-sm uppercase">✅ SAIU: ${r.saida}</div>`;
+                    let btnSaida = pendente ? `<button onclick="event.stopPropagation(); window.abrirModalSaida('${r.firebase_id}')" class="mt-3 w-full bg-red-100 hover:bg-red-200 text-red-700 font-bold py-3 rounded-lg border border-red-300 transition text-sm shadow-sm uppercase"><i class="fas fa-sign-out-alt"></i> Registrar Saída</button>` : `<div class="mt-3 text-green-700 font-bold text-center bg-green-50 py-3 rounded-lg border border-green-200 shadow-sm uppercase">✅ SAIU: ${r.saida.substring(0, 16)}</div>`;
                     
                     card.innerHTML = `
                         <div class="flex justify-between items-start border-b pb-3 mb-3">
                             <div class="flex items-center gap-3">
                                 ${imgThumb}
-                                <div><div class="font-black text-xl text-gray-800 leading-none mb-1">${r.placa}</div><div class="text-xs font-bold text-gray-500 uppercase">${r.modelo} • ${r.empresa}</div></div>
+                                <div><div class="font-black text-xl text-gray-800 leading-none mb-1">${r.placa}</div><div class="text-[10px] font-bold text-gray-500 uppercase">${subTitle}</div></div>
                             </div>
                             <div class="text-right">
-                                <div class="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Entrada (Autenticada)</div>
-                                <div class="text-sm font-black text-blue-700 leading-tight">${r.entrada.split(' ')[0]}<br>${r.entrada.split(' ')[1]}</div>
+                                <div class="text-[10px] text-gray-500 uppercase font-bold">ENTRADA</div>
+                                <div class="text-xs font-black text-blue-700 leading-tight">${r.entrada.split(' ')[0]}<br>${r.entrada.split(' ')[1]}</div>
                             </div>
                         </div>
-                        <div class="grid grid-cols-2 gap-x-2 gap-y-2 text-xs text-gray-700 uppercase font-medium">
-                            <div class="truncate"><i class="fas fa-user text-gray-400 w-4"></i> ${r.motorista}</div>
-                            <div class="truncate"><i class="fas fa-map-marker-alt text-gray-400 w-4"></i> ${r.local}</div>
+                        <div class="flex justify-between items-center">
+                            <div class="text-xs text-gray-600 uppercase font-bold"><i class="fas fa-user text-gray-400"></i> ${r.dados_dinamicos?.motorista || 'N/A'}</div>
+                            <div>${btnEdit}${btnDel}</div>
                         </div>
                         ${btnSaida}
                     `;
                     listaPatio.appendChild(card);
                 }
 
-                if(matchPlanilha) {
+                if(showPlanilha) {
                     countPlanilha++;
                     const tr = document.createElement('tr');
                     tr.className = "hover:bg-gray-50 transition cursor-pointer";
                     tr.setAttribute('onclick', `window.abrirDetalhes('${r.firebase_id}')`);
 
-                    let acaoPlanilha = pendente ? `<button onclick="event.stopPropagation(); window.abrirModalSaida('${r.firebase_id}')" class="bg-red-500 text-white px-3 py-1.5 rounded text-xs font-bold shadow-sm uppercase">DAR SAÍDA</button>` : `<span class="text-green-600 font-bold uppercase"><i class="fas fa-check-circle"></i> CONCLUÍDO</span>`;
+                    let acao = pendente ? `<button onclick="event.stopPropagation(); window.abrirModalSaida('${r.firebase_id}')" class="bg-red-500 text-white px-2 py-1 rounded text-[10px] font-bold shadow-sm uppercase">SAÍDA</button>` : `<span class="text-green-600 font-bold text-xs uppercase"><i class="fas fa-check"></i> OK</span>`;
                     
-                    tr.innerHTML = `
-                        <td class="px-3 py-3 border-r text-center">${acaoPlanilha}</td><td class="px-3 py-3 border-r text-center align-middle">${imgThumb}</td>
-                        <td class="px-3 py-3 border-r font-bold text-blue-700 whitespace-nowrap">${r.entrada}</td><td class="px-3 py-3 border-r font-bold ${pendente ? 'text-gray-400' : 'text-green-600'} whitespace-nowrap">${r.saida || '-- AGUARDANDO --'}</td>
-                        <td class="px-3 py-3 border-r uppercase">${r.local}</td><td class="px-3 py-3 border-r uppercase">${r.motorista}</td><td class="px-3 py-3 border-r uppercase">${r.documento}</td>
-                        <td class="px-3 py-3 border-r uppercase">${r.empresa}</td><td class="px-3 py-3 border-r uppercase font-bold text-gray-600">${r.modelo}</td>
-                        <td class="px-3 py-3 border-r font-black text-gray-900 text-base">${r.placa}</td><td class="px-3 py-3 border-r uppercase">${r.nota}</td>
-                        <td class="px-3 py-3 uppercase text-gray-600 text-[10px] leading-tight"><b>Ent:</b> ${r.visto_entrada} <br> <b>Saí:</b> ${r.visto_saida || '...'}</td>
-                    `;
+                    let rowHtml = `<td class="px-2 py-2 border-r text-center ${isAdmin?'':'hidden'}" onclick="event.stopPropagation()"><input type="checkbox" class="cb-planilha w-4 h-4" value="${r.firebase_id}"></td>
+                                   <td class="px-2 py-2 border-r text-center">${btnEdit}${btnDel} <br> ${acao}</td>
+                                   <td class="px-2 py-2 border-r text-center">${imgThumb}</td>
+                                   <td class="px-2 py-2 border-r font-bold text-blue-700 whitespace-nowrap">${r.entrada}</td>
+                                   <td class="px-2 py-2 border-r font-bold ${pendente ? 'text-gray-400' : 'text-green-600'} whitespace-nowrap">${r.saida || '...'}</td>`;
+                    
+                    schemaCampos.forEach(c => {
+                        if(c.tipo === 'placa') rowHtml += `<td class="px-3 py-2 border-r font-black text-base">${r.placa}</td>`;
+                        else rowHtml += `<td class="px-3 py-2 border-r uppercase whitespace-nowrap max-w-[150px] truncate" title="${r.dados_dinamicos?.[c.id] || ''}">${r.dados_dinamicos?.[c.id] || ''}</td>`;
+                    });
+                    
+                    rowHtml += `<td class="px-2 py-2 text-xs truncate max-w-[100px]">${r.gps}</td>`;
+                    tr.innerHTML = rowHtml;
                     listaPlanilha.appendChild(tr);
                 }
             });
+            if(countPatio === 0) listaPatio.innerHTML = '<p class="text-center text-gray-500 py-10 font-bold uppercase">Nenhum veículo.</p>';
+        };
 
-            if(countPatio === 0) listaPatio.innerHTML = '<p class="text-center text-gray-500 py-10 font-bold uppercase">Nenhum veículo encontrado.</p>';
-            if(countPlanilha === 0) listaPlanilha.innerHTML = '<tr><td colspan="12" class="text-center py-6 font-bold text-gray-500 uppercase">Nenhum registro encontrado.</td></tr>';
+        // ==========================================
+        // DETALHES, ZOOM, EXCLUIR E EDITAR
+        // ==========================================
+        window.abrirZoom = function(url) {
+            document.getElementById('img-zoom').src = url;
+            document.getElementById('modal-zoom').classList.remove('hidden');
+        };
+        window.fecharZoom = function() {
+            document.getElementById('modal-zoom').classList.add('hidden');
         };
 
         window.abrirDetalhes = function(firebase_id) {
             const r = registros.find(reg => reg.firebase_id === firebase_id);
             if(!r) return;
-            
             const pendente = !r.saida;
-            const imgHtml = r.foto ? `<img src="${r.foto}" class="w-full max-h-64 object-contain bg-gray-100 rounded border mt-2">` : `<div class="w-full h-32 bg-gray-100 flex items-center justify-center text-gray-400 font-bold rounded border mt-2 uppercase">Sem foto disponível</div>`;
-            const gpsLink = r.gps && r.gps !== 'Sem registro' && !r.gps.includes('Não autorizado') ? `<a href="https://maps.google.com/?q=${r.gps}" target="_blank" class="text-blue-500 underline ml-2"><i class="fas fa-external-link-alt"></i> Ver no Mapa</a>` : '';
+            const imgHtml = r.foto ? `<img src="${r.foto}" onclick="window.abrirZoom('${r.foto}')" class="w-full max-h-64 object-contain bg-gray-100 rounded border mt-2 cursor-zoom-in">` : `<div class="w-full h-32 bg-gray-100 flex items-center justify-center text-gray-400 font-bold rounded border mt-2 uppercase">Sem foto</div>`;
+
+            let infos = '';
+            schemaCampos.forEach(c => {
+                if(c.tipo !== 'placa') {
+                    infos += `<div class="border-b py-2"><span class="block text-[10px] text-gray-400 font-black uppercase tracking-widest">${c.nome}</span><span class="font-bold text-gray-800 uppercase block whitespace-pre-wrap">${r.dados_dinamicos?.[c.id] || '---'}</span></div>`;
+                }
+            });
 
             document.getElementById('conteudo-detalhes').innerHTML = `
-                <div class="text-center mb-4">
-                    <div class="text-4xl font-black text-gray-800 tracking-wider">${r.placa}</div>
-                    <div class="text-lg text-gray-600 font-bold uppercase">${r.modelo} - ${r.empresa}</div>
-                </div>
+                <div class="text-center mb-2"><div class="text-4xl font-black tracking-wider">${r.placa}</div></div>
                 ${imgHtml}
-                <div class="grid grid-cols-1 gap-3 mt-4 text-sm">
-                    <div class="bg-blue-50 p-3 rounded border border-blue-100">
-                        <span class="block text-xs text-blue-600 font-black uppercase tracking-widest mb-1">Entrada</span>
-                        <span class="font-bold text-gray-800 text-lg block">${r.entrada}</span>
-                        <span class="block text-xs text-gray-500 mt-1 uppercase">Responsável: ${r.visto_entrada}</span>
-                    </div>
-                    <div class="bg-gray-100 p-3 rounded border border-gray-300">
-                        <span class="block text-xs text-gray-600 font-black uppercase tracking-widest mb-1"><i class="fas fa-map-marker-alt"></i> Localização (GPS)</span>
-                        <span class="font-bold text-gray-800 text-sm block">${r.gps || 'Sem registro GPS'} ${gpsLink}</span>
-                    </div>
-                    <div class="bg-${pendente ? 'yellow' : 'green'}-50 p-3 rounded border border-${pendente ? 'yellow' : 'green'}-100">
-                        <span class="block text-xs text-${pendente ? 'yellow-600' : 'green-600'} font-black uppercase tracking-widest mb-1">Saída</span>
-                        <span class="font-bold text-gray-800 text-lg block">${r.saida || 'Aguardando Saída...'}</span>
-                        ${r.visto_saida ? `<span class="block text-xs text-gray-500 mt-1 uppercase">Responsável: ${r.visto_saida}</span>` : ''}
-                    </div>
-                    <div class="border p-3 rounded bg-white">
-                        <span class="block text-xs text-gray-400 font-black uppercase tracking-widest mb-1">Motorista</span>
-                        <span class="font-bold text-gray-800 uppercase text-base block">${r.motorista}</span>
-                        <span class="text-xs text-gray-500 uppercase">Doc: ${r.documento}</span>
-                    </div>
-                    <div class="border p-3 rounded bg-white">
-                        <span class="block text-xs text-gray-400 font-black uppercase tracking-widest mb-1">Localização e Carga</span>
-                        <span class="font-bold text-gray-800 uppercase block">Local: ${r.local}</span>
-                        <span class="text-sm text-gray-500 font-bold uppercase block mt-1">NF: ${r.nota}</span>
-                    </div>
+                <div class="grid grid-cols-2 gap-2 mt-4 text-sm">
+                    <div class="bg-blue-50 p-2 rounded border border-blue-100"><span class="block text-[10px] text-blue-600 font-black uppercase">Entrada</span><span class="font-bold text-sm block">${r.entrada}</span></div>
+                    <div class="bg-${pendente?'yellow':'green'}-50 p-2 rounded border border-${pendente?'yellow':'green'}-100"><span class="block text-[10px] text-${pendente?'yellow':'green'}-600 font-black uppercase">Saída</span><span class="font-bold text-sm block">${r.saida || 'Aguardando...'}</span></div>
                 </div>
+                <div class="mt-4 bg-white p-3 border rounded shadow-sm">${infos}</div>
+                <div class="mt-2 text-xs text-gray-400 text-center"><i class="fas fa-map-marker-alt"></i> GPS: ${r.gps}</div>
             `;
-
-            const rodape = document.getElementById('rodape-detalhes');
-            if(pendente) {
-                rodape.innerHTML = `<button onclick="window.fecharDetalhes(); window.abrirModalSaida('${r.firebase_id}')" class="w-full bg-red-600 hover:bg-red-700 text-white font-black py-4 rounded-lg shadow-md text-lg uppercase transition"><i class="fas fa-sign-out-alt"></i> Registrar Saída</button>`;
-            } else {
-                rodape.innerHTML = `<button onclick="window.fecharDetalhes()" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 font-black py-4 rounded-lg shadow-md text-lg uppercase transition">Fechar Ficha</button>`;
-            }
-
+            document.getElementById('rodape-detalhes').innerHTML = pendente ? `<button onclick="window.fecharDetalhes(); window.abrirModalSaida('${r.firebase_id}')" class="w-full bg-red-600 text-white font-black py-4 rounded-lg shadow-md uppercase">Registrar Saída</button>` : `<button onclick="window.fecharDetalhes()" class="w-full bg-gray-200 text-gray-800 font-black py-4 rounded-lg shadow-md uppercase">Fechar Ficha</button>`;
             document.getElementById('modal-detalhes').classList.remove('hidden');
         };
+        window.fecharDetalhes = () => document.getElementById('modal-detalhes').classList.add('hidden');
 
-        window.fecharDetalhes = function() {
-            document.getElementById('modal-detalhes').classList.add('hidden');
-        };
-
-        window.abrirModalSaida = function(firebase_id) {
-            registroSelecionadoFirebaseId = firebase_id;
-            document.getElementById('modal_visto_saida').value = '';
-            document.getElementById('modal-saida').classList.remove('hidden');
-            setTimeout(() => document.getElementById('modal_visto_saida').focus(), 100);
-        };
-
-        window.fecharModalSaida = function() {
-            document.getElementById('modal-saida').classList.add('hidden');
-            registroSelecionadoFirebaseId = null;
-        };
-
-        window.confirmarSaida = async function() {
-            const visto = document.getElementById('modal_visto_saida').value.trim().toUpperCase();
-            if(!visto) { alert("Por favor, preencha o Responsável pela Saída."); return; }
-            
-            const btn = document.getElementById('btn-confirmar-saida');
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-            btn.disabled = true;
-
-            try {
-                const docRef = doc(db, "registros", registroSelecionadoFirebaseId);
-                await updateDoc(docRef, {
-                    saida: getDataHoraAtualNavegador(),
-                    visto_saida: visto
-                });
-                window.fecharModalSaida();
-            } catch (e) {
-                alert("Erro ao registrar saída na nuvem: " + e.message);
-            } finally {
-                btn.innerHTML = 'CONFIRMAR';
-                btn.disabled = false;
+        // ADMIN: EXCLUIR
+        window.excluirIndiv = async function(id) {
+            if(confirm("Confirmar exclusão definitiva?")) {
+                try { await deleteDoc(doc(db, "registros", id)); } 
+                catch (e) { alert("Erro: " + e.message); }
             }
         };
 
+        window.excluirEmLote = async function() {
+            const marcados = document.querySelectorAll('.cb-planilha:checked');
+            if(marcados.length === 0) return alert("Nenhum registro selecionado.");
+            if(confirm(`Tem certeza que deseja excluir ${marcados.length} registros?`)) {
+                document.getElementById('btn-excluir-lote').innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+                for(let cb of marcados) {
+                    try { await deleteDoc(doc(db, "registros", cb.value)); } catch(e) {}
+                }
+                document.getElementById('btn-excluir-lote').innerHTML = '<i class="fas fa-trash-alt"></i> Excluir Selecionados';
+                alert("Exclusão concluída.");
+            }
+        };
+
+        // ADMIN: EDITAR
+        window.abrirEdicao = function(id) {
+            const r = registros.find(reg => reg.firebase_id === id);
+            if(!r) return;
+            registroSelecionadoFirebaseId = id;
+            
+            const cont = document.getElementById('formulario-edicao');
+            cont.innerHTML = `<div class="mb-3"><label class="text-xs font-bold text-gray-500">PLACA</label><input type="text" id="edit_placa" value="${r.placa}" class="w-full border p-2 rounded uppercase font-bold"></div>`;
+            
+            schemaCampos.forEach(c => {
+                if(c.tipo !== 'placa') {
+                    if(c.tipo === 'textarea') {
+                        cont.innerHTML += `<div class="mb-3"><label class="text-xs font-bold text-gray-500">${c.nome.toUpperCase()}</label><textarea id="edit_${c.id}" class="w-full border p-2 rounded uppercase">${r.dados_dinamicos?.[c.id] || ''}</textarea></div>`;
+                    } else {
+                        cont.innerHTML += `<div class="mb-3"><label class="text-xs font-bold text-gray-500">${c.nome.toUpperCase()}</label><input type="text" id="edit_${c.id}" value="${r.dados_dinamicos?.[c.id] || ''}" class="w-full border p-2 rounded uppercase"></div>`;
+                    }
+                }
+            });
+            document.getElementById('modal-edicao').classList.remove('hidden');
+        };
+
+        window.fecharEdicao = () => { document.getElementById('modal-edicao').classList.add('hidden'); registroSelecionadoFirebaseId = null; };
+
+        window.salvarEdicao = async function() {
+            const btn = document.getElementById('btn-salvar-edicao');
+            btn.innerHTML = 'Salvando...'; btn.disabled = true;
+
+            const r = registros.find(reg => reg.firebase_id === registroSelecionadoFirebaseId);
+            const dados = { ...r.dados_dinamicos };
+            
+            schemaCampos.forEach(c => {
+                if(c.tipo !== 'placa') dados[c.id] = document.getElementById('edit_' + c.id).value.trim().toUpperCase();
+            });
+
+            try {
+                await updateDoc(doc(db, "registros", registroSelecionadoFirebaseId), {
+                    placa: document.getElementById('edit_placa').value.trim().toUpperCase(),
+                    dados_dinamicos: dados
+                });
+                window.fecharEdicao();
+            } catch (e) { alert("Erro ao editar."); } 
+            finally { btn.innerHTML = 'SALVAR ALTERAÇÕES'; btn.disabled = false; }
+        };
+
+        // ADMIN: BACKUP
+        window.gerarBackupNuvem = function() {
+            if(registros.length === 0) return alert("Banco vazio.");
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(registros, null, 2));
+            const dl = document.createElement('a');
+            dl.setAttribute("href", dataStr);
+            dl.setAttribute("download", `patiopark_backup_${new Date().getTime()}.json`);
+            dl.click();
+        };
+
+        // ==========================================
+        // SAÍDA E INÍCIO
+        // ==========================================
+        window.abrirModalSaida = (id) => { registroSelecionadoFirebaseId = id; document.getElementById('modal_visto_saida').value = ''; document.getElementById('modal-saida').classList.remove('hidden'); setTimeout(()=>document.getElementById('modal_visto_saida').focus(), 100); };
+        window.fecharModalSaida = () => { document.getElementById('modal-saida').classList.add('hidden'); };
+        
+        window.confirmarSaida = async function() {
+            const visto = document.getElementById('modal_visto_saida').value.trim().toUpperCase();
+            if(!visto) return alert("Preencha o visto.");
+            document.getElementById('btn-confirmar-saida').innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            try {
+                await updateDoc(doc(db, "registros", registroSelecionadoFirebaseId), { saida: getDataHoraAtualNavegador(), visto_saida: visto });
+                window.fecharModalSaida();
+            } catch (e) { alert("Erro."); } 
+            finally { document.getElementById('btn-confirmar-saida').innerHTML = 'CONFIRMAR'; }
+        };
+
+        // Iniciar
+        window.renderizarTudo();
         window.mudarAba('registro');
     </script>
 </body>
