@@ -14,7 +14,6 @@
         input::placeholder, select::placeholder, textarea::placeholder { font-weight: normal; color: #6b7280; text-transform: none; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        /* Transições suaves */
         .fade-in { animation: fadeIn 0.3s ease-in-out; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
@@ -28,12 +27,14 @@
 
     <main class="flex-1 overflow-y-auto p-4 relative" id="main-content">
 
-        <!-- ABA 1: REGISTRAR (Formulário Gerado Dinamicamente) -->
+        <!-- ABA 1: REGISTRAR (Gerado Dinamicamente) -->
         <div id="view-registro" class="block pb-20 fade-in">
             <h2 class="text-xl font-bold mb-4 flex items-center uppercase"><i class="fas fa-edit mr-2"></i> Novo Registro</h2>
+            
             <div class="space-y-4 bg-white p-4 rounded-lg shadow" id="formulario-dinamico">
-                <!-- O Formulario sera injetado aqui pelo JS baseado nas configurações -->
+                <!-- O Formulário será injetado aqui pelo JS -->
             </div>
+            
             <button onclick="window.salvarRegistro()" id="btn-salvar-entrada" class="w-full bg-green-600 active:bg-green-700 text-white font-bold p-4 rounded-lg mt-4 text-xl shadow flex justify-center items-center uppercase transition">
                 <i class="fas fa-save mr-2"></i> SALVAR ENTRADA
             </button>
@@ -43,7 +44,6 @@
         <div id="view-patio" class="hidden pb-20 fade-in">
             <h2 class="text-xl font-bold mb-4 flex items-center uppercase"><i class="fas fa-truck-loading mr-2"></i> Pátio Atual</h2>
             
-            <!-- PAINEL DE FILTROS -->
             <div class="bg-white p-3 rounded-lg shadow-sm mb-4 border border-gray-200">
                 <div class="grid grid-cols-2 gap-2 mb-2">
                     <select id="filtro-status-patio" onchange="window.filtrarListas()" class="w-full p-2 border border-gray-300 rounded text-sm uppercase bg-gray-50 font-bold">
@@ -73,10 +73,9 @@
         <div id="view-planilha" class="hidden pb-20 fade-in">
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-xl font-bold flex items-center uppercase"><i class="fas fa-table mr-2"></i> Histórico</h2>
-                <button id="btn-excluir-lote" onclick="window.excluirEmLote()" class="hidden bg-red-600 text-white font-bold px-3 py-2 rounded text-xs shadow"><i class="fas fa-trash-alt"></i> Excluir Selecionados</button>
+                <button id="btn-excluir-lote" onclick="window.excluirEmLote()" class="hidden bg-red-600 text-white font-bold px-3 py-2 rounded text-xs shadow"><i class="fas fa-trash-alt"></i> Excluir Lote</button>
             </div>
 
-            <!-- PAINEL DE FILTROS PLANILHA -->
             <div class="bg-white p-3 rounded-lg shadow-sm mb-4 border border-gray-200">
                 <div class="grid grid-cols-2 gap-2 mb-2">
                     <select id="filtro-status-planilha" onchange="window.filtrarListas()" class="w-full p-2 border border-gray-300 rounded text-sm uppercase bg-gray-50 font-bold">
@@ -104,7 +103,7 @@
                     <table class="min-w-full text-sm text-left">
                         <thead class="bg-blue-800 text-white text-xs uppercase font-bold whitespace-nowrap">
                             <tr id="cabecalho-planilha">
-                                <!-- Gerado Dinamicamente pelo JS -->
+                                <!-- Gerado Dinamicamente -->
                             </tr>
                         </thead>
                         <tbody id="lista-planilha" class="divide-y divide-gray-200 whitespace-nowrap text-xs">
@@ -131,9 +130,7 @@
                     <h3 class="font-bold text-gray-800 uppercase border-b pb-2 mb-3"><i class="fas fa-list-ol"></i> Estrutura de Campos</h3>
                     <p class="text-xs text-gray-500 mb-4">Adicione, exclua ou reordene os campos do formulário.</p>
                     
-                    <div id="lista-campos-admin" class="space-y-2 mb-4">
-                        <!-- Gerado pelo JS -->
-                    </div>
+                    <div id="lista-campos-admin" class="space-y-2 mb-4"></div>
 
                     <div class="border-t pt-4 mt-2">
                         <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Criar Novo Campo</label>
@@ -156,18 +153,10 @@
 
     <!-- MENU INFERIOR -->
     <nav id="bottom-nav" class="bg-white border-t border-gray-200 flex justify-around p-2 fixed bottom-0 w-full shadow-[0_-10px_20px_rgba(0,0,0,0.05)] z-20 transition-transform duration-300 uppercase">
-        <button onclick="window.mudarAba('registro')" id="tab-registro" class="flex flex-col items-center flex-1 py-2 text-blue-600 font-bold transition">
-            <i class="fas fa-edit text-xl mb-1"></i><span class="text-[10px] md:text-xs">Registrar</span>
-        </button>
-        <button onclick="window.mudarAba('patio')" id="tab-patio" class="flex flex-col items-center flex-1 py-2 text-gray-500 font-bold transition">
-            <i class="fas fa-truck text-xl mb-1"></i><span class="text-[10px] md:text-xs">Pátio</span>
-        </button>
-        <button onclick="window.mudarAba('planilha')" id="tab-planilha" class="flex flex-col items-center flex-1 py-2 text-gray-500 font-bold transition">
-            <i class="fas fa-table text-xl mb-1"></i><span class="text-[10px] md:text-xs">Planilha</span>
-        </button>
-        <button onclick="window.tentarAdmin()" id="tab-config" class="flex flex-col items-center flex-1 py-2 text-gray-300 font-bold transition hover:text-red-500">
-            <i class="fas fa-cog text-xl mb-1"></i><span class="text-[10px] md:text-xs">Config</span>
-        </button>
+        <button onclick="window.mudarAba('registro')" id="tab-registro" class="flex flex-col items-center flex-1 py-2 text-blue-600 font-bold transition"><i class="fas fa-edit text-xl mb-1"></i><span class="text-[10px] md:text-xs">Registrar</span></button>
+        <button onclick="window.mudarAba('patio')" id="tab-patio" class="flex flex-col items-center flex-1 py-2 text-gray-500 font-bold transition"><i class="fas fa-truck text-xl mb-1"></i><span class="text-[10px] md:text-xs">Pátio</span></button>
+        <button onclick="window.mudarAba('planilha')" id="tab-planilha" class="flex flex-col items-center flex-1 py-2 text-gray-500 font-bold transition"><i class="fas fa-table text-xl mb-1"></i><span class="text-[10px] md:text-xs">Planilha</span></button>
+        <button onclick="window.tentarAdmin()" id="tab-config" class="flex flex-col items-center flex-1 py-2 text-gray-300 font-bold transition hover:text-red-500"><i class="fas fa-cog text-xl mb-1"></i><span class="text-[10px] md:text-xs">Config</span></button>
     </nav>
 
     <!-- MODAL ZOOM IMAGEM -->
@@ -176,7 +165,7 @@
         <img id="img-zoom" src="" class="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl">
     </div>
 
-    <!-- MODAL DE DETALHES GIGANTE (95%) -->
+    <!-- MODAL DE DETALHES GIGANTE -->
     <div id="modal-detalhes" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80 backdrop-blur-sm p-2">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-[500px] h-[95vh] flex flex-col overflow-hidden relative">
             <div class="bg-blue-900 text-white p-4 flex justify-between items-center flex-shrink-0">
@@ -221,7 +210,7 @@
     <!-- SCRIPT TIPO MODULE -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, updateDoc, doc, deleteDoc, onSnapshot, query, orderBy, getDocs } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, updateDoc, doc, deleteDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
         // ==========================================
         // CREDENCIAIS
@@ -248,6 +237,7 @@
         let dataHoraMetadata = null; 
         let gpsLocalizacao = null; 
         let isAdmin = false;
+        let ultimoVeiculoEncontrado = null;
 
         // ==========================================
         // SISTEMA DE CAMPOS DINÂMICOS
@@ -275,7 +265,7 @@
         // RENDERIZAR O APLICATIVO
         // ==========================================
         window.renderizarTudo = function() {
-            // 1. Renderiza o Formulário Principal
+            // 1. Renderiza o Formulário Principal Dinâmico
             const formContainer = document.getElementById('formulario-dinamico');
             formContainer.innerHTML = '';
             
@@ -383,10 +373,108 @@
         });
 
         // ==========================================
-        // ADMIN & CAMPOS LÓGICA
+        // FUNÇÕES INTERATIVAS DO FORMULÁRIO
+        // ==========================================
+        const bottomNav = document.getElementById('bottom-nav');
+        document.addEventListener('focusin', (e) => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') bottomNav.style.transform = 'translateY(100%)';
+        });
+        document.addEventListener('focusout', (e) => {
+            bottomNav.style.transform = 'translateY(0)';
+        });
+
+        document.addEventListener('input', function(e) {
+            if((e.target.tagName === 'INPUT' && e.target.type === 'text') || e.target.tagName === 'TEXTAREA') {
+                let start = e.target.selectionStart;
+                let end = e.target.selectionEnd;
+                e.target.value = e.target.value.toUpperCase();
+                e.target.setSelectionRange(start, end);
+            }
+        });
+
+        window.mudarAba = function(aba) {
+            document.getElementById('view-registro').classList.add('hidden');
+            document.getElementById('view-patio').classList.add('hidden');
+            document.getElementById('view-planilha').classList.add('hidden');
+            document.getElementById('view-config').classList.add('hidden');
+            
+            document.getElementById('tab-registro').classList.replace('text-blue-600', 'text-gray-500');
+            document.getElementById('tab-patio').classList.replace('text-blue-600', 'text-gray-500');
+            document.getElementById('tab-planilha').classList.replace('text-blue-600', 'text-gray-500');
+            
+            if(aba !== 'config') {
+                document.getElementById(`view-${aba}`).classList.remove('hidden');
+                document.getElementById(`tab-${aba}`).classList.replace('text-gray-500', 'text-blue-600');
+            }
+        };
+
+        window.limparCampo = function(id) {
+            const input = document.getElementById(id);
+            if(input) { input.value = ''; input.focus(); }
+        };
+
+        window.verificarModeloOutros = function(valor, id) {
+            const obsInput = document.getElementById('campo_' + id + '_obs');
+            if(obsInput) {
+                if(valor === 'OUTROS') {
+                    obsInput.classList.remove('hidden');
+                    obsInput.focus();
+                } else {
+                    obsInput.classList.add('hidden');
+                    obsInput.value = '';
+                }
+            }
+        };
+
+        window.verificarHistorico = function(placaStr) {
+            const placa = placaStr.trim().toUpperCase();
+            if(placa.length < 7) return;
+
+            const historico = registros.filter(r => r.placa === placa);
+            if(historico.length > 0) {
+                ultimoVeiculoEncontrado = historico[0];
+                const empresa = ultimoVeiculoEncontrado.dados_dinamicos?.empresa || 'S/ EMPRESA';
+                const texto = `Visitas totais: ${historico.length} <br> Última: ${ultimoVeiculoEncontrado.entrada.split(' ')[0]} <br> Emp: ${empresa}`;
+                document.getElementById('alerta_historico_completo').classList.remove('hidden');
+                document.getElementById('texto_historico_completo').innerHTML = texto;
+            } else {
+                document.getElementById('alerta_historico_completo').classList.add('hidden');
+                ultimoVeiculoEncontrado = null;
+            }
+        };
+
+        window.aplicarAutopreenchimento = function() {
+            if(!ultimoVeiculoEncontrado) return;
+            
+            schemaCampos.forEach(c => {
+                const input = document.getElementById('campo_' + c.id);
+                if(input && c.id !== 'placa') {
+                    const valorSalvo = ultimoVeiculoEncontrado.dados_dinamicos?.[c.id] || '';
+                    
+                    if(c.tipo === 'select_modelo') {
+                        const options = Array.from(input.options).map(opt => opt.value);
+                        if(options.includes(valorSalvo)) {
+                            input.value = valorSalvo;
+                            window.verificarModeloOutros(valorSalvo, c.id);
+                        } else {
+                            input.value = 'OUTROS';
+                            window.verificarModeloOutros('OUTROS', c.id);
+                            const obsInput = document.getElementById('campo_' + c.id + '_obs');
+                            if(obsInput) obsInput.value = valorSalvo;
+                        }
+                    } else {
+                        input.value = valorSalvo;
+                    }
+                }
+            });
+            document.getElementById('alerta_historico_completo').classList.add('hidden');
+        };
+
+        // ==========================================
+        // ADMIN LÓGICA
         // ==========================================
         window.tentarAdmin = function() {
-            if(isAdmin) { window.mudarAba('config'); return; }
+            if(isAdmin) { window.mudarAba('config'); document.getElementById('view-config').classList.remove('hidden'); return; }
             const p = prompt("Digite a senha do Administrador:");
             if(p === SENHA_ADMIN) {
                 isAdmin = true;
@@ -394,9 +482,8 @@
                 document.getElementById('btn-excluir-lote').classList.remove('hidden');
                 window.renderizarTudo();
                 window.mudarAba('config');
-            } else if (p !== null) {
-                alert("Senha Incorreta.");
-            }
+                document.getElementById('view-config').classList.remove('hidden');
+            } else if (p !== null) { alert("Senha Incorreta."); }
         };
 
         window.sairAdmin = function() {
@@ -418,7 +505,7 @@
         };
 
         window.excluirCampo = function(index) {
-            if(confirm("Tem certeza que deseja excluir o campo " + schemaCampos[index].nome + "? (Os dados antigos permanecerão no BD)")) {
+            if(confirm("Excluir o campo " + schemaCampos[index].nome + "? (Os dados antigos no Banco permanecerão intactos)")) {
                 schemaCampos.splice(index, 1);
                 salvarSchema();
             }
@@ -444,6 +531,7 @@
             const statusLabel = document.getElementById('status_foto_completo');
             statusLabel.classList.remove('hidden');
             statusLabel.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Preparando foto...';
+            statusLabel.classList.replace('text-green-700', 'text-orange-600');
 
             EXIF.getData(file, function() {
                 const exifDate = EXIF.getTag(this, "DateTimeOriginal");
@@ -460,12 +548,11 @@
             reader.onload = function(e) {
                 const img = new Image();
                 img.onload = async function() {
-                    statusLabel.innerHTML = '<i class="fas fa-cloud-upload-alt fa-bounce"></i> Salvando na nuvem...';
+                    statusLabel.innerHTML = '<i class="fas fa-cloud-upload-alt fa-bounce"></i> Subindo p/ Nuvem...';
                     const canvas = document.createElement('canvas');
                     const MAX_WIDTH = 800;
                     const scaleSize = MAX_WIDTH / img.width;
-                    canvas.width = MAX_WIDTH;
-                    canvas.height = img.height * scaleSize;
+                    canvas.width = MAX_WIDTH; canvas.height = img.height * scaleSize;
                     canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
                     
                     try {
@@ -476,22 +563,36 @@
                         
                         if(json.success) {
                             fotoAtualUrl = json.data.url;
-                            statusLabel.innerHTML = `<i class="fas fa-satellite-dish fa-spin"></i> Pegando GPS...`;
+                            statusLabel.innerHTML = `<i class="fas fa-satellite-dish fa-spin"></i> Foto Salva! Buscando GPS...`;
                             
                             if (navigator.geolocation) {
                                 navigator.geolocation.getCurrentPosition(
-                                    (pos) => { gpsLocalizacao = `${pos.coords.latitude}, ${pos.coords.longitude}`; statusLabel.innerHTML = `<i class="fas fa-check-circle text-green-600"></i> Pronto!`; },
-                                    () => { gpsLocalizacao = "Sem GPS"; statusLabel.innerHTML = `<i class="fas fa-check-circle text-green-600"></i> Foto OK. GPS bloqueado.`; },
+                                    (pos) => { 
+                                        gpsLocalizacao = `${pos.coords.latitude}, ${pos.coords.longitude}`; 
+                                        statusLabel.innerHTML = `<i class="fas fa-check-circle text-green-600"></i> Foto e GPS Registrados!`; 
+                                    },
+                                    (err) => { 
+                                        gpsLocalizacao = "Permissão Negada / Falha"; 
+                                        statusLabel.innerHTML = `<i class="fas fa-check-circle text-green-600"></i> Foto Salva. (GPS Bloqueado no Celular)`; 
+                                    },
                                     { timeout: 5000 }
                                 );
-                            } else { gpsLocalizacao = "Sem GPS"; statusLabel.innerHTML = `<i class="fas fa-check-circle text-green-600"></i> Pronto!`; }
+                            } else { 
+                                gpsLocalizacao = "GPS Indisponível"; 
+                                statusLabel.innerHTML = `<i class="fas fa-check-circle text-green-600"></i> Foto Salva (Sem GPS).`; 
+                            }
                         } else throw new Error();
-                    } catch (err) { statusLabel.innerHTML = `<i class="fas fa-times-circle text-red-600"></i> Erro de Upload.`; }
+                    } catch (err) { statusLabel.innerHTML = `<i class="fas fa-times-circle text-red-600"></i> Erro ao subir foto.`; }
                 };
                 img.src = e.target.result;
             };
             reader.readAsDataURL(file);
         };
+
+        function getDataHoraAtualNavegador() {
+            const now = new Date();
+            return `${now.toLocaleDateString('pt-BR')} ${now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
+        }
 
         window.salvarRegistro = async function() {
             const btn = document.getElementById('btn-salvar-entrada');
@@ -499,28 +600,34 @@
             btn.disabled = true;
 
             const dados = {};
+            let placaDefinitiva = '';
+
             schemaCampos.forEach(c => {
-                let val = document.getElementById('campo_' + c.id).value.trim();
-                if(c.tipo === 'select_modelo' && val === 'OUTROS') {
-                    val = document.getElementById('campo_' + c.id + '_obs').value.trim() || 'OUTROS';
+                const input = document.getElementById('campo_' + c.id);
+                if(input) {
+                    let val = input.value.trim().toUpperCase();
+                    if(c.tipo === 'select_modelo' && val === 'OUTROS') {
+                        const obs = document.getElementById('campo_' + c.id + '_obs');
+                        val = obs ? obs.value.trim().toUpperCase() || 'OUTROS' : 'OUTROS';
+                    }
+                    if(c.id === 'placa') placaDefinitiva = val;
+                    dados[c.id] = val;
                 }
-                dados[c.id] = val.toUpperCase();
             });
 
-            if(!dados['placa']) {
-                alert("A Placa é obrigatória!");
+            if(!placaDefinitiva) {
+                alert("O campo Placa é obrigatório!");
                 btn.innerHTML = '<i class="fas fa-save mr-2"></i> SALVAR ENTRADA';
                 btn.disabled = false;
                 return;
             }
 
-            const now = new Date();
-            const entrada = dataHoraMetadata ? dataHoraMetadata + " (EXIF)" : `${now.toLocaleDateString('pt-BR')} ${now.toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'})} (Sist)`;
-            const diaParticao = entrada.substring(0, 10); // "DD/MM/YYYY"
+            const entrada = dataHoraMetadata ? dataHoraMetadata + " (EXIF)" : getDataHoraAtualNavegador() + " (Sist)";
+            const diaParticao = entrada.substring(0, 10);
 
             const novo = {
                 id: Date.now(),
-                placa: dados['placa'],
+                placa: placaDefinitiva,
                 entrada: entrada,
                 dia_particao: diaParticao,
                 saida: '',
@@ -532,15 +639,23 @@
 
             try {
                 await addDoc(collection(db, "registros"), novo);
-                schemaCampos.forEach(c => document.getElementById('campo_' + c.id).value = '');
-                if(document.getElementById('campo_modelo_obs')) {
-                    document.getElementById('campo_modelo_obs').value = '';
-                    document.getElementById('container_modelo_obs').classList.add('hidden');
-                }
+                
+                // Limpar campos dinâmicos sem erro de null
+                schemaCampos.forEach(c => {
+                    const inp = document.getElementById('campo_' + c.id);
+                    if(inp) inp.value = '';
+                    if(c.tipo === 'select_modelo') {
+                        const obs = document.getElementById('campo_' + c.id + '_obs');
+                        if(obs) { obs.value = ''; obs.classList.add('hidden'); }
+                    }
+                });
+
                 fotoAtualUrl = null; dataHoraMetadata = null; gpsLocalizacao = null;
                 document.getElementById('status_foto_completo').classList.add('hidden');
+                document.getElementById('alerta_historico_completo').classList.add('hidden');
+                
                 window.mudarAba('patio');
-            } catch (e) { alert("Erro: " + e.message); } 
+            } catch (e) { alert("Erro ao salvar: " + e.message); } 
             finally { btn.innerHTML = '<i class="fas fa-save mr-2"></i> SALVAR ENTRADA'; btn.disabled = false; }
         };
 
@@ -554,10 +669,6 @@
             else inputDate.classList.add('hidden');
             window.filtrarListas();
         };
-
-        function extrairDataFormatada(dateObj) {
-            return dateObj.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-        }
 
         window.filtrarListas = function() {
             const termoPatio = document.getElementById('busca-patio').value.toUpperCase();
@@ -576,71 +687,56 @@
             listaPatio.innerHTML = ''; listaPlanilha.innerHTML = '';
             let countPatio = 0, countPlanilha = 0;
 
-            const hoje = new Date();
-            const strHoje = extrairDataFormatada(hoje);
-            const ontem = new Date(hoje); ontem.setDate(ontem.getDate() - 1);
-            const strOntem = extrairDataFormatada(ontem);
+            const hoje = new Date().toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit', year:'numeric'});
+            const ontemObj = new Date(); ontemObj.setDate(ontemObj.getDate() - 1);
+            const ontem = ontemObj.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit', year:'numeric'});
 
             registros.forEach(r => {
                 const pendente = !r.saida;
                 let textoBusca = Object.values(r.dados_dinamicos || {}).join(" ").toUpperCase() + " " + r.placa;
                 const rData = r.dia_particao || r.entrada.substring(0, 10);
 
-                // Check Pátio
                 let showPatio = true;
                 if(statusPatio === 'NO_PATIO' && !pendente) showPatio = false;
                 if(statusPatio === 'SAIRAM' && pendente) showPatio = false;
-                if(dataPatioSel === 'HOJE' && rData !== strHoje) showPatio = false;
-                if(dataPatioSel === 'ONTEM' && rData !== strOntem) showPatio = false;
+                if(dataPatioSel === 'HOJE' && rData !== hoje) showPatio = false;
+                if(dataPatioSel === 'ONTEM' && rData !== ontem) showPatio = false;
                 if(dataPatioSel === 'ESPECIFICA' && dataPatioEsp) {
-                    const espPartes = dataPatioEsp.split('-');
-                    const formatedEsp = `${espPartes[2]}/${espPartes[1]}/${espPartes[0]}`;
-                    if(rData !== formatedEsp) showPatio = false;
+                    const e = dataPatioEsp.split('-');
+                    if(rData !== `${e[2]}/${e[1]}/${e[0]}`) showPatio = false;
                 }
                 if(termoPatio && !textoBusca.includes(termoPatio)) showPatio = false;
 
-                // Check Planilha
                 let showPlanilha = true;
                 if(statusPlanilha === 'NO_PATIO' && !pendente) showPlanilha = false;
                 if(statusPlanilha === 'SAIRAM' && pendente) showPlanilha = false;
-                if(dataPlanilhaSel === 'HOJE' && rData !== strHoje) showPlanilha = false;
-                if(dataPlanilhaSel === 'ONTEM' && rData !== strOntem) showPlanilha = false;
+                if(dataPlanilhaSel === 'HOJE' && rData !== hoje) showPlanilha = false;
+                if(dataPlanilhaSel === 'ONTEM' && rData !== ontem) showPlanilha = false;
                 if(dataPlanilhaSel === 'ESPECIFICA' && dataPlanilhaEsp) {
-                    const espPartes = dataPlanilhaEsp.split('-');
-                    const formatedEsp = `${espPartes[2]}/${espPartes[1]}/${espPartes[0]}`;
-                    if(rData !== formatedEsp) showPlanilha = false;
+                    const e = dataPlanilhaEsp.split('-');
+                    if(rData !== `${e[2]}/${e[1]}/${e[0]}`) showPlanilha = false;
                 }
                 if(termoPlanilha && !textoBusca.includes(termoPlanilha)) showPlanilha = false;
 
                 const imgThumb = r.foto ? `<img src="${r.foto}" onclick="event.stopPropagation(); window.abrirZoom('${r.foto}')" class="w-12 h-12 object-cover rounded-lg border shadow-sm cursor-zoom-in">` : `<div class="w-12 h-12 bg-gray-100 rounded flex flex-col items-center justify-center text-gray-400 text-[10px]"><i class="fas fa-camera"></i></div>`;
-                
-                // Funções exclusivas Admin
                 const btnEdit = isAdmin ? `<button onclick="event.stopPropagation(); window.abrirEdicao('${r.firebase_id}')" class="text-blue-500 hover:text-blue-700 bg-blue-50 p-2 rounded mr-1"><i class="fas fa-pen"></i></button>` : '';
                 const btnDel = isAdmin ? `<button onclick="event.stopPropagation(); window.excluirIndiv('${r.firebase_id}')" class="text-red-500 hover:text-red-700 bg-red-50 p-2 rounded"><i class="fas fa-trash"></i></button>` : '';
 
                 if(showPatio) {
                     countPatio++;
-                    const subTitle = (r.dados_dinamicos?.modelo || '') + ' • ' + (r.dados_dinamicos?.empresa || '');
-                    
                     const card = document.createElement('div');
                     card.className = `bg-white rounded-xl shadow-sm border-l-8 ${pendente ? 'border-blue-500' : 'border-green-500'} p-4 flex flex-col relative cursor-pointer hover:bg-gray-50 transition`;
                     card.setAttribute('onclick', `window.abrirDetalhes('${r.firebase_id}')`);
 
-                    let btnSaida = pendente ? `<button onclick="event.stopPropagation(); window.abrirModalSaida('${r.firebase_id}')" class="mt-3 w-full bg-red-100 hover:bg-red-200 text-red-700 font-bold py-3 rounded-lg border border-red-300 transition text-sm shadow-sm uppercase"><i class="fas fa-sign-out-alt"></i> Registrar Saída</button>` : `<div class="mt-3 text-green-700 font-bold text-center bg-green-50 py-3 rounded-lg border border-green-200 shadow-sm uppercase">✅ SAIU: ${r.saida.substring(0, 16)}</div>`;
+                    let btnSaida = pendente ? `<button onclick="event.stopPropagation(); window.abrirModalSaida('${r.firebase_id}')" class="mt-3 w-full bg-red-100 hover:bg-red-200 text-red-700 font-bold py-3 rounded-lg border border-red-300 text-sm shadow-sm uppercase"><i class="fas fa-sign-out-alt"></i> Registrar Saída</button>` : `<div class="mt-3 text-green-700 font-bold text-center bg-green-50 py-3 rounded-lg border border-green-200 shadow-sm uppercase">✅ SAIU: ${r.saida.substring(0,16)}</div>`;
                     
                     card.innerHTML = `
                         <div class="flex justify-between items-start border-b pb-3 mb-3">
-                            <div class="flex items-center gap-3">
-                                ${imgThumb}
-                                <div><div class="font-black text-xl text-gray-800 leading-none mb-1">${r.placa}</div><div class="text-[10px] font-bold text-gray-500 uppercase">${subTitle}</div></div>
-                            </div>
-                            <div class="text-right">
-                                <div class="text-[10px] text-gray-500 uppercase font-bold">ENTRADA</div>
-                                <div class="text-xs font-black text-blue-700 leading-tight">${r.entrada.split(' ')[0]}<br>${r.entrada.split(' ')[1]}</div>
-                            </div>
+                            <div class="flex items-center gap-3">${imgThumb}<div><div class="font-black text-xl text-gray-800">${r.placa}</div><div class="text-[10px] font-bold text-gray-500 uppercase">${r.dados_dinamicos?.modelo || 'VEÍCULO'} • ${r.dados_dinamicos?.empresa || 'S/ EMPRESA'}</div></div></div>
+                            <div class="text-right"><div class="text-[10px] text-gray-500 uppercase font-bold">ENTRADA</div><div class="text-xs font-black text-blue-700">${r.entrada.split(' ')[0]}<br>${r.entrada.split(' ')[1]}</div></div>
                         </div>
-                        <div class="flex justify-between items-center">
-                            <div class="text-xs text-gray-600 uppercase font-bold"><i class="fas fa-user text-gray-400"></i> ${r.dados_dinamicos?.motorista || 'N/A'}</div>
+                        <div class="flex justify-between items-center text-xs font-bold text-gray-600 uppercase">
+                            <div><i class="fas fa-user text-gray-400"></i> ${r.dados_dinamicos?.motorista || 'N/A'}</div>
                             <div>${btnEdit}${btnDel}</div>
                         </div>
                         ${btnSaida}
@@ -654,17 +750,17 @@
                     tr.className = "hover:bg-gray-50 transition cursor-pointer";
                     tr.setAttribute('onclick', `window.abrirDetalhes('${r.firebase_id}')`);
 
-                    let acao = pendente ? `<button onclick="event.stopPropagation(); window.abrirModalSaida('${r.firebase_id}')" class="bg-red-500 text-white px-2 py-1 rounded text-[10px] font-bold shadow-sm uppercase">SAÍDA</button>` : `<span class="text-green-600 font-bold text-xs uppercase"><i class="fas fa-check"></i> OK</span>`;
+                    let acao = pendente ? `<button onclick="event.stopPropagation(); window.abrirModalSaida('${r.firebase_id}')" class="bg-red-500 text-white px-2 py-1 rounded text-[10px] font-bold shadow-sm uppercase">SAÍDA</button>` : `<span class="text-green-600 font-bold text-[10px] uppercase"><i class="fas fa-check"></i> OK</span>`;
                     
                     let rowHtml = `<td class="px-2 py-2 border-r text-center ${isAdmin?'':'hidden'}" onclick="event.stopPropagation()"><input type="checkbox" class="cb-planilha w-4 h-4" value="${r.firebase_id}"></td>
-                                   <td class="px-2 py-2 border-r text-center">${btnEdit}${btnDel} <br> ${acao}</td>
+                                   <td class="px-2 py-2 border-r text-center whitespace-nowrap">${btnEdit}${btnDel} ${acao}</td>
                                    <td class="px-2 py-2 border-r text-center">${imgThumb}</td>
                                    <td class="px-2 py-2 border-r font-bold text-blue-700 whitespace-nowrap">${r.entrada}</td>
                                    <td class="px-2 py-2 border-r font-bold ${pendente ? 'text-gray-400' : 'text-green-600'} whitespace-nowrap">${r.saida || '...'}</td>`;
                     
                     schemaCampos.forEach(c => {
                         if(c.tipo === 'placa') rowHtml += `<td class="px-3 py-2 border-r font-black text-base">${r.placa}</td>`;
-                        else rowHtml += `<td class="px-3 py-2 border-r uppercase whitespace-nowrap max-w-[150px] truncate" title="${r.dados_dinamicos?.[c.id] || ''}">${r.dados_dinamicos?.[c.id] || ''}</td>`;
+                        else rowHtml += `<td class="px-3 py-2 border-r uppercase max-w-[150px] truncate" title="${r.dados_dinamicos?.[c.id] || ''}">${r.dados_dinamicos?.[c.id] || ''}</td>`;
                     });
                     
                     rowHtml += `<td class="px-2 py-2 text-xs truncate max-w-[100px]">${r.gps}</td>`;
@@ -672,7 +768,9 @@
                     listaPlanilha.appendChild(tr);
                 }
             });
+
             if(countPatio === 0) listaPatio.innerHTML = '<p class="text-center text-gray-500 py-10 font-bold uppercase">Nenhum veículo.</p>';
+            if(countPlanilha === 0) listaPlanilha.innerHTML = '<tr><td colspan="15" class="text-center py-6 font-bold text-gray-500 uppercase">Nenhum registro.</td></tr>';
         };
 
         // ==========================================
@@ -682,15 +780,13 @@
             document.getElementById('img-zoom').src = url;
             document.getElementById('modal-zoom').classList.remove('hidden');
         };
-        window.fecharZoom = function() {
-            document.getElementById('modal-zoom').classList.add('hidden');
-        };
+        window.fecharZoom = () => document.getElementById('modal-zoom').classList.add('hidden');
 
         window.abrirDetalhes = function(firebase_id) {
             const r = registros.find(reg => reg.firebase_id === firebase_id);
             if(!r) return;
             const pendente = !r.saida;
-            const imgHtml = r.foto ? `<img src="${r.foto}" onclick="window.abrirZoom('${r.foto}')" class="w-full max-h-64 object-contain bg-gray-100 rounded border mt-2 cursor-zoom-in">` : `<div class="w-full h-32 bg-gray-100 flex items-center justify-center text-gray-400 font-bold rounded border mt-2 uppercase">Sem foto</div>`;
+            const imgHtml = r.foto ? `<img src="${r.foto}" onclick="window.abrirZoom('${r.foto}')" class="w-full max-h-64 object-contain bg-gray-100 rounded border mt-2 cursor-zoom-in shadow">` : `<div class="w-full h-32 bg-gray-100 flex items-center justify-center text-gray-400 font-bold rounded border mt-2 uppercase">Sem foto</div>`;
 
             let infos = '';
             schemaCampos.forEach(c => {
@@ -698,6 +794,8 @@
                     infos += `<div class="border-b py-2"><span class="block text-[10px] text-gray-400 font-black uppercase tracking-widest">${c.nome}</span><span class="font-bold text-gray-800 uppercase block whitespace-pre-wrap">${r.dados_dinamicos?.[c.id] || '---'}</span></div>`;
                 }
             });
+
+            const gpsLink = r.gps && !r.gps.includes('Sem') && !r.gps.includes('Negada') ? `<a href="https://maps.google.com/?q=${r.gps}" target="_blank" class="text-blue-500 underline ml-2"><i class="fas fa-external-link-alt"></i> Mapa</a>` : '';
 
             document.getElementById('conteudo-detalhes').innerHTML = `
                 <div class="text-center mb-2"><div class="text-4xl font-black tracking-wider">${r.placa}</div></div>
@@ -707,7 +805,7 @@
                     <div class="bg-${pendente?'yellow':'green'}-50 p-2 rounded border border-${pendente?'yellow':'green'}-100"><span class="block text-[10px] text-${pendente?'yellow':'green'}-600 font-black uppercase">Saída</span><span class="font-bold text-sm block">${r.saida || 'Aguardando...'}</span></div>
                 </div>
                 <div class="mt-4 bg-white p-3 border rounded shadow-sm">${infos}</div>
-                <div class="mt-2 text-xs text-gray-400 text-center"><i class="fas fa-map-marker-alt"></i> GPS: ${r.gps}</div>
+                <div class="mt-2 text-xs text-gray-500 text-center font-bold"><i class="fas fa-map-marker-alt"></i> GPS: ${r.gps} ${gpsLink}</div>
             `;
             document.getElementById('rodape-detalhes').innerHTML = pendente ? `<button onclick="window.fecharDetalhes(); window.abrirModalSaida('${r.firebase_id}')" class="w-full bg-red-600 text-white font-black py-4 rounded-lg shadow-md uppercase">Registrar Saída</button>` : `<button onclick="window.fecharDetalhes()" class="w-full bg-gray-200 text-gray-800 font-black py-4 rounded-lg shadow-md uppercase">Fechar Ficha</button>`;
             document.getElementById('modal-detalhes').classList.remove('hidden');
@@ -716,7 +814,7 @@
 
         // ADMIN: EXCLUIR
         window.excluirIndiv = async function(id) {
-            if(confirm("Confirmar exclusão definitiva?")) {
+            if(confirm("Confirmar exclusão DEFINITIVA deste registro?")) {
                 try { await deleteDoc(doc(db, "registros", id)); } 
                 catch (e) { alert("Erro: " + e.message); }
             }
@@ -730,7 +828,7 @@
                 for(let cb of marcados) {
                     try { await deleteDoc(doc(db, "registros", cb.value)); } catch(e) {}
                 }
-                document.getElementById('btn-excluir-lote').innerHTML = '<i class="fas fa-trash-alt"></i> Excluir Selecionados';
+                document.getElementById('btn-excluir-lote').innerHTML = '<i class="fas fa-trash-alt"></i> Excluir Lote';
                 alert("Exclusão concluída.");
             }
         };
@@ -742,7 +840,7 @@
             registroSelecionadoFirebaseId = id;
             
             const cont = document.getElementById('formulario-edicao');
-            cont.innerHTML = `<div class="mb-3"><label class="text-xs font-bold text-gray-500">PLACA</label><input type="text" id="edit_placa" value="${r.placa}" class="w-full border p-2 rounded uppercase font-bold"></div>`;
+            cont.innerHTML = `<div class="mb-3"><label class="text-xs font-bold text-gray-500">PLACA</label><input type="text" id="edit_placa" value="${r.placa}" class="w-full border p-2 rounded uppercase font-bold text-blue-800 border-blue-400"></div>`;
             
             schemaCampos.forEach(c => {
                 if(c.tipo !== 'placa') {
