@@ -16,11 +16,33 @@
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         .fade-in { animation: fadeIn 0.3s ease-in-out; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* REGRAS DE IMPRESSÃO (PDF / PAISAGEM) */
+        @media print {
+            @page { size: A4 landscape; margin: 10mm; }
+            
+            /* Esconde os elementos do aplicativo na hora da impressão */
+            body, main { height: auto !important; overflow: visible !important; background-color: white !important; }
+            header, nav, #view-registro, #view-patio, #view-config, .no-print, .modal { display: none !important; }
+            
+            /* Força a exibição apenas da Planilha */
+            #view-planilha { display: block !important; position: absolute; left: 0; top: 0; width: 100%; height: auto !important; }
+            
+            /* Remove fundos e sombras, adapta a tabela */
+            .bg-white { box-shadow: none !important; border: none !important; }
+            .overflow-x-auto { overflow: visible !important; }
+            table { width: 100% !important; border-collapse: collapse !important; }
+            th, td { border: 1px solid #000 !important; padding: 4px !important; font-size: 10px !important; white-space: normal !important; color: black !important; background: white !important; }
+            th { background-color: #e5e7eb !important; font-weight: bold !important; -webkit-print-color-adjust: exact; }
+            
+            /* Remove imagens e botões da tabela na impressão para economizar tinta e espaço */
+            td img, td button { display: none !important; }
+        }
     </style>
 </head>
 <body class="h-[100dvh] flex flex-col overflow-hidden text-gray-800">
 
-    <header class="bg-blue-900 text-white p-4 shadow-md flex-shrink-0 z-10 flex justify-between items-center">
+    <header class="bg-blue-900 text-white p-4 shadow-md flex-shrink-0 z-10 flex justify-between items-center no-print">
         <h1 class="text-xl font-bold uppercase"><i class="fas fa-truck"></i> PÁTIOPARK</h1>
         <div id="status-conexao" class="text-xs font-bold text-yellow-300"><i class="fas fa-spinner fa-spin"></i> Conectando...</div>
     </header>
@@ -28,20 +50,18 @@
     <main class="flex-1 overflow-y-auto p-4 relative" id="main-content">
 
         <!-- ABA 1: REGISTRAR (Gerado Dinamicamente) -->
-        <div id="view-registro" class="block pb-20 fade-in">
+        <div id="view-registro" class="block pb-20 fade-in no-print">
             <h2 class="text-xl font-bold mb-4 flex items-center uppercase"><i class="fas fa-edit mr-2"></i> Novo Registro</h2>
-            
             <div class="space-y-4 bg-white p-4 rounded-lg shadow" id="formulario-dinamico">
                 <!-- O Formulário será injetado aqui pelo JS -->
             </div>
-            
             <button onclick="window.salvarRegistro()" id="btn-salvar-entrada" class="w-full bg-green-600 active:bg-green-700 text-white font-bold p-4 rounded-lg mt-4 text-xl shadow flex justify-center items-center uppercase transition">
                 <i class="fas fa-save mr-2"></i> SALVAR ENTRADA
             </button>
         </div>
 
         <!-- ABA 2: PÁTIO -->
-        <div id="view-patio" class="hidden pb-20 fade-in">
+        <div id="view-patio" class="hidden pb-20 fade-in no-print">
             <h2 class="text-xl font-bold mb-4 flex items-center uppercase"><i class="fas fa-truck-loading mr-2"></i> Pátio Atual</h2>
             
             <div class="bg-white p-3 rounded-lg shadow-sm mb-4 border border-gray-200">
@@ -59,7 +79,6 @@
                     </select>
                 </div>
                 <input type="date" id="data-especifica-patio" onchange="window.filtrarListas()" class="w-full p-2 border border-gray-300 rounded text-sm uppercase bg-gray-50 font-bold hidden mb-2">
-                
                 <div class="relative">
                     <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
                     <input type="text" id="busca-patio" onkeyup="window.filtrarListas()" placeholder="Pesquisar Placa, Motorista..." class="w-full pl-10 pr-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none font-bold uppercase">
@@ -71,12 +90,22 @@
 
         <!-- ABA 3: PLANILHA -->
         <div id="view-planilha" class="hidden pb-20 fade-in">
-            <div class="flex justify-between items-center mb-4">
+            <div class="flex justify-between items-center mb-4 no-print">
                 <h2 class="text-xl font-bold flex items-center uppercase"><i class="fas fa-table mr-2"></i> Histórico</h2>
-                <button id="btn-excluir-lote" onclick="window.excluirEmLote()" class="hidden bg-red-600 text-white font-bold px-3 py-2 rounded text-xs shadow"><i class="fas fa-trash-alt"></i> Excluir Lote</button>
+                
+                <!-- BOTÃO DE IMPRIMIR E EXCLUIR LOTE -->
+                <div class="flex space-x-2">
+                    <button onclick="window.print()" class="bg-gray-700 text-white font-bold px-3 py-2 rounded text-xs shadow hover:bg-gray-800 transition">
+                        <i class="fas fa-print"></i> Imprimir PDF
+                    </button>
+                    <button id="btn-excluir-lote" onclick="window.excluirEmLote()" class="hidden bg-red-600 text-white font-bold px-3 py-2 rounded text-xs shadow hover:bg-red-700 transition">
+                        <i class="fas fa-trash-alt"></i> Excluir Lote
+                    </button>
+                </div>
             </div>
 
-            <div class="bg-white p-3 rounded-lg shadow-sm mb-4 border border-gray-200">
+            <!-- FILTROS (Escondidos na impressão) -->
+            <div class="bg-white p-3 rounded-lg shadow-sm mb-4 border border-gray-200 no-print">
                 <div class="grid grid-cols-2 gap-2 mb-2">
                     <select id="filtro-status-planilha" onchange="window.filtrarListas()" class="w-full p-2 border border-gray-300 rounded text-sm uppercase bg-gray-50 font-bold">
                         <option value="TODOS">Todos os Status</option>
@@ -91,14 +120,14 @@
                     </select>
                 </div>
                 <input type="date" id="data-especifica-planilha" onchange="window.filtrarListas()" class="w-full p-2 border border-gray-300 rounded text-sm uppercase bg-gray-50 font-bold hidden mb-2">
-                
                 <div class="relative">
                     <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
                     <input type="text" id="busca-planilha" onkeyup="window.filtrarListas()" placeholder="Pesquisar Placa, Motorista..." class="w-full pl-10 pr-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none font-bold uppercase">
                 </div>
             </div>
 
-            <div class="bg-white rounded-lg shadow overflow-hidden">
+            <!-- TABELA PARA IMPRESSÃO -->
+            <div class="bg-white rounded-lg shadow overflow-hidden" id="tabela-impressao">
                 <div class="overflow-x-auto no-scrollbar">
                     <table class="min-w-full text-sm text-left">
                         <thead class="bg-blue-800 text-white text-xs uppercase font-bold whitespace-nowrap">
@@ -114,9 +143,8 @@
         </div>
 
         <!-- ABA 4: CONFIGURAÇÕES / ADMIN -->
-        <div id="view-config" class="hidden pb-20 fade-in">
+        <div id="view-config" class="hidden pb-20 fade-in no-print">
             <h2 class="text-xl font-bold mb-4 flex items-center uppercase text-red-600"><i class="fas fa-cogs mr-2"></i> Painel de Administração</h2>
-            
             <div class="space-y-6">
                 <!-- Backup -->
                 <div class="bg-white p-4 rounded-lg shadow border border-gray-200">
@@ -124,14 +152,11 @@
                     <p class="text-xs text-gray-500 mb-4">Faça o download de toda a base de dados do Firebase em formato JSON para segurança.</p>
                     <button onclick="window.gerarBackupNuvem()" class="w-full bg-blue-600 text-white font-bold py-3 rounded uppercase shadow"><i class="fas fa-cloud-download-alt"></i> Baixar Backup Completo</button>
                 </div>
-
                 <!-- Construtor de Campos -->
                 <div class="bg-white p-4 rounded-lg shadow border border-gray-200">
                     <h3 class="font-bold text-gray-800 uppercase border-b pb-2 mb-3"><i class="fas fa-list-ol"></i> Estrutura de Campos</h3>
                     <p class="text-xs text-gray-500 mb-4">Adicione, exclua ou reordene os campos do formulário.</p>
-                    
                     <div id="lista-campos-admin" class="space-y-2 mb-4"></div>
-
                     <div class="border-t pt-4 mt-2">
                         <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Criar Novo Campo</label>
                         <div class="flex space-x-2">
@@ -144,7 +169,6 @@
                         </div>
                     </div>
                 </div>
-
                 <button onclick="window.sairAdmin()" class="w-full bg-gray-200 text-gray-800 font-bold py-4 rounded-lg shadow mt-4 uppercase"><i class="fas fa-sign-out-alt"></i> Sair do Modo Admin</button>
             </div>
         </div>
@@ -152,7 +176,7 @@
     </main>
 
     <!-- MENU INFERIOR -->
-    <nav id="bottom-nav" class="bg-white border-t border-gray-200 flex justify-around p-2 fixed bottom-0 w-full shadow-[0_-10px_20px_rgba(0,0,0,0.05)] z-20 transition-transform duration-300 uppercase">
+    <nav id="bottom-nav" class="bg-white border-t border-gray-200 flex justify-around p-2 fixed bottom-0 w-full shadow-[0_-10px_20px_rgba(0,0,0,0.05)] z-20 transition-transform duration-300 uppercase no-print">
         <button onclick="window.mudarAba('registro')" id="tab-registro" class="flex flex-col items-center flex-1 py-2 text-blue-600 font-bold transition"><i class="fas fa-edit text-xl mb-1"></i><span class="text-[10px] md:text-xs">Registrar</span></button>
         <button onclick="window.mudarAba('patio')" id="tab-patio" class="flex flex-col items-center flex-1 py-2 text-gray-500 font-bold transition"><i class="fas fa-truck text-xl mb-1"></i><span class="text-[10px] md:text-xs">Pátio</span></button>
         <button onclick="window.mudarAba('planilha')" id="tab-planilha" class="flex flex-col items-center flex-1 py-2 text-gray-500 font-bold transition"><i class="fas fa-table text-xl mb-1"></i><span class="text-[10px] md:text-xs">Planilha</span></button>
@@ -160,13 +184,13 @@
     </nav>
 
     <!-- MODAL ZOOM IMAGEM -->
-    <div id="modal-zoom" class="hidden fixed inset-0 z-[100] bg-black bg-opacity-95 flex items-center justify-center p-2 backdrop-blur-md" onclick="window.fecharZoom()">
+    <div id="modal-zoom" class="hidden fixed inset-0 z-[100] bg-black bg-opacity-95 flex items-center justify-center p-2 backdrop-blur-md no-print" onclick="window.fecharZoom()">
         <button class="absolute top-4 right-4 text-white text-4xl">&times;</button>
         <img id="img-zoom" src="" class="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl">
     </div>
 
     <!-- MODAL DE DETALHES GIGANTE -->
-    <div id="modal-detalhes" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80 backdrop-blur-sm p-2">
+    <div id="modal-detalhes" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80 backdrop-blur-sm p-2 no-print">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-[500px] h-[95vh] flex flex-col overflow-hidden relative">
             <div class="bg-blue-900 text-white p-4 flex justify-between items-center flex-shrink-0">
                 <h3 class="font-bold text-lg uppercase"><i class="fas fa-file-alt"></i> Ficha do Veículo</h3>
@@ -178,7 +202,7 @@
     </div>
 
     <!-- MODAL EDIÇÃO DE REGISTRO (ADMIN) -->
-    <div id="modal-edicao" class="hidden fixed inset-0 z-[60] bg-black bg-opacity-80 flex items-center justify-center p-2">
+    <div id="modal-edicao" class="hidden fixed inset-0 z-[60] bg-black bg-opacity-80 flex items-center justify-center p-2 no-print">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-[500px] max-h-[90vh] flex flex-col overflow-hidden relative">
             <div class="bg-yellow-500 text-white p-4 flex justify-between items-center flex-shrink-0">
                 <h3 class="font-bold text-lg uppercase"><i class="fas fa-pen"></i> Editar Registro</h3>
@@ -192,7 +216,7 @@
     </div>
 
     <!-- MODAL DE SAÍDA -->
-    <div id="modal-saida" class="hidden fixed inset-0 z-[60] bg-black bg-opacity-70 flex items-center justify-center p-4">
+    <div id="modal-saida" class="hidden fixed inset-0 z-[60] bg-black bg-opacity-70 flex items-center justify-center p-4 no-print">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden">
             <div class="bg-red-600 text-white p-4 font-bold text-lg text-center uppercase">Registrar Saída</div>
             <div class="p-6">
@@ -237,7 +261,6 @@
         let dataHoraMetadata = null; 
         let gpsLocalizacao = null; 
         let isAdmin = false;
-        let ultimoVeiculoEncontrado = null;
 
         // ==========================================
         // SISTEMA DE CAMPOS DINÂMICOS
@@ -265,7 +288,7 @@
         // RENDERIZAR O APLICATIVO
         // ==========================================
         window.renderizarTudo = function() {
-            // 1. Renderiza o Formulário Principal Dinâmico
+            // 1. Renderiza o Formulário Principal
             const formContainer = document.getElementById('formulario-dinamico');
             formContainer.innerHTML = '';
             
@@ -275,7 +298,7 @@
                     html = `
                         <div class="mb-4">
                             <label class="block text-sm font-bold text-gray-700 uppercase">${index+1}. ${campo.nome} (Tire Foto)</label>
-                            <div class="relative flex items-center mt-1">
+                            <div class="relative flex items-center mt-1 no-print">
                                 <input type="text" id="campo_${campo.id}" class="w-full border-2 border-gray-300 p-3 pr-24 rounded-lg focus:border-blue-500 focus:outline-none uppercase" onblur="window.verificarHistorico(this.value)" placeholder="ABC-1234">
                                 <div class="absolute right-2 top-1/2 -translate-y-1/2 flex space-x-1">
                                     <label class="bg-blue-100 text-blue-600 rounded w-10 h-10 flex items-center justify-center cursor-pointer border shadow-sm">
@@ -286,7 +309,14 @@
                                     </label>
                                 </div>
                             </div>
-                            <div id="status_foto_completo" class="text-xs font-bold text-orange-600 mt-1 hidden"><i class="fas fa-info-circle"></i> Aguardando imagem...</div>
+                            
+                            <!-- PAINEL DE PREVIEW DA FOTO (CORRIGIDO PARA O USUÁRIO VER) -->
+                            <div id="preview-container" class="hidden mt-2 p-2 border rounded bg-gray-50 flex items-center justify-between shadow-inner">
+                                <img id="preview-img" src="" class="h-16 w-16 object-cover rounded border border-gray-300">
+                                <div class="text-[10px] text-gray-500 font-bold text-right ml-2 leading-tight uppercase" id="preview-info"></div>
+                            </div>
+
+                            <div id="status_foto_completo" class="text-xs font-bold text-orange-600 mt-1 hidden"><i class="fas fa-info-circle"></i> Processando...</div>
                             <div id="alerta_historico_completo" class="hidden bg-blue-50 border-l-4 border-blue-500 p-3 mt-2 rounded shadow-sm">
                                 <div class="flex justify-between items-center">
                                     <div><h3 class="font-bold text-blue-800 text-xs uppercase"><i class="fas fa-history"></i> Veículo Conhecido</h3><p id="texto_historico_completo" class="text-[10px] text-blue-600 uppercase"></p></div>
@@ -329,12 +359,12 @@
 
             // 2. Renderiza Cabeçalho da Planilha
             const cabecalho = document.getElementById('cabecalho-planilha');
-            cabecalho.innerHTML = `<th class="px-3 py-2 border-r border-blue-700 w-10 ${isAdmin ? '' : 'hidden'}"><i class="fas fa-check-square"></i></th><th class="px-3 py-2 border-r border-blue-700">Ações</th><th class="px-3 py-2 border-r border-blue-700">Foto</th><th class="px-3 py-2 border-r border-blue-700">Entrada</th><th class="px-3 py-2 border-r border-blue-700">Saída</th>`;
+            cabecalho.innerHTML = `<th class="px-3 py-2 border-r border-blue-700 w-10 no-print ${isAdmin ? '' : 'hidden'}"><i class="fas fa-check-square"></i></th><th class="px-3 py-2 border-r border-blue-700 no-print">Ações</th><th class="px-3 py-2 border-r border-blue-700">Foto</th><th class="px-3 py-2 border-r border-blue-700">Entrada</th><th class="px-3 py-2 border-r border-blue-700">Saída</th>`;
             schemaCampos.forEach(c => {
                 if(c.tipo !== 'placa') cabecalho.innerHTML += `<th class="px-3 py-2 border-r border-blue-700">${c.nome}</th>`;
                 else cabecalho.innerHTML += `<th class="px-3 py-2 border-r border-blue-700">PLACA</th>`;
             });
-            cabecalho.innerHTML += `<th class="px-3 py-2">GPS</th>`;
+            cabecalho.innerHTML += `<th class="px-3 py-2 no-print">GPS</th>`;
 
             // 3. Renderiza Painel Admin (Campos)
             const painelCampos = document.getElementById('lista-campos-admin');
@@ -432,25 +462,27 @@
 
             const historico = registros.filter(r => r.placa === placa);
             if(historico.length > 0) {
-                ultimoVeiculoEncontrado = historico[0];
+                let ultimoVeiculoEncontrado = historico[0];
                 const empresa = ultimoVeiculoEncontrado.dados_dinamicos?.empresa || 'S/ EMPRESA';
-                const texto = `Visitas totais: ${historico.length} <br> Última: ${ultimoVeiculoEncontrado.entrada.split(' ')[0]} <br> Emp: ${empresa}`;
+                const texto = `Visitas: ${historico.length} <br> Última: ${ultimoVeiculoEncontrado.entrada.split(' ')[0]} <br> Emp: ${empresa}`;
                 document.getElementById('alerta_historico_completo').classList.remove('hidden');
                 document.getElementById('texto_historico_completo').innerHTML = texto;
+                
+                // Grava temporariamente na window para o botão de autopreencher
+                window._veiculo_temp = ultimoVeiculoEncontrado;
             } else {
                 document.getElementById('alerta_historico_completo').classList.add('hidden');
-                ultimoVeiculoEncontrado = null;
+                window._veiculo_temp = null;
             }
         };
 
         window.aplicarAutopreenchimento = function() {
-            if(!ultimoVeiculoEncontrado) return;
+            if(!window._veiculo_temp) return;
             
             schemaCampos.forEach(c => {
                 const input = document.getElementById('campo_' + c.id);
                 if(input && c.id !== 'placa') {
-                    const valorSalvo = ultimoVeiculoEncontrado.dados_dinamicos?.[c.id] || '';
-                    
+                    const valorSalvo = window._veiculo_temp.dados_dinamicos?.[c.id] || '';
                     if(c.tipo === 'select_modelo') {
                         const options = Array.from(input.options).map(opt => opt.value);
                         if(options.includes(valorSalvo)) {
@@ -522,13 +554,17 @@
         };
 
         // ==========================================
-        // UPLOAD & GPS (ENTRADA)
+        // UPLOAD (IMGBB + FALLBACK BASE64) E GPS
         // ==========================================
         window.processarFotoPlaca = async function(event) {
             const file = event.target.files[0];
             if(!file) return;
 
             const statusLabel = document.getElementById('status_foto_completo');
+            const previewCont = document.getElementById('preview-container');
+            const previewImg = document.getElementById('preview-img');
+            const previewInfo = document.getElementById('preview-info');
+
             statusLabel.classList.remove('hidden');
             statusLabel.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Preparando foto...';
             statusLabel.classList.replace('text-green-700', 'text-orange-600');
@@ -549,40 +585,59 @@
                 const img = new Image();
                 img.onload = async function() {
                     statusLabel.innerHTML = '<i class="fas fa-cloud-upload-alt fa-bounce"></i> Subindo p/ Nuvem...';
+                    
                     const canvas = document.createElement('canvas');
-                    const MAX_WIDTH = 800;
+                    const MAX_WIDTH = 800; // Suficiente para zoom e clareza
                     const scaleSize = MAX_WIDTH / img.width;
                     canvas.width = MAX_WIDTH; canvas.height = img.height * scaleSize;
                     canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
                     
+                    // Mostra na tela para o usuário saber que a foto está com o app
+                    const base64DataStr = canvas.toDataURL('image/jpeg', 0.8);
+                    previewImg.src = base64DataStr;
+                    previewCont.classList.remove('hidden');
+                    
+                    const base64Data = base64DataStr.split(',')[1];
+                    let imgbbSucesso = false;
+                    
                     try {
+                        // TENTA IMGBB PRIMEIRO
                         const formData = new FormData();
-                        formData.append("image", canvas.toDataURL('image/jpeg', 0.8).split(',')[1]);
+                        formData.append("image", base64Data);
                         const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, { method: "POST", body: formData });
                         const json = await res.json();
                         
                         if(json.success) {
                             fotoAtualUrl = json.data.url;
-                            statusLabel.innerHTML = `<i class="fas fa-satellite-dish fa-spin"></i> Foto Salva! Buscando GPS...`;
-                            
-                            if (navigator.geolocation) {
-                                navigator.geolocation.getCurrentPosition(
-                                    (pos) => { 
-                                        gpsLocalizacao = `${pos.coords.latitude}, ${pos.coords.longitude}`; 
-                                        statusLabel.innerHTML = `<i class="fas fa-check-circle text-green-600"></i> Foto e GPS Registrados!`; 
-                                    },
-                                    (err) => { 
-                                        gpsLocalizacao = "Permissão Negada / Falha"; 
-                                        statusLabel.innerHTML = `<i class="fas fa-check-circle text-green-600"></i> Foto Salva. (GPS Bloqueado no Celular)`; 
-                                    },
-                                    { timeout: 5000 }
-                                );
-                            } else { 
-                                gpsLocalizacao = "GPS Indisponível"; 
-                                statusLabel.innerHTML = `<i class="fas fa-check-circle text-green-600"></i> Foto Salva (Sem GPS).`; 
-                            }
+                            imgbbSucesso = true;
                         } else throw new Error();
-                    } catch (err) { statusLabel.innerHTML = `<i class="fas fa-times-circle text-red-600"></i> Erro ao subir foto.`; }
+                    } catch (err) { 
+                        // FALLBACK: Se o ImgBB der erro (ou CORS), salva em Base64 comprimido no próprio Firebase!
+                        fotoAtualUrl = canvas.toDataURL('image/jpeg', 0.5); 
+                        console.log("Fallback Base64 Ativado.");
+                    }
+
+                    // TENTA GPS
+                    statusLabel.innerHTML = `<i class="fas fa-satellite-dish fa-spin"></i> Pegando GPS...`;
+                    if (navigator.geolocation) {
+                        navigator.geolocation.getCurrentPosition(
+                            (pos) => { 
+                                gpsLocalizacao = `${pos.coords.latitude}, ${pos.coords.longitude}`; 
+                                statusLabel.innerHTML = `<i class="fas fa-check-circle text-green-600"></i> Foto e GPS OK!`; 
+                                previewInfo.innerHTML = "GPS OK<br><span class='text-green-600'><i class='fas fa-check'></i> Anexada</span>";
+                            },
+                            (err) => { 
+                                gpsLocalizacao = "Sem Permissão de GPS"; 
+                                statusLabel.innerHTML = `<i class="fas fa-check-circle text-green-600"></i> Foto Salva (GPS Bloqueado).`; 
+                                previewInfo.innerHTML = "SEM GPS<br><span class='text-green-600'><i class='fas fa-check'></i> Anexada</span>";
+                            },
+                            { timeout: 5000 }
+                        );
+                    } else { 
+                        gpsLocalizacao = "Sem suporte a GPS"; 
+                        statusLabel.innerHTML = `<i class="fas fa-check-circle text-green-600"></i> Foto Salva.`; 
+                        previewInfo.innerHTML = "SEM GPS<br><span class='text-green-600'><i class='fas fa-check'></i> Anexada</span>";
+                    }
                 };
                 img.src = e.target.result;
             };
@@ -640,7 +695,7 @@
             try {
                 await addDoc(collection(db, "registros"), novo);
                 
-                // Limpar campos dinâmicos sem erro de null
+                // Limpar Form
                 schemaCampos.forEach(c => {
                     const inp = document.getElementById('campo_' + c.id);
                     if(inp) inp.value = '';
@@ -652,6 +707,7 @@
 
                 fotoAtualUrl = null; dataHoraMetadata = null; gpsLocalizacao = null;
                 document.getElementById('status_foto_completo').classList.add('hidden');
+                document.getElementById('preview-container').classList.add('hidden');
                 document.getElementById('alerta_historico_completo').classList.add('hidden');
                 
                 window.mudarAba('patio');
@@ -718,9 +774,10 @@
                 }
                 if(termoPlanilha && !textoBusca.includes(termoPlanilha)) showPlanilha = false;
 
-                const imgThumb = r.foto ? `<img src="${r.foto}" onclick="event.stopPropagation(); window.abrirZoom('${r.foto}')" class="w-12 h-12 object-cover rounded-lg border shadow-sm cursor-zoom-in">` : `<div class="w-12 h-12 bg-gray-100 rounded flex flex-col items-center justify-center text-gray-400 text-[10px]"><i class="fas fa-camera"></i></div>`;
-                const btnEdit = isAdmin ? `<button onclick="event.stopPropagation(); window.abrirEdicao('${r.firebase_id}')" class="text-blue-500 hover:text-blue-700 bg-blue-50 p-2 rounded mr-1"><i class="fas fa-pen"></i></button>` : '';
-                const btnDel = isAdmin ? `<button onclick="event.stopPropagation(); window.excluirIndiv('${r.firebase_id}')" class="text-red-500 hover:text-red-700 bg-red-50 p-2 rounded"><i class="fas fa-trash"></i></button>` : '';
+                // Esconde a coluna foto na impressão
+                const imgThumb = r.foto ? `<img src="${r.foto}" onclick="event.stopPropagation(); window.abrirZoom('${r.foto}')" class="w-12 h-12 object-cover rounded-lg border shadow-sm cursor-zoom-in no-print">` : `<div class="w-12 h-12 bg-gray-100 rounded flex flex-col items-center justify-center text-gray-400 text-[10px] no-print"><i class="fas fa-camera"></i></div>`;
+                const btnEdit = isAdmin ? `<button onclick="event.stopPropagation(); window.abrirEdicao('${r.firebase_id}')" class="text-blue-500 hover:text-blue-700 bg-blue-50 p-2 rounded mr-1 no-print"><i class="fas fa-pen"></i></button>` : '';
+                const btnDel = isAdmin ? `<button onclick="event.stopPropagation(); window.excluirIndiv('${r.firebase_id}')" class="text-red-500 hover:text-red-700 bg-red-50 p-2 rounded no-print"><i class="fas fa-trash"></i></button>` : '';
 
                 if(showPatio) {
                     countPatio++;
@@ -737,7 +794,7 @@
                         </div>
                         <div class="flex justify-between items-center text-xs font-bold text-gray-600 uppercase">
                             <div><i class="fas fa-user text-gray-400"></i> ${r.dados_dinamicos?.motorista || 'N/A'}</div>
-                            <div>${btnEdit}${btnDel}</div>
+                            <div class="no-print">${btnEdit}${btnDel}</div>
                         </div>
                         ${btnSaida}
                     `;
@@ -750,11 +807,11 @@
                     tr.className = "hover:bg-gray-50 transition cursor-pointer";
                     tr.setAttribute('onclick', `window.abrirDetalhes('${r.firebase_id}')`);
 
-                    let acao = pendente ? `<button onclick="event.stopPropagation(); window.abrirModalSaida('${r.firebase_id}')" class="bg-red-500 text-white px-2 py-1 rounded text-[10px] font-bold shadow-sm uppercase">SAÍDA</button>` : `<span class="text-green-600 font-bold text-[10px] uppercase"><i class="fas fa-check"></i> OK</span>`;
+                    let acao = pendente ? `<button onclick="event.stopPropagation(); window.abrirModalSaida('${r.firebase_id}')" class="bg-red-500 text-white px-2 py-1 rounded text-[10px] font-bold shadow-sm uppercase no-print">SAÍDA</button>` : `<span class="text-green-600 font-bold text-[10px] uppercase"><i class="fas fa-check"></i> OK</span>`;
                     
-                    let rowHtml = `<td class="px-2 py-2 border-r text-center ${isAdmin?'':'hidden'}" onclick="event.stopPropagation()"><input type="checkbox" class="cb-planilha w-4 h-4" value="${r.firebase_id}"></td>
-                                   <td class="px-2 py-2 border-r text-center whitespace-nowrap">${btnEdit}${btnDel} ${acao}</td>
-                                   <td class="px-2 py-2 border-r text-center">${imgThumb}</td>
+                    let rowHtml = `<td class="px-2 py-2 border-r text-center no-print ${isAdmin?'':'hidden'}" onclick="event.stopPropagation()"><input type="checkbox" class="cb-planilha w-4 h-4" value="${r.firebase_id}"></td>
+                                   <td class="px-2 py-2 border-r text-center no-print whitespace-nowrap">${btnEdit}${btnDel} ${acao}</td>
+                                   <td class="px-2 py-2 border-r text-center no-print">${imgThumb}</td>
                                    <td class="px-2 py-2 border-r font-bold text-blue-700 whitespace-nowrap">${r.entrada}</td>
                                    <td class="px-2 py-2 border-r font-bold ${pendente ? 'text-gray-400' : 'text-green-600'} whitespace-nowrap">${r.saida || '...'}</td>`;
                     
@@ -763,7 +820,7 @@
                         else rowHtml += `<td class="px-3 py-2 border-r uppercase max-w-[150px] truncate" title="${r.dados_dinamicos?.[c.id] || ''}">${r.dados_dinamicos?.[c.id] || ''}</td>`;
                     });
                     
-                    rowHtml += `<td class="px-2 py-2 text-xs truncate max-w-[100px]">${r.gps}</td>`;
+                    rowHtml += `<td class="px-2 py-2 text-xs truncate max-w-[100px] no-print">${r.gps}</td>`;
                     tr.innerHTML = rowHtml;
                     listaPlanilha.appendChild(tr);
                 }
@@ -786,7 +843,7 @@
             const r = registros.find(reg => reg.firebase_id === firebase_id);
             if(!r) return;
             const pendente = !r.saida;
-            const imgHtml = r.foto ? `<img src="${r.foto}" onclick="window.abrirZoom('${r.foto}')" class="w-full max-h-64 object-contain bg-gray-100 rounded border mt-2 cursor-zoom-in shadow">` : `<div class="w-full h-32 bg-gray-100 flex items-center justify-center text-gray-400 font-bold rounded border mt-2 uppercase">Sem foto</div>`;
+            const imgHtml = r.foto ? `<img src="${r.foto}" onclick="window.abrirZoom('${r.foto}')" class="w-full max-h-64 object-contain bg-gray-100 rounded border mt-2 cursor-zoom-in shadow no-print">` : `<div class="w-full h-32 bg-gray-100 flex items-center justify-center text-gray-400 font-bold rounded border mt-2 uppercase no-print">Sem foto</div>`;
 
             let infos = '';
             schemaCampos.forEach(c => {
@@ -795,7 +852,7 @@
                 }
             });
 
-            const gpsLink = r.gps && !r.gps.includes('Sem') && !r.gps.includes('Negada') ? `<a href="https://maps.google.com/?q=${r.gps}" target="_blank" class="text-blue-500 underline ml-2"><i class="fas fa-external-link-alt"></i> Mapa</a>` : '';
+            const gpsLink = r.gps && !r.gps.includes('Sem') && !r.gps.includes('Negad') ? `<a href="https://maps.google.com/?q=${r.gps}" target="_blank" class="text-blue-500 underline ml-2"><i class="fas fa-external-link-alt"></i> Mapa</a>` : '';
 
             document.getElementById('conteudo-detalhes').innerHTML = `
                 <div class="text-center mb-2"><div class="text-4xl font-black tracking-wider">${r.placa}</div></div>
@@ -805,9 +862,9 @@
                     <div class="bg-${pendente?'yellow':'green'}-50 p-2 rounded border border-${pendente?'yellow':'green'}-100"><span class="block text-[10px] text-${pendente?'yellow':'green'}-600 font-black uppercase">Saída</span><span class="font-bold text-sm block">${r.saida || 'Aguardando...'}</span></div>
                 </div>
                 <div class="mt-4 bg-white p-3 border rounded shadow-sm">${infos}</div>
-                <div class="mt-2 text-xs text-gray-500 text-center font-bold"><i class="fas fa-map-marker-alt"></i> GPS: ${r.gps} ${gpsLink}</div>
+                <div class="mt-2 text-xs text-gray-500 text-center font-bold no-print"><i class="fas fa-map-marker-alt"></i> GPS: ${r.gps} ${gpsLink}</div>
             `;
-            document.getElementById('rodape-detalhes').innerHTML = pendente ? `<button onclick="window.fecharDetalhes(); window.abrirModalSaida('${r.firebase_id}')" class="w-full bg-red-600 text-white font-black py-4 rounded-lg shadow-md uppercase">Registrar Saída</button>` : `<button onclick="window.fecharDetalhes()" class="w-full bg-gray-200 text-gray-800 font-black py-4 rounded-lg shadow-md uppercase">Fechar Ficha</button>`;
+            document.getElementById('rodape-detalhes').innerHTML = pendente ? `<button onclick="window.fecharDetalhes(); window.abrirModalSaida('${r.firebase_id}')" class="w-full bg-red-600 text-white font-black py-4 rounded-lg shadow-md uppercase no-print">Registrar Saída</button>` : `<button onclick="window.fecharDetalhes()" class="w-full bg-gray-200 text-gray-800 font-black py-4 rounded-lg shadow-md uppercase no-print">Fechar Ficha</button>`;
             document.getElementById('modal-detalhes').classList.remove('hidden');
         };
         window.fecharDetalhes = () => document.getElementById('modal-detalhes').classList.add('hidden');
