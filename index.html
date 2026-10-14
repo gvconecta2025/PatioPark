@@ -22,18 +22,14 @@
             @page { size: A4 landscape; margin: 10mm; }
             body, main { height: auto !important; overflow: visible !important; background-color: white !important; }
             header, nav, #view-registro, #view-patio, #view-config, #view-login, .no-print, .modal { display: none !important; }
-            
             #view-planilha { display: block !important; position: absolute; left: 0; top: 0; width: 100%; height: auto !important; }
-            
-            /* Mostra o cabeçalho oficial de impressão */
             #cabecalho-impressao { display: block !important; text-align: center; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #000; }
-            
             .bg-white { box-shadow: none !important; border: none !important; }
             .overflow-x-auto { overflow: visible !important; }
             table { width: 100% !important; border-collapse: collapse !important; }
             th, td { border: 1px solid #000 !important; padding: 6px !important; font-size: 10px !important; white-space: normal !important; color: black !important; background: white !important; }
             th { background-color: #e5e7eb !important; font-weight: bold !important; -webkit-print-color-adjust: exact; }
-            td img, td button { display: none !important; }
+            td img, td button, td input[type="checkbox"] { display: none !important; }
         }
     </style>
 </head>
@@ -44,22 +40,20 @@
         <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-sm text-center">
             <i class="fas fa-truck text-5xl text-blue-600 mb-2"></i>
             <h1 class="text-3xl font-black text-gray-800 tracking-tight mb-1 uppercase">PátioPark</h1>
-            <p class="text-sm text-gray-500 mb-8 uppercase font-bold">Controle de Acesso</p>
+            <p class="text-sm text-gray-500 mb-8 uppercase font-bold">Acesso ao Sistema</p>
             
             <div class="space-y-4">
-                <input type="text" id="login-usuario" placeholder="NOME DO USUÁRIO" class="w-full border-2 border-gray-300 p-3 rounded-lg focus:border-blue-500 focus:outline-none uppercase bg-gray-50 text-center font-bold">
+                <input type="text" id="login-usuario" placeholder="USUÁRIO" class="w-full border-2 border-gray-300 p-3 rounded-lg focus:border-blue-500 focus:outline-none uppercase bg-gray-50 text-center font-bold">
                 <input type="password" id="login-senha" placeholder="SENHA" class="w-full border-2 border-gray-300 p-3 rounded-lg focus:border-blue-500 focus:outline-none uppercase bg-gray-50 text-center font-bold" onkeypress="if(event.key === 'Enter') window.fazerLogin()">
-                <button onclick="window.fazerLogin()" id="btn-login" class="w-full bg-blue-600 active:bg-blue-700 text-white font-bold p-4 rounded-lg mt-2 text-lg shadow-md uppercase transition">Entrar no Sistema</button>
+                <button onclick="window.fazerLogin()" id="btn-login" class="w-full bg-blue-600 active:bg-blue-700 text-white font-bold p-4 rounded-lg mt-2 text-lg shadow-md uppercase transition">Entrar</button>
             </div>
             <div id="login-status" class="mt-4 text-xs font-bold text-red-600 min-h-[16px]"></div>
         </div>
     </div>
 
-    <!-- CABEÇALHO DA APLICAÇÃO -->
+    <!-- CABEÇALHO -->
     <header id="app-header" class="hidden bg-blue-900 text-white p-4 shadow-md flex-shrink-0 z-10 flex justify-between items-center no-print">
-        <div class="flex items-center">
-            <h1 class="text-xl font-bold uppercase"><i class="fas fa-truck mr-2"></i>PÁTIOPARK</h1>
-        </div>
+        <div class="flex items-center"><h1 class="text-xl font-bold uppercase"><i class="fas fa-truck mr-2"></i>PÁTIOPARK</h1></div>
         <div class="flex items-center space-x-3 text-xs font-bold">
             <span id="nome-usuario-header" class="text-blue-200 border-r border-blue-700 pr-3"><i class="fas fa-user-circle"></i> ...</span>
             <div id="status-conexao" class="text-yellow-300"><i class="fas fa-spinner fa-spin"></i> Conectando...</div>
@@ -69,7 +63,7 @@
     <main class="hidden flex-1 overflow-y-auto p-4 relative" id="main-content">
 
         <!-- ABA 1: REGISTRAR -->
-        <div id="view-registro" class="block pb-20 fade-in no-print">
+        <div id="view-registro" class="hidden pb-20 fade-in no-print">
             <h2 class="text-xl font-bold mb-4 flex items-center uppercase"><i class="fas fa-edit mr-2"></i> Novo Registro</h2>
             <div class="space-y-4 bg-white p-4 rounded-lg shadow" id="formulario-dinamico"></div>
             <button onclick="window.salvarRegistro()" id="btn-salvar-entrada" class="w-full bg-green-600 active:bg-green-700 text-white font-bold p-4 rounded-lg mt-4 text-xl shadow flex justify-center items-center uppercase transition">
@@ -108,12 +102,11 @@
             <div class="flex justify-between items-center mb-4 no-print">
                 <h2 class="text-xl font-bold flex items-center uppercase"><i class="fas fa-table mr-2"></i> Histórico</h2>
                 <div class="flex space-x-2">
-                    <button onclick="window.imprimirRelatorio()" class="bg-gray-700 text-white font-bold px-3 py-2 rounded text-xs shadow hover:bg-gray-800 transition"><i class="fas fa-print"></i> Imprimir PDF</button>
+                    <button id="btn-imprimir" onclick="window.imprimirRelatorio()" class="bg-gray-700 text-white font-bold px-3 py-2 rounded text-xs shadow hover:bg-gray-800 transition"><i class="fas fa-print"></i> PDF</button>
                     <button id="btn-excluir-lote" onclick="window.excluirEmLote()" class="hidden bg-red-600 text-white font-bold px-3 py-2 rounded text-xs shadow hover:bg-red-700 transition"><i class="fas fa-trash-alt"></i> Excluir Lote</button>
                 </div>
             </div>
 
-            <!-- FILTROS -->
             <div class="bg-white p-3 rounded-lg shadow-sm mb-4 border border-gray-200 no-print">
                 <div class="grid grid-cols-2 gap-2 mb-2">
                     <select id="filtro-status-planilha" onchange="window.filtrarListas()" class="w-full p-2 border border-gray-300 rounded text-sm uppercase bg-gray-50 font-bold">
@@ -135,7 +128,6 @@
                 </div>
             </div>
 
-            <!-- CABEÇALHO INVISÍVEL PARA IMPRESSÃO -->
             <div id="cabecalho-impressao" class="hidden">
                 <h1 class="text-2xl font-black uppercase tracking-widest text-gray-900">Relatório PátioPark</h1>
                 <p class="text-sm font-bold text-gray-600 uppercase" id="data-impressao"></p>
@@ -153,13 +145,13 @@
 
         <!-- ABA 4: CONFIGURAÇÕES / ADMIN -->
         <div id="view-config" class="hidden pb-20 fade-in no-print">
-            <h2 class="text-xl font-bold mb-4 flex items-center uppercase text-red-600"><i class="fas fa-cogs mr-2"></i> Painel de Administração</h2>
+            <h2 class="text-xl font-bold mb-4 flex items-center uppercase text-red-600"><i class="fas fa-user-shield mr-2"></i> Painel do DEV / Admin</h2>
             <div class="space-y-6">
                 
                 <div class="bg-white p-4 rounded-lg shadow border border-gray-200 border-l-4 border-l-purple-500">
-                    <h3 class="font-bold text-gray-800 uppercase border-b pb-2 mb-3"><i class="fas fa-users text-purple-600"></i> Gestão de Usuários</h3>
-                    <p class="text-xs text-gray-500 mb-4">Crie contas para os funcionários. A senha mestra e a conta "ADMIN" são inalteráveis.</p>
-                    <div id="lista-usuarios-admin" class="space-y-2 mb-4 max-h-40 overflow-y-auto"></div>
+                    <h3 class="font-bold text-gray-800 uppercase border-b pb-2 mb-3"><i class="fas fa-users-cog text-purple-600"></i> Delegação de Funções</h3>
+                    <p class="text-[10px] text-gray-500 mb-4 font-bold uppercase tracking-wide">Crie usuários e ative ou desative permissões individuais. O Administrador possui acesso irrestrito.</p>
+                    <div id="lista-usuarios-admin" class="space-y-3 mb-4 max-h-[50vh] overflow-y-auto pr-1"></div>
                     <div class="border-t pt-4 mt-2">
                         <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Cadastrar Novo Usuário</label>
                         <div class="flex space-x-2">
@@ -182,7 +174,7 @@
                         <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Criar Novo Campo</label>
                         <div class="flex space-x-2">
                             <input type="text" id="novo-campo-nome" placeholder="NOME" class="flex-1 border-2 border-gray-300 p-2 rounded text-sm uppercase focus:border-blue-500 focus:outline-none">
-                            <select id="novo-campo-tipo" class="border-2 border-gray-300 p-2 rounded text-sm uppercase bg-gray-50">
+                            <select id="novo-campo-tipo" class="border-2 border-gray-300 p-2 rounded text-[10px] uppercase bg-gray-50">
                                 <option value="text">Texto</option><option value="textarea">Observação</option>
                             </select>
                             <button onclick="window.adicionarCampo()" class="bg-green-600 text-white px-4 rounded font-bold uppercase hover:bg-green-700"><i class="fas fa-plus"></i></button>
@@ -190,7 +182,7 @@
                     </div>
                 </div>
 
-                <button onclick="window.fazerLogoff()" class="w-full bg-red-100 text-red-700 font-bold py-4 rounded-lg shadow mt-4 uppercase border border-red-300 hover:bg-red-200"><i class="fas fa-sign-out-alt"></i> Sair da Conta (Logoff)</button>
+                <button onclick="window.fazerLogoff()" class="w-full bg-red-100 text-red-700 font-bold py-4 rounded-lg shadow mt-4 uppercase border border-red-300 hover:bg-red-200"><i class="fas fa-sign-out-alt"></i> Fazer Logoff (Sair)</button>
             </div>
         </div>
 
@@ -198,10 +190,11 @@
 
     <!-- MENU INFERIOR -->
     <nav id="bottom-nav" class="hidden bg-white border-t border-gray-200 flex justify-around p-2 fixed bottom-0 w-full shadow-[0_-10px_20px_rgba(0,0,0,0.05)] z-20 transition-transform duration-300 uppercase no-print">
-        <button onclick="window.mudarAba('registro')" id="tab-registro" class="flex flex-col items-center flex-1 py-2 text-blue-600 font-bold transition"><i class="fas fa-edit text-xl mb-1"></i><span class="text-[10px] md:text-xs">Registrar</span></button>
-        <button onclick="window.mudarAba('patio')" id="tab-patio" class="flex flex-col items-center flex-1 py-2 text-gray-500 font-bold transition"><i class="fas fa-truck text-xl mb-1"></i><span class="text-[10px] md:text-xs">Pátio</span></button>
-        <button onclick="window.mudarAba('planilha')" id="tab-planilha" class="flex flex-col items-center flex-1 py-2 text-gray-500 font-bold transition"><i class="fas fa-table text-xl mb-1"></i><span class="text-[10px] md:text-xs">Planilha</span></button>
-        <button onclick="window.tentarAdmin()" id="tab-config" class="flex flex-col items-center flex-1 py-2 text-gray-300 font-bold transition hover:text-red-500"><i class="fas fa-cog text-xl mb-1"></i><span class="text-[10px] md:text-xs">Config</span></button>
+        <button onclick="window.mudarAba('registro')" id="tab-registro" class="hidden flex-col items-center flex-1 py-2 text-blue-600 font-bold transition"><i class="fas fa-edit text-xl mb-1"></i><span class="text-[10px] md:text-xs">Registrar</span></button>
+        <button onclick="window.mudarAba('patio')" id="tab-patio" class="hidden flex-col items-center flex-1 py-2 text-gray-500 font-bold transition"><i class="fas fa-truck text-xl mb-1"></i><span class="text-[10px] md:text-xs">Pátio</span></button>
+        <button onclick="window.mudarAba('planilha')" id="tab-planilha" class="hidden flex-col items-center flex-1 py-2 text-gray-500 font-bold transition"><i class="fas fa-table text-xl mb-1"></i><span class="text-[10px] md:text-xs">Planilha</span></button>
+        <button onclick="window.mudarAba('config')" id="tab-config" class="hidden flex-col items-center flex-1 py-2 text-red-600 font-bold transition"><i class="fas fa-user-shield text-xl mb-1"></i><span class="text-[10px] md:text-xs">Admin</span></button>
+        <button onclick="window.fazerLogoff()" class="flex flex-col items-center flex-1 py-2 text-gray-400 font-bold transition hover:text-red-500"><i class="fas fa-sign-out-alt text-xl mb-1"></i><span class="text-[10px] md:text-xs">Sair</span></button>
     </nav>
 
     <!-- MODAL ZOOM IMAGEM -->
@@ -222,7 +215,7 @@
         </div>
     </div>
 
-    <!-- MODAL EDIÇÃO DE REGISTRO (ADMIN) -->
+    <!-- MODAL EDIÇÃO -->
     <div id="modal-edicao" class="hidden fixed inset-0 z-[60] bg-black bg-opacity-80 flex items-center justify-center p-2 no-print">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-[500px] max-h-[90vh] flex flex-col overflow-hidden relative">
             <div class="bg-yellow-500 text-white p-4 flex justify-between items-center flex-shrink-0">
@@ -236,16 +229,14 @@
         </div>
     </div>
 
-    <!-- MODAL DE SAÍDA -->
+    <!-- MODAL SAÍDA -->
     <div id="modal-saida" class="hidden fixed inset-0 z-[60] bg-black bg-opacity-70 flex items-center justify-center p-4 no-print">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden">
             <div class="bg-red-600 text-white p-4 font-bold text-lg text-center uppercase">Registrar Saída</div>
             <div class="p-6">
                 <p class="text-sm text-gray-600 mb-4 text-center">A saída será carimbada com o seu usuário automaticamente na nuvem.</p>
-                <div class="flex space-x-3">
-                    <button onclick="window.fecharModalSaida()" class="flex-1 bg-gray-200 text-gray-800 font-bold py-3 rounded-lg uppercase">Cancelar</button>
-                    <button onclick="window.confirmarSaida()" id="btn-confirmar-saida" class="flex-1 bg-red-600 text-white font-bold py-3 rounded-lg shadow-md uppercase">Confirmar Saída</button>
-                </div>
+                <button onclick="window.confirmarSaida()" id="btn-confirmar-saida" class="w-full bg-red-600 text-white font-bold py-4 rounded-lg shadow-md uppercase mb-2">Confirmar Saída</button>
+                <button onclick="window.fecharModalSaida()" class="w-full bg-gray-200 text-gray-800 font-bold py-3 rounded-lg uppercase">Cancelar</button>
             </div>
         </div>
     </div>
@@ -255,9 +246,6 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
         import { getFirestore, collection, addDoc, updateDoc, doc, deleteDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
-        // ==========================================
-        // CREDENCIAIS
-        // ==========================================
         const firebaseConfig = {
             apiKey: "AIzaSyDYXFu-soolSOoCAxNYlVVgeJVwzJef_fk",
             authDomain: "patiopark-7984f.firebaseapp.com",
@@ -276,34 +264,35 @@
         let registros = [];
         let usuarios = [];
         let usuarioLogado = null;
-        let registroSelecionadoFirebaseId = null;
-        let fotoAtualUrl = null; 
-        let dataHoraMetadata = null; 
-        let gpsLocalizacao = null; 
+        let permissoesAtuais = {};
         let isAdmin = false;
+        
+        let registroSelecionadoFirebaseId = null;
+        let fotoAtualUrl = null; let dataHoraMetadata = null; let gpsLocalizacao = null; 
         let ultimoVeiculoEncontrado = null;
 
+        // PERMISSÕES SUPER ADMIN
+        const permissoesAdminDev = { reg: true, pat: true, sai: true, pla: true, imp: true, edi: true, exc: true };
+
         // ==========================================
-        // SISTEMA DE USUÁRIOS E LOGIN
+        // SISTEMA RBAC (PERMISSÕES E LOGIN)
         // ==========================================
         onSnapshot(collection(db, "usuarios"), (snapshot) => {
             usuarios = [];
             snapshot.forEach((doc) => usuarios.push({ id: doc.id, ...doc.data() }));
             window.renderizarUsuarios();
-        }, (error) => {
-            document.getElementById('login-status').innerHTML = '<i class="fas fa-exclamation-triangle"></i> Sem permissão. Configure as regras do Firestore.';
         });
 
         window.fazerLogin = function() {
             const status = document.getElementById('login-status');
             const u = document.getElementById('login-usuario').value.trim().toUpperCase();
             const s = document.getElementById('login-senha').value;
-            
             status.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Autenticando...';
             
             if(u === 'ADMIN' && s === SENHA_ADMIN) {
-                usuarioLogado = 'ADMINISTRADOR';
+                usuarioLogado = 'DEV / ADMIN';
                 isAdmin = true;
+                permissoesAtuais = permissoesAdminDev;
                 iniciarAplicativo();
                 return;
             }
@@ -312,6 +301,8 @@
             if(func) {
                 usuarioLogado = func.nome;
                 isAdmin = false;
+                // Carrega permissões ou defaults básicos se for um usuário antigo
+                permissoesAtuais = func.permissoes || { reg: true, pat: true, sai: true, pla: false, imp: false, edi: false, exc: false };
                 iniciarAplicativo();
             } else {
                 status.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Usuário ou Senha incorretos.';
@@ -323,17 +314,28 @@
             document.getElementById('app-header').classList.remove('hidden');
             document.getElementById('main-content').classList.remove('hidden');
             document.getElementById('bottom-nav').classList.remove('hidden');
-            document.getElementById('nome-usuario-header').innerHTML = `<i class="fas fa-user-circle"></i> ${usuarioLogado}`;
+            document.getElementById('nome-usuario-header').innerHTML = `<i class="fas fa-user-shield"></i> ${usuarioLogado}`;
             
-            if(isAdmin) document.getElementById('tab-config').classList.replace('text-gray-300', 'text-red-600');
-            else document.getElementById('tab-config').classList.replace('text-red-600', 'text-gray-300');
+            // CONFIGURA A INTERFACE BASEADA NAS PERMISSÕES
+            document.getElementById('tab-registro').style.display = permissoesAtuais.reg ? 'flex' : 'none';
+            document.getElementById('tab-patio').style.display = permissoesAtuais.pat ? 'flex' : 'none';
+            document.getElementById('tab-planilha').style.display = permissoesAtuais.pla ? 'flex' : 'none';
+            document.getElementById('tab-config').style.display = isAdmin ? 'flex' : 'none';
+            
+            document.getElementById('btn-imprimir').style.display = permissoesAtuais.imp ? 'block' : 'none';
+            document.getElementById('btn-excluir-lote').style.display = permissoesAtuais.exc ? 'block' : 'none';
 
-            window.mudarAba('registro');
             window.renderizarTudo();
+            
+            // Força abrir a primeira aba que o usuário tem permissão
+            if(permissoesAtuais.reg) window.mudarAba('registro');
+            else if(permissoesAtuais.pat) window.mudarAba('patio');
+            else if(permissoesAtuais.pla) window.mudarAba('planilha');
+            else if(isAdmin) window.mudarAba('config');
         }
 
         window.fazerLogoff = function() {
-            usuarioLogado = null; isAdmin = false;
+            usuarioLogado = null; isAdmin = false; permissoesAtuais = {};
             document.getElementById('login-usuario').value = '';
             document.getElementById('login-senha').value = '';
             document.getElementById('login-status').innerHTML = '';
@@ -350,10 +352,10 @@
             if(!nome || !senha) return alert("Preencha o Nome e a Senha.");
             if(usuarios.find(u => u.nome === nome)) return alert("Já existe um usuário com esse nome.");
             
+            const permissoesIniciais = { reg: true, pat: true, sai: true, pla: false, imp: false, edi: false, exc: false };
             try {
-                await addDoc(collection(db, "usuarios"), { nome, senha, data: getDataHoraAtualNavegador() });
-                document.getElementById('novo-user-nome').value = '';
-                document.getElementById('novo-user-senha').value = '';
+                await addDoc(collection(db, "usuarios"), { nome, senha, permissoes: permissoesIniciais, data: getDataHoraAtualNavegador() });
+                document.getElementById('novo-user-nome').value = ''; document.getElementById('novo-user-senha').value = '';
             } catch(e) { alert("Erro ao criar usuário."); }
         };
 
@@ -363,22 +365,42 @@
             }
         };
 
+        window.atualizarPermissao = async function(userId, permissaoKey, value) {
+            try {
+                await updateDoc(doc(db, "usuarios", userId), { [`permissoes.${permissaoKey}`]: value });
+            } catch(e) { alert("Falha ao salvar permissão."); }
+        };
+
         window.renderizarUsuarios = function() {
             const container = document.getElementById('lista-usuarios-admin');
             if(!container) return;
             container.innerHTML = '';
-            if(usuarios.length === 0) container.innerHTML = '<div class="text-xs text-gray-400 italic">Nenhum usuário cadastrado. Apenas o Admin tem acesso.</div>';
+            if(usuarios.length === 0) container.innerHTML = '<div class="text-xs text-gray-400 italic">Nenhum usuário secundário criado.</div>';
+            
             usuarios.forEach(u => {
+                const p = u.permissoes || {};
                 container.innerHTML += `
-                    <div class="flex justify-between items-center bg-gray-50 border p-2 rounded">
-                        <div><div class="font-bold text-sm uppercase text-gray-800"><i class="fas fa-user text-purple-500 mr-1"></i> ${u.nome}</div><div class="text-[10px] text-gray-500">Senha: ${u.senha}</div></div>
-                        <button onclick="window.excluirUsuario('${u.id}', '${u.nome}')" class="text-red-500 hover:text-red-700 p-2"><i class="fas fa-trash"></i></button>
+                    <div class="bg-gray-50 border p-3 rounded-lg shadow-sm">
+                        <div class="flex justify-between items-center border-b border-gray-200 pb-2 mb-2">
+                            <div><div class="font-bold text-sm uppercase text-blue-900"><i class="fas fa-user-tie mr-1"></i> ${u.nome}</div><div class="text-[10px] text-gray-500 font-bold">SENHA: ${u.senha}</div></div>
+                            <button onclick="window.excluirUsuario('${u.id}', '${u.nome}')" class="text-red-500 hover:text-red-700 bg-red-100 p-2 rounded"><i class="fas fa-trash"></i></button>
+                        </div>
+                        <div class="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-2">Delegação de Funções</div>
+                        <div class="grid grid-cols-2 gap-2 text-xs">
+                            <label class="flex items-center space-x-2 cursor-pointer"><input type="checkbox" onchange="window.atualizarPermissao('${u.id}', 'reg', this.checked)" ${p.reg ? 'checked' : ''} class="w-4 h-4 text-purple-600 rounded"><span class="font-bold">Criar Entradas</span></label>
+                            <label class="flex items-center space-x-2 cursor-pointer"><input type="checkbox" onchange="window.atualizarPermissao('${u.id}', 'pat', this.checked)" ${p.pat ? 'checked' : ''} class="w-4 h-4 text-purple-600 rounded"><span class="font-bold">Ver Pátio</span></label>
+                            <label class="flex items-center space-x-2 cursor-pointer"><input type="checkbox" onchange="window.atualizarPermissao('${u.id}', 'sai', this.checked)" ${p.sai ? 'checked' : ''} class="w-4 h-4 text-purple-600 rounded"><span class="font-bold text-red-600">Dar Saídas</span></label>
+                            <label class="flex items-center space-x-2 cursor-pointer"><input type="checkbox" onchange="window.atualizarPermissao('${u.id}', 'pla', this.checked)" ${p.pla ? 'checked' : ''} class="w-4 h-4 text-purple-600 rounded"><span class="font-bold">Ver Histórico</span></label>
+                            <label class="flex items-center space-x-2 cursor-pointer"><input type="checkbox" onchange="window.atualizarPermissao('${u.id}', 'imp', this.checked)" ${p.imp ? 'checked' : ''} class="w-4 h-4 text-purple-600 rounded"><span class="font-bold text-gray-600">Imprimir PDF</span></label>
+                            <label class="flex items-center space-x-2 cursor-pointer"><input type="checkbox" onchange="window.atualizarPermissao('${u.id}', 'edi', this.checked)" ${p.edi ? 'checked' : ''} class="w-4 h-4 text-purple-600 rounded"><span class="font-bold text-blue-600">Editar Registros</span></label>
+                            <label class="flex items-center space-x-2 cursor-pointer"><input type="checkbox" onchange="window.atualizarPermissao('${u.id}', 'exc', this.checked)" ${p.exc ? 'checked' : ''} class="w-4 h-4 text-purple-600 rounded"><span class="font-bold text-red-600">Excluir Registros</span></label>
+                        </div>
                     </div>`;
             });
         };
 
         // ==========================================
-        // SISTEMA DE CAMPOS DINÂMICOS
+        // SISTEMA DE CAMPOS E DADOS
         // ==========================================
         const camposPadrao = [
             { id: "placa", nome: "Placa", tipo: "placa", fixo: true },
@@ -396,51 +418,53 @@
 
         window.renderizarTudo = function() {
             const formContainer = document.getElementById('formulario-dinamico');
-            if(!formContainer) return;
-            formContainer.innerHTML = '';
-            
-            schemaCampos.forEach((campo, index) => {
-                let html = '';
-                if(campo.tipo === 'placa') {
-                    html = `
-                        <div class="mb-4">
-                            <label class="block text-sm font-bold text-gray-700 uppercase">${index+1}. ${campo.nome} (Tire Foto p/ Registrar)</label>
-                            <div class="relative flex items-center mt-1 no-print">
-                                <input type="text" id="campo_${campo.id}" class="w-full border-2 border-gray-300 p-3 pr-24 rounded-lg focus:border-blue-500 focus:outline-none uppercase" onblur="window.verificarHistorico(this.value)" placeholder="ABC-1234">
-                                <div class="absolute right-2 top-1/2 -translate-y-1/2 flex space-x-1">
-                                    <label class="bg-blue-100 text-blue-600 rounded w-10 h-10 flex items-center justify-center cursor-pointer border shadow-sm"><i class="fas fa-camera text-lg"></i><input type="file" accept="image/*" capture="environment" class="hidden" onchange="window.processarFotoPlaca(event)"></label>
-                                    <label class="bg-purple-100 text-purple-600 rounded w-10 h-10 flex items-center justify-center cursor-pointer border shadow-sm"><i class="fas fa-image text-lg"></i><input type="file" accept="image/*" class="hidden" onchange="window.processarFotoPlaca(event)"></label>
+            if(formContainer) {
+                formContainer.innerHTML = '';
+                schemaCampos.forEach((campo, index) => {
+                    let html = '';
+                    if(campo.tipo === 'placa') {
+                        html = `
+                            <div class="mb-4">
+                                <label class="block text-sm font-bold text-gray-700 uppercase">${index+1}. ${campo.nome} (Tire Foto p/ Registrar)</label>
+                                <div class="relative flex items-center mt-1 no-print">
+                                    <input type="text" id="campo_${campo.id}" class="w-full border-2 border-gray-300 p-3 pr-24 rounded-lg focus:border-blue-500 focus:outline-none uppercase" onblur="window.verificarHistorico(this.value)" placeholder="ABC-1234">
+                                    <div class="absolute right-2 top-1/2 -translate-y-1/2 flex space-x-1">
+                                        <label class="bg-blue-100 text-blue-600 rounded w-10 h-10 flex items-center justify-center cursor-pointer border shadow-sm"><i class="fas fa-camera text-lg"></i><input type="file" accept="image/*" capture="environment" class="hidden" onchange="window.processarFotoPlaca(event)"></label>
+                                        <label class="bg-purple-100 text-purple-600 rounded w-10 h-10 flex items-center justify-center cursor-pointer border shadow-sm"><i class="fas fa-image text-lg"></i><input type="file" accept="image/*" class="hidden" onchange="window.processarFotoPlaca(event)"></label>
+                                    </div>
                                 </div>
-                            </div>
-                            <div id="preview-container" class="hidden mt-2 p-2 border rounded bg-gray-50 flex items-center justify-between shadow-inner">
-                                <img id="preview-img" src="" class="h-16 w-16 object-cover rounded border border-gray-300">
-                                <div class="text-[10px] text-gray-500 font-bold text-right ml-2 leading-tight uppercase" id="preview-info"></div>
-                            </div>
-                            <div id="status_foto_completo" class="text-xs font-bold text-orange-600 mt-1 hidden"><i class="fas fa-info-circle"></i> Processando...</div>
-                            <div id="alerta_historico_completo" class="hidden bg-blue-50 border-l-4 border-blue-500 p-3 mt-2 rounded shadow-sm">
-                                <div class="flex justify-between items-center"><div><h3 class="font-bold text-blue-800 text-xs uppercase"><i class="fas fa-history"></i> Veículo Conhecido</h3><p id="texto_historico_completo" class="text-[10px] text-blue-600 uppercase"></p></div><button type="button" onclick="window.aplicarAutopreenchimento()" class="bg-blue-600 text-white text-[10px] font-bold px-2 py-2 rounded shadow uppercase">Autopreencher</button></div>
-                            </div>
-                        </div>`;
-                } else if(campo.tipo === 'select_modelo') {
-                    html = `<div class="mb-4"><label class="block text-sm font-bold text-gray-700 uppercase">${index+1}. ${campo.nome}</label><select id="campo_${campo.id}" onchange="window.verificarModeloOutros(this.value, '${campo.id}')" class="w-full border-2 border-gray-300 p-3 rounded-lg mt-1 bg-white uppercase focus:border-blue-500 focus:outline-none"><option value="" disabled selected>SELECIONE...</option><option value="CAMINHÃO">CAMINHÃO</option><option value="PICAPE">PICAPE</option><option value="FIORINO">FIORINO</option><option value="SAVEIRO">SAVEIRO</option><option value="MOTO">MOTO</option><option value="CARRO DE PASSEIO">CARRO DE PASSEIO</option><option value="OUTROS">OUTROS</option></select><input type="text" id="campo_${campo.id}_obs" class="w-full border-2 border-blue-300 p-3 mt-2 rounded-lg hidden uppercase focus:border-blue-500 focus:outline-none" placeholder="DIGITE O MODELO"></div>`;
-                } else if(campo.tipo === 'textarea') {
-                    html = `<div class="mb-4"><label class="block text-sm font-bold text-gray-700 uppercase">${index+1}. ${campo.nome}</label><textarea id="campo_${campo.id}" rows="3" class="w-full border-2 border-gray-300 p-3 rounded-lg mt-1 uppercase focus:border-blue-500 focus:outline-none"></textarea><button tabindex="-1" onclick="window.limparCampo('campo_${campo.id}')" class="text-red-400 text-xs mt-1 uppercase font-bold"><i class="fas fa-eraser"></i> Limpar</button></div>`;
-                } else {
-                    html = `<div class="mb-4"><label class="block text-sm font-bold text-gray-700 uppercase">${index+1}. ${campo.nome}</label><div class="relative flex items-center mt-1"><input type="text" id="campo_${campo.id}" class="w-full border-2 border-gray-300 p-3 pr-10 rounded-lg focus:border-blue-500 focus:outline-none uppercase"><button tabindex="-1" onclick="window.limparCampo('campo_${campo.id}')" class="absolute right-3 text-red-400"><i class="fas fa-times-circle text-xl"></i></button></div></div>`;
-                }
-                formContainer.insertAdjacentHTML('beforeend', html);
-            });
+                                <div id="preview-container" class="hidden mt-2 p-2 border rounded bg-gray-50 flex items-center justify-between shadow-inner">
+                                    <img id="preview-img" src="" class="h-16 w-16 object-cover rounded border border-gray-300">
+                                    <div class="text-[10px] text-gray-500 font-bold text-right ml-2 leading-tight uppercase" id="preview-info"></div>
+                                </div>
+                                <div id="status_foto_completo" class="text-xs font-bold text-orange-600 mt-1 hidden"><i class="fas fa-info-circle"></i> Processando...</div>
+                                <div id="alerta_historico_completo" class="hidden bg-blue-50 border-l-4 border-blue-500 p-3 mt-2 rounded shadow-sm">
+                                    <div class="flex justify-between items-center"><div><h3 class="font-bold text-blue-800 text-xs uppercase"><i class="fas fa-history"></i> Veículo Conhecido</h3><p id="texto_historico_completo" class="text-[10px] text-blue-600 uppercase"></p></div><button type="button" onclick="window.aplicarAutopreenchimento()" class="bg-blue-600 text-white text-[10px] font-bold px-2 py-2 rounded shadow uppercase">Autopreencher</button></div>
+                                </div>
+                            </div>`;
+                    } else if(campo.tipo === 'select_modelo') {
+                        html = `<div class="mb-4"><label class="block text-sm font-bold text-gray-700 uppercase">${index+1}. ${campo.nome}</label><select id="campo_${campo.id}" onchange="window.verificarModeloOutros(this.value, '${campo.id}')" class="w-full border-2 border-gray-300 p-3 rounded-lg mt-1 bg-white uppercase focus:border-blue-500 focus:outline-none"><option value="" disabled selected>SELECIONE...</option><option value="CAMINHÃO">CAMINHÃO</option><option value="PICAPE">PICAPE</option><option value="FIORINO">FIORINO</option><option value="SAVEIRO">SAVEIRO</option><option value="MOTO">MOTO</option><option value="CARRO DE PASSEIO">CARRO DE PASSEIO</option><option value="OUTROS">OUTROS</option></select><input type="text" id="campo_${campo.id}_obs" class="w-full border-2 border-blue-300 p-3 mt-2 rounded-lg hidden uppercase focus:border-blue-500 focus:outline-none" placeholder="DIGITE O MODELO"></div>`;
+                    } else if(campo.tipo === 'textarea') {
+                        html = `<div class="mb-4"><label class="block text-sm font-bold text-gray-700 uppercase">${index+1}. ${campo.nome}</label><textarea id="campo_${campo.id}" rows="3" class="w-full border-2 border-gray-300 p-3 rounded-lg mt-1 uppercase focus:border-blue-500 focus:outline-none"></textarea><button tabindex="-1" onclick="window.limparCampo('campo_${campo.id}')" class="text-red-400 text-xs mt-1 uppercase font-bold"><i class="fas fa-eraser"></i> Limpar</button></div>`;
+                    } else {
+                        html = `<div class="mb-4"><label class="block text-sm font-bold text-gray-700 uppercase">${index+1}. ${campo.nome}</label><div class="relative flex items-center mt-1"><input type="text" id="campo_${campo.id}" class="w-full border-2 border-gray-300 p-3 pr-10 rounded-lg focus:border-blue-500 focus:outline-none uppercase"><button tabindex="-1" onclick="window.limparCampo('campo_${campo.id}')" class="absolute right-3 text-red-400"><i class="fas fa-times-circle text-xl"></i></button></div></div>`;
+                    }
+                    formContainer.insertAdjacentHTML('beforeend', html);
+                });
+            }
 
             const cabecalho = document.getElementById('cabecalho-planilha');
-            cabecalho.innerHTML = `<th class="px-3 py-2 border-r border-blue-700 w-10 no-print ${isAdmin ? '' : 'hidden'}"><i class="fas fa-check-square"></i></th><th class="px-3 py-2 border-r border-blue-700 no-print">Ações</th><th class="px-3 py-2 border-r border-blue-700 no-print">Foto</th><th class="px-3 py-2 border-r border-blue-700">Entrada</th><th class="px-3 py-2 border-r border-blue-700">Saída</th><th class="px-3 py-2 border-r border-blue-700">Responsável</th>`;
-            schemaCampos.forEach(c => {
-                if(c.tipo !== 'placa') cabecalho.innerHTML += `<th class="px-3 py-2 border-r border-blue-700">${c.nome}</th>`;
-                else cabecalho.innerHTML += `<th class="px-3 py-2 border-r border-blue-700">PLACA</th>`;
-            });
-            cabecalho.innerHTML += `<th class="px-3 py-2 no-print">GPS</th>`;
+            if(cabecalho) {
+                cabecalho.innerHTML = `<th class="px-3 py-2 border-r border-blue-700 w-10 no-print ${permissoesAtuais.exc ? '' : 'hidden'}"><i class="fas fa-check-square"></i></th><th class="px-3 py-2 border-r border-blue-700 no-print ${permissoesAtuais.edi || permissoesAtuais.exc || permissoesAtuais.sai ? '' : 'hidden'}">Ações</th><th class="px-3 py-2 border-r border-blue-700 no-print">Foto</th><th class="px-3 py-2 border-r border-blue-700">Entrada</th><th class="px-3 py-2 border-r border-blue-700">Saída</th><th class="px-3 py-2 border-r border-blue-700">Responsáveis</th>`;
+                schemaCampos.forEach(c => {
+                    if(c.tipo !== 'placa') cabecalho.innerHTML += `<th class="px-3 py-2 border-r border-blue-700">${c.nome}</th>`;
+                    else cabecalho.innerHTML += `<th class="px-3 py-2 border-r border-blue-700">PLACA</th>`;
+                });
+                cabecalho.innerHTML += `<th class="px-3 py-2 no-print">GPS</th>`;
+            }
 
             const painelCampos = document.getElementById('lista-campos-admin');
-            if(painelCampos) {
+            if(painelCampos && isAdmin) {
                 painelCampos.innerHTML = '';
                 schemaCampos.forEach((c, index) => {
                     painelCampos.innerHTML += `
@@ -451,12 +475,10 @@
                         </div>`;
                 });
             }
+
             window.filtrarListas();
         };
 
-        // ==========================================
-        // FIREBASE REGISTROS
-        // ==========================================
         const q = query(collection(db, "registros"), orderBy("id", "desc"));
         onSnapshot(q, (snapshot) => {
             registros = [];
@@ -466,7 +488,7 @@
         }, (error) => { document.getElementById('status-conexao').innerHTML = '<i class="fas fa-exclamation-triangle text-red-400"></i> Erro DB'; });
 
         // ==========================================
-        // EVENTOS GERAIS
+        // NAVEGAÇÃO E INTERFACE
         // ==========================================
         const botNav = document.getElementById('bottom-nav');
         document.addEventListener('focusin', (e) => { if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') botNav.style.transform = 'translateY(100%)'; });
@@ -480,19 +502,15 @@
         });
 
         window.mudarAba = function(aba) {
-            document.getElementById('view-registro').classList.add('hidden');
-            document.getElementById('view-patio').classList.add('hidden');
-            document.getElementById('view-planilha').classList.add('hidden');
-            document.getElementById('view-config').classList.add('hidden');
+            ['registro', 'patio', 'planilha', 'config'].forEach(a => {
+                document.getElementById('view-' + a).classList.add('hidden');
+                document.getElementById('tab-' + a).classList.replace('text-blue-600', 'text-gray-500');
+                if(a === 'config') document.getElementById('tab-config').classList.replace('text-red-600', 'text-gray-300');
+            });
             
-            document.getElementById('tab-registro').classList.replace('text-blue-600', 'text-gray-500');
-            document.getElementById('tab-patio').classList.replace('text-blue-600', 'text-gray-500');
-            document.getElementById('tab-planilha').classList.replace('text-blue-600', 'text-gray-500');
-            
-            if(aba !== 'config') {
-                document.getElementById(`view-${aba}`).classList.remove('hidden');
-                document.getElementById(`tab-${aba}`).classList.replace('text-gray-500', 'text-blue-600');
-            }
+            document.getElementById(`view-${aba}`).classList.remove('hidden');
+            if(aba === 'config') document.getElementById(`tab-${aba}`).classList.replace('text-gray-300', 'text-red-600');
+            else document.getElementById(`tab-${aba}`).classList.replace('text-gray-500', 'text-blue-600');
         };
 
         window.limparCampo = (id) => { const input = document.getElementById(id); if(input) { input.value = ''; input.focus(); } };
@@ -541,17 +559,8 @@
         };
 
         // ==========================================
-        // ADMIN LÓGICA (CAMPOS)
+        // ADMIN LÓGICA DE CAMPOS E BACKUP
         // ==========================================
-        window.tentarAdmin = function() {
-            if(!isAdmin) { alert("Apenas o Administrador pode acessar o painel de Configurações."); return; }
-            window.renderizarTudo();
-            window.mudarAba('config');
-            document.getElementById('view-config').classList.remove('hidden');
-        };
-
-        window.sairAdmin = function() { window.mudarAba('registro'); };
-
         window.adicionarCampo = function() {
             const nome = document.getElementById('novo-campo-nome').value.trim();
             const tipo = document.getElementById('novo-campo-tipo').value;
@@ -566,9 +575,17 @@
                 const temp = schemaCampos[index]; schemaCampos[index] = schemaCampos[nIndex]; schemaCampos[nIndex] = temp; salvarSchema();
             }
         };
+        window.gerarBackupNuvem = function() {
+            if(registros.length === 0) return alert("Banco vazio.");
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(registros, null, 2));
+            const dl = document.createElement('a');
+            dl.setAttribute("href", dataStr);
+            dl.setAttribute("download", `patiopark_backup_${new Date().getTime()}.json`);
+            dl.click();
+        };
 
         // ==========================================
-        // UPLOAD WEBP IMGBB
+        // UPLOAD WEBP IMGBB & GPS
         // ==========================================
         window.processarFotoPlaca = async function(event) {
             const file = event.target.files[0];
@@ -630,7 +647,7 @@
                                     },
                                     (err) => { 
                                         gpsLocalizacao = "Sem Permissão de GPS"; 
-                                        statusLabel.innerHTML = `<i class="fas fa-check-circle text-green-600"></i> Foto Salva (GPS Bloqueado).`; 
+                                        statusLabel.innerHTML = `<i class="fas fa-check-circle text-green-600"></i> Foto Salva (Sem GPS).`; 
                                         previewInfo.innerHTML = "SEM GPS<br><span class='text-green-600'><i class='fas fa-check'></i> Anexada</span>";
                                     },
                                     { timeout: 5000 }
@@ -643,7 +660,7 @@
                         } else throw new Error();
                     } catch (err) { 
                         fotoAtualUrl = null;
-                        statusLabel.innerHTML = `<i class="fas fa-times-circle text-red-600"></i> Erro de Conexão com ImgBB.`; 
+                        statusLabel.innerHTML = `<i class="fas fa-times-circle text-red-600"></i> Erro de Conexão com a Nuvem.`; 
                         previewInfo.innerHTML = "FALHA<br><span class='text-red-600'><i class='fas fa-times'></i> Não anexada</span>";
                     }
                 };
@@ -724,7 +741,7 @@
         };
 
         // ==========================================
-        // RENDERIZAÇÃO E IMPRESSÃO
+        // RENDERIZAÇÃO E LISTAS COM PERMISSÕES
         // ==========================================
         window.imprimirRelatorio = function() {
             const now = new Date();
@@ -789,8 +806,10 @@
                 if(termoPlanilha && !textoBusca.includes(termoPlanilha)) showPlanilha = false;
 
                 const imgThumb = r.foto ? `<img src="${r.foto}" onclick="event.stopPropagation(); window.abrirZoom('${r.foto}')" class="w-12 h-12 object-cover rounded-lg border shadow-sm cursor-zoom-in no-print">` : `<div class="w-12 h-12 bg-gray-100 rounded flex flex-col items-center justify-center text-gray-400 text-[10px] no-print"><i class="fas fa-camera"></i></div>`;
-                const btnEdit = isAdmin ? `<button onclick="event.stopPropagation(); window.abrirEdicao('${r.firebase_id}')" class="text-blue-500 hover:text-blue-700 bg-blue-50 p-2 rounded mr-1 no-print"><i class="fas fa-pen"></i></button>` : '';
-                const btnDel = isAdmin ? `<button onclick="event.stopPropagation(); window.excluirIndiv('${r.firebase_id}')" class="text-red-500 hover:text-red-700 bg-red-50 p-2 rounded no-print"><i class="fas fa-trash"></i></button>` : '';
+                
+                // Botões de Ação respeitando Permissões
+                const btnEdit = permissoesAtuais.edi ? `<button onclick="event.stopPropagation(); window.abrirEdicao('${r.firebase_id}')" class="text-blue-500 hover:text-blue-700 bg-blue-50 p-2 rounded mr-1 no-print"><i class="fas fa-pen"></i></button>` : '';
+                const btnDel = permissoesAtuais.exc ? `<button onclick="event.stopPropagation(); window.excluirIndiv('${r.firebase_id}')" class="text-red-500 hover:text-red-700 bg-red-50 p-2 rounded no-print"><i class="fas fa-trash"></i></button>` : '';
 
                 if(showPatio) {
                     countPatio++;
@@ -798,7 +817,12 @@
                     card.className = `bg-white rounded-xl shadow-sm border-l-8 ${pendente ? 'border-blue-500' : 'border-green-500'} p-4 flex flex-col relative cursor-pointer hover:bg-gray-50 transition`;
                     card.setAttribute('onclick', `window.abrirDetalhes('${r.firebase_id}')`);
 
-                    let btnSaida = pendente ? `<button onclick="event.stopPropagation(); window.abrirModalSaida('${r.firebase_id}')" class="mt-3 w-full bg-red-100 hover:bg-red-200 text-red-700 font-bold py-3 rounded-lg border border-red-300 text-sm shadow-sm uppercase"><i class="fas fa-sign-out-alt"></i> Registrar Saída</button>` : `<div class="mt-3 text-green-700 font-bold text-center bg-green-50 py-3 rounded-lg border border-green-200 shadow-sm uppercase">✅ SAIU: ${r.saida.substring(0,16)}</div>`;
+                    let btnSaida = '';
+                    if(pendente && permissoesAtuais.sai) {
+                        btnSaida = `<button onclick="event.stopPropagation(); window.abrirModalSaida('${r.firebase_id}')" class="mt-3 w-full bg-red-100 hover:bg-red-200 text-red-700 font-bold py-3 rounded-lg border border-red-300 text-sm shadow-sm uppercase"><i class="fas fa-sign-out-alt"></i> Registrar Saída</button>`;
+                    } else if (!pendente) {
+                        btnSaida = `<div class="mt-3 text-green-700 font-bold text-center bg-green-50 py-3 rounded-lg border border-green-200 shadow-sm uppercase">✅ SAIU: ${r.saida.substring(0,16)}</div>`;
+                    }
                     
                     card.innerHTML = `
                         <div class="flex justify-between items-start border-b pb-3 mb-3">
@@ -820,10 +844,12 @@
                     tr.className = "hover:bg-gray-50 transition cursor-pointer";
                     tr.setAttribute('onclick', `window.abrirDetalhes('${r.firebase_id}')`);
 
-                    let acao = pendente ? `<button onclick="event.stopPropagation(); window.abrirModalSaida('${r.firebase_id}')" class="bg-red-500 text-white px-2 py-1 rounded text-[10px] font-bold shadow-sm uppercase no-print">SAÍDA</button>` : `<span class="text-green-600 font-bold text-[10px] uppercase"><i class="fas fa-check"></i> OK</span>`;
+                    let acao = '';
+                    if(pendente && permissoesAtuais.sai) acao = `<button onclick="event.stopPropagation(); window.abrirModalSaida('${r.firebase_id}')" class="bg-red-500 text-white px-2 py-1 rounded text-[10px] font-bold shadow-sm uppercase no-print">SAÍDA</button>`;
+                    else if (!pendente) acao = `<span class="text-green-600 font-bold text-[10px] uppercase"><i class="fas fa-check"></i> OK</span>`;
                     
-                    let rowHtml = `<td class="px-2 py-2 border-r text-center no-print ${isAdmin?'':'hidden'}" onclick="event.stopPropagation()"><input type="checkbox" class="cb-planilha w-4 h-4" value="${r.firebase_id}"></td>
-                                   <td class="px-2 py-2 border-r text-center no-print whitespace-nowrap">${btnEdit}${btnDel} ${acao}</td>
+                    let rowHtml = `<td class="px-2 py-2 border-r text-center no-print ${permissoesAtuais.exc?'':'hidden'}" onclick="event.stopPropagation()"><input type="checkbox" class="cb-planilha w-4 h-4" value="${r.firebase_id}"></td>
+                                   <td class="px-2 py-2 border-r text-center no-print whitespace-nowrap ${permissoesAtuais.edi || permissoesAtuais.exc || permissoesAtuais.sai ? '' : 'hidden'}">${btnEdit}${btnDel} ${acao}</td>
                                    <td class="px-2 py-2 border-r text-center no-print">${imgThumb}</td>
                                    <td class="px-2 py-2 border-r font-bold text-blue-700 whitespace-nowrap">${r.entrada}</td>
                                    <td class="px-2 py-2 border-r font-bold ${pendente ? 'text-gray-400' : 'text-green-600'} whitespace-nowrap">${r.saida || '...'}</td>
@@ -845,7 +871,7 @@
         };
 
         // ==========================================
-        // DETALHES GERAIS
+        // DETALHES GERAIS, EXCLUIR, EDITAR E SAÍDA
         // ==========================================
         window.abrirZoom = function(url) {
             document.getElementById('img-zoom').src = url;
@@ -878,33 +904,37 @@
                 <div class="mt-4 bg-white p-3 border rounded shadow-sm">${infos}</div>
                 <div class="mt-2 text-xs text-gray-500 text-center font-bold no-print"><i class="fas fa-map-marker-alt"></i> GPS: ${r.gps} ${gpsLink}</div>
             `;
-            document.getElementById('rodape-detalhes').innerHTML = pendente ? `<button onclick="window.fecharDetalhes(); window.abrirModalSaida('${r.firebase_id}')" class="w-full bg-red-600 text-white font-black py-4 rounded-lg shadow-md uppercase no-print">Registrar Saída</button>` : `<button onclick="window.fecharDetalhes()" class="w-full bg-gray-200 text-gray-800 font-black py-4 rounded-lg shadow-md uppercase no-print">Fechar Ficha</button>`;
+            
+            if(pendente && permissoesAtuais.sai) {
+                document.getElementById('rodape-detalhes').innerHTML = `<button onclick="window.fecharDetalhes(); window.abrirModalSaida('${r.firebase_id}')" class="w-full bg-red-600 text-white font-black py-4 rounded-lg shadow-md uppercase no-print">Registrar Saída</button>`;
+            } else {
+                document.getElementById('rodape-detalhes').innerHTML = `<button onclick="window.fecharDetalhes()" class="w-full bg-gray-200 text-gray-800 font-black py-4 rounded-lg shadow-md uppercase no-print">Fechar Ficha</button>`;
+            }
             document.getElementById('modal-detalhes').classList.remove('hidden');
         };
         window.fecharDetalhes = () => document.getElementById('modal-detalhes').classList.add('hidden');
 
-        // ADMIN: EXCLUIR E EDITAR
         window.excluirIndiv = async function(id) {
+            if(!permissoesAtuais.exc) return;
             if(confirm("Confirmar exclusão DEFINITIVA deste registro?")) {
-                try { await deleteDoc(doc(db, "registros", id)); } 
-                catch (e) { alert("Erro: " + e.message); }
+                try { await deleteDoc(doc(db, "registros", id)); } catch (e) { alert("Erro: " + e.message); }
             }
         };
 
         window.excluirEmLote = async function() {
+            if(!permissoesAtuais.exc) return;
             const marcados = document.querySelectorAll('.cb-planilha:checked');
             if(marcados.length === 0) return alert("Nenhum registro selecionado.");
             if(confirm(`Tem certeza que deseja excluir ${marcados.length} registros?`)) {
                 document.getElementById('btn-excluir-lote').innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-                for(let cb of marcados) {
-                    try { await deleteDoc(doc(db, "registros", cb.value)); } catch(e) {}
-                }
+                for(let cb of marcados) { try { await deleteDoc(doc(db, "registros", cb.value)); } catch(e) {} }
                 document.getElementById('btn-excluir-lote').innerHTML = '<i class="fas fa-trash-alt"></i> Excluir Lote';
                 alert("Exclusão concluída.");
             }
         };
 
         window.abrirEdicao = function(id) {
+            if(!permissoesAtuais.edi) return;
             const r = registros.find(reg => reg.firebase_id === id);
             if(!r) return;
             registroSelecionadoFirebaseId = id;
@@ -914,11 +944,8 @@
             
             schemaCampos.forEach(c => {
                 if(c.tipo !== 'placa') {
-                    if(c.tipo === 'textarea') {
-                        cont.innerHTML += `<div class="mb-3"><label class="text-xs font-bold text-gray-500">${c.nome.toUpperCase()}</label><textarea id="edit_${c.id}" class="w-full border p-2 rounded uppercase">${r.dados_dinamicos?.[c.id] || ''}</textarea></div>`;
-                    } else {
-                        cont.innerHTML += `<div class="mb-3"><label class="text-xs font-bold text-gray-500">${c.nome.toUpperCase()}</label><input type="text" id="edit_${c.id}" value="${r.dados_dinamicos?.[c.id] || ''}" class="w-full border p-2 rounded uppercase"></div>`;
-                    }
+                    if(c.tipo === 'textarea') cont.innerHTML += `<div class="mb-3"><label class="text-xs font-bold text-gray-500">${c.nome.toUpperCase()}</label><textarea id="edit_${c.id}" class="w-full border p-2 rounded uppercase">${r.dados_dinamicos?.[c.id] || ''}</textarea></div>`;
+                    else cont.innerHTML += `<div class="mb-3"><label class="text-xs font-bold text-gray-500">${c.nome.toUpperCase()}</label><input type="text" id="edit_${c.id}" value="${r.dados_dinamicos?.[c.id] || ''}" class="w-full border p-2 rounded uppercase"></div>`;
                 }
             });
             document.getElementById('modal-edicao').classList.remove('hidden');
@@ -933,33 +960,22 @@
             const r = registros.find(reg => reg.firebase_id === registroSelecionadoFirebaseId);
             const dados = { ...r.dados_dinamicos };
             
-            schemaCampos.forEach(c => {
-                if(c.tipo !== 'placa') dados[c.id] = document.getElementById('edit_' + c.id).value.trim().toUpperCase();
-            });
+            schemaCampos.forEach(c => { if(c.tipo !== 'placa') dados[c.id] = document.getElementById('edit_' + c.id).value.trim().toUpperCase(); });
 
             try {
                 await updateDoc(doc(db, "registros", registroSelecionadoFirebaseId), {
-                    placa: document.getElementById('edit_placa').value.trim().toUpperCase(),
-                    dados_dinamicos: dados
+                    placa: document.getElementById('edit_placa').value.trim().toUpperCase(), dados_dinamicos: dados
                 });
                 window.fecharEdicao();
             } catch (e) { alert("Erro ao editar."); } 
             finally { btn.innerHTML = 'SALVAR ALTERAÇÕES'; btn.disabled = false; }
         };
 
-        window.gerarBackupNuvem = function() {
-            if(registros.length === 0) return alert("Banco vazio.");
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(registros, null, 2));
-            const dl = document.createElement('a');
-            dl.setAttribute("href", dataStr);
-            dl.setAttribute("download", `patiopark_backup_${new Date().getTime()}.json`);
-            dl.click();
+        window.abrirModalSaida = (id) => { 
+            if(!permissoesAtuais.sai) return;
+            registroSelecionadoFirebaseId = id; 
+            document.getElementById('modal-saida').classList.remove('hidden'); 
         };
-
-        // ==========================================
-        // SAÍDA E ASSINATURA AUTOMÁTICA
-        // ==========================================
-        window.abrirModalSaida = (id) => { registroSelecionadoFirebaseId = id; document.getElementById('modal-saida').classList.remove('hidden'); };
         window.fecharModalSaida = () => { document.getElementById('modal-saida').classList.add('hidden'); };
         
         window.confirmarSaida = async function() {
