@@ -140,14 +140,14 @@ window.filtrarLogsTela = function() {
     const bc = { SAIDA_PLANO_B:'bg-amber-100 text-amber-800 border-amber-400', EXCLUSAO:'bg-red-100 text-red-800 border-red-400', EDICAO:'bg-blue-100 text-blue-800 border-blue-400', ENTRADA:'bg-emerald-100 text-emerald-800 border-emerald-400', SAIDA_PLANO_A:'bg-teal-100 text-teal-800 border-teal-400', LOGIN:'bg-purple-100 text-purple-800 border-purple-400', CONFIG:'bg-gray-200 text-gray-800 border-gray-400' };
     f.forEach(l => {
         const d = document.createElement('div'); d.className = `p-2.5 rounded-xl border ${bc[l.acao] || bc.CONFIG} flex justify-between items-center cursor-pointer mb-2`; d.onclick = () => window.abrirDetalheLog(l.log_id);
-        d.innerHTML = `<div class="pr-2"><div class="flex items-center space-x-2"><span class="text-[9px] font-black uppercase px-1.5 py-0.5 bg-white/80 rounded">${l.acao}</span><span class="text-[10px] font-bold">${l.data_hora}</span></div><div class="font-black text-xs mt-1 uppercase">${l.resumo}</div><div class="text-[10px] opacity-80 uppercase font-bold">Autor: ${l.usuario}</div></div>`;
+        d.innerHTML = `<div class="pr-2"><div class="flex items-center space-x-2"><span class="text-[9px] font-black uppercase px-1.5 py-0.5 bg-white/80 rounded">${l.acao}</span><span class="text-[10px] font-bold">${l.data_hora}</span></div><div class="font-black text-xs mt-1 uppercase">${l.resumo}</div><div class="text-[10px] opacity-80 uppercase font-bold">Autor: ${l.usuario}</div></div><i class="fas fa-chevron-right text-sm opacity-60"></i>`;
         c.appendChild(d);
     });
 };
 
 window.abrirDetalheLog = function(id) {
     const l = logsAuditoria.find(i => i.log_id === id); if(!l) return;
-    document.getElementById('conteudo-detalhe-log').innerHTML = `<div class="bg-gray-100 p-3 rounded-xl border"><div class="font-black text-sm uppercase">${l.resumo}</div><div class="text-[11px] text-gray-600 font-bold mt-1 uppercase">Ação: <span class="text-red-700">${l.acao}</span> | Data: ${l.data_hora}</div><div class="text-[11px] text-gray-600 font-bold uppercase">Autor: ${l.usuario}</div></div><div><span class="block text-[10px] font-black text-gray-500 mb-1">Carga JSON:</span><pre class="bg-gray-900 text-green-400 p-3 rounded-xl text-[10px] overflow-x-auto font-mono">${JSON.stringify(l.detalhes || {}, null, 2)}</pre></div>`;
+    document.getElementById('conteudo-detalhe-log').innerHTML = `<div class="bg-gray-100 p-3 rounded-xl border"><div class="font-black text-sm uppercase">${l.resumo}</div><div class="text-[11px] text-gray-600 font-bold mt-1 uppercase">Ação: <span class="text-red-700">${l.acao}</span> | Data: ${l.data_hora}</div><div class="text-[11px] text-gray-600 font-bold uppercase">Autor: ${l.usuario} (${l.cargo})</div></div><div><span class="block text-[10px] font-black uppercase text-gray-500 mb-1">Carga JSON:</span><pre class="bg-gray-900 text-green-400 p-3 rounded-xl text-[10px] overflow-x-auto font-mono">${JSON.stringify(l.detalhes || {}, null, 2)}</pre></div>`;
     let rd = `<button onclick="document.getElementById('modal-detalhe-log').classList.add('hidden')" class="flex-1 bg-gray-200 text-gray-800 font-black py-3 rounded-xl text-xs">Fechar</button>`;
     if(l.acao === 'EXCLUSAO' && l.detalhes?.registro_apagado) rd += `<button onclick="window.restaurarRegistro('${l.log_id}')" class="flex-1 bg-emerald-600 text-white font-black py-3 rounded-xl text-xs"><i class="fas fa-undo"></i> Restaurar</button>`;
     if(l.acao === 'EDICAO' && l.detalhes?.antes) rd += `<button onclick="window.reverterEdicao('${l.log_id}')" class="flex-1 bg-amber-600 text-white font-black py-3 rounded-xl text-xs"><i class="fas fa-history"></i> Reverter</button>`;
@@ -176,7 +176,7 @@ window.reverterEdicao = async function(id) {
 // ==========================================
 window.fazerLogin = async function() {
     const u = document.getElementById('login-usuario').value.trim().toUpperCase(); const s = document.getElementById('login-senha').value; const st = document.getElementById('login-status');
-    if(!u || !s) return st.innerHTML = 'Preencha tudo.'; st.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Entrando...';
+    if(!u || !s) return st.innerHTML = 'Preencha tudo.'; st.innerHTML = '<i class="fas fa-spinner fa-spin text-blue-600"></i> Entrando...';
     if(u === 'ADMIN' && s === SENHA_ADMIN) { usuarioLogado = 'DEV / ADMIN'; cargoLogado = 'DEV'; isAdmin = true; permissoesAtuais = permissoesAdminDev; await registrarLog('LOGIN', 'LOGIN DEV'); return iniciarAplicativo(); }
     try {
         const sn = await getDocs(query(collection(db, "usuarios"), where("nome", "==", u), where("senha", "==", s), limit(1)));
@@ -214,7 +214,7 @@ window.criarUsuario = async function() {
 };
 window.excluirUsuario = async function(id, n) { if(await window.appConfirm("Excluir", `Remover ${n}?`, "Sim", true)) { await deleteDoc(doc(db, "usuarios", id)); await registrarLog('CONFIG', `EXCLUIU USUÁRIO ${n}`); } };
 window.atualizarPermissao = async function(id, n, k, v) { await updateDoc(doc(db, "usuarios", id), {[`permissoes.${k}`]: v}); await registrarLog('CONFIG', `EDITOU PERMISSAO DE ${n}`); };
-window.atualizarCargoUsuario = async function(id, n, c) { await updateDoc(doc(db, "usuarios", id), {cargo: c}); await registrarLog('CONFIG', `EDITOU CARGO DE ${n}`); };
+window.atualizarCargoUsuario = async function(id, n, c) { await updateDoc(doc(db, "usuarios", id), {cargo: c}); await registrarLog('CONFIG', `EDITOU CARGO DE ${n} P/ ${c}`); };
 
 window.renderizarUsuarios = function() {
     const c = document.getElementById('lista-usuarios-admin'); if(!c) return; c.innerHTML = usuarios.length===0?'<div class="italic text-gray-400">Vazio</div>':'';
@@ -434,21 +434,25 @@ window.salvarEdicao = async function() {
 
 window.excluirIndiv = async function(id) {
     if(!permissoesAtuais.exc) return; const a = obterUnificada().find(r=>r.firebase_id===id); if(!a) return;
-    if(await window.appConfirm("Excluir", `Apagar ${a.placa}?`, "Excluir", true)) { try { await deleteDoc(doc(db, "registros", id)); await registrarLog('EXCLUSAO', `EXCLUIU: ${a.placa}`, {registro_apagado:a}); registrosHistorico = registrosHistorico.filter(r=>r.firebase_id!==id); window.filtrarListas(); window.mostrarToast("Excluído.", "aviso"); } catch(e){} }
+    if(await window.appConfirm("Excluir", `Apagar ${a.placa}?`, "Excluir", true)) { try { await deleteDoc(doc(db, "registros", id)); await registrarLog('EXCLUSAO', `EXCLUIU: ${a.placa}`, {registro_apagado:a}); registrosHistorico = registrosHistorico.filter(r=>r.firebase_id!==id); window.filtrarListas(); window.mostrarToast(`Registro excluído.`, 'aviso'); } catch(e){} }
 };
 window.excluirEmLote = async function() {
     if(!permissoesAtuais.exc) return; const m = document.querySelectorAll('.cb-planilha:checked'); if(m.length===0) return window.appAlert("Vazio", "Selecione registros.", "aviso");
-    if(await window.appConfirm("Lote", `Apagar ${m.length} registros?`, "Apagar Lote", true)) { for(let cb of m) { try { const a = obterUnificada().find(r=>r.firebase_id===cb.value); await deleteDoc(doc(db, "registros", cb.value)); if(a) await registrarLog('EXCLUSAO', `LOTE: ${a.placa}`, {registro_apagado:a}); registrosHistorico = registrosHistorico.filter(r=>r.firebase_id!==cb.value); } catch(e){} } window.filtrarListas(); window.mostrarToast("Lote Excluído.", "aviso"); }
+    if(await window.appConfirm("Lote", `Apagar ${m.length} registros?`, "Apagar Lote", true)) { for(let cb of m) { try { const a = obterUnificada().find(r=>r.firebase_id===cb.value); await deleteDoc(doc(db, "registros", cb.value)); if(a) await registrarLog('EXCLUSAO', `LOTE: EXCLUIU PLACA ${a.placa}`, {registro_apagado:a}); registrosHistorico = registrosHistorico.filter(r=>r.firebase_id!==cb.value); } catch(e){} } window.filtrarListas(); window.mostrarToast("Lote apagado.", "aviso"); }
 };
 
-window.imprimirRelatorio = function() { document.getElementById('data-impressao').innerText = `Gerado em: ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')} por ${usuarioLogado}`; window.print(); };
+function formatarLinkMapa(c) { if(!c || c.includes('Sem') || c.includes('Indisponível') || c.includes('Plano B')) return ''; const limpa = c.replace(' (EXIF)', '').trim(); return `<a href="https://maps.google.com/?q=${encodeURIComponent(limpa)}" target="_blank" class="inline-block bg-blue-600 text-white text-[9px] font-black px-2 py-0.5 rounded ml-1 uppercase"><i class="fas fa-map-marked-alt mr-0.5"></i> Mapa</a>`; }
 
 window.verificarFiltroData = function(origem) { const s = document.getElementById(`filtro-data-${origem}`); const i = document.getElementById(`data-especifica-${origem}`); if(s.value === 'ESPECIFICA') i.classList.remove('hidden'); else i.classList.add('hidden'); if(origem === 'planilha') window.carregarHistorico(true); else window.mudarFiltroPatio(); };
 
 window.mudarFiltroPatio = async function() {
     const st = document.getElementById('filtro-status-patio').value; const ds = document.getElementById('filtro-data-patio').value; const de = document.getElementById('data-especifica-patio').value;
     if(st !== 'NO_PATIO') {
-        let q = null; if(ds === 'HOJE') q = query(collection(db, "registros"), where("dia_particao", "==", obterDataString('HOJE'))); else if(ds === 'ONTEM') q = query(collection(db, "registros"), where("dia_particao", "==", obterDataString('ONTEM'))); else if(ds === 'ESPECIFICA' && de) { const e = de.split('-'); q = query(collection(db, "registros"), where("dia_particao", "==", `${e[2]}/${e[1]}/${e[0]}`)); } else q = query(collection(db, "registros"), orderBy("id", "desc"), limit(50));
+        let q = null;
+        if(ds === 'HOJE') q = query(collection(db, "registros"), where("dia_particao", "==", obterDataString('HOJE')));
+        else if(ds === 'ONTEM') q = query(collection(db, "registros"), where("dia_particao", "==", obterDataString('ONTEM')));
+        else if(ds === 'ESPECIFICA' && de) { const e = de.split('-'); q = query(collection(db, "registros"), where("dia_particao", "==", `${e[2]}/${e[1]}/${e[0]}`)); }
+        else q = query(collection(db, "registros"), orderBy("id", "desc"), limit(50));
         const sn = await getDocs(q); registrosHistorico = []; sn.forEach(d => registrosHistorico.push({ firebase_id: d.id, ...d.data() }));
     }
     window.filtrarListas();
@@ -458,7 +462,11 @@ window.carregarHistorico = async function(rp = true) {
     if(rp) limitePaginacao = 50; const ds = document.getElementById('filtro-data-planilha')?.value || 'HOJE'; const de = document.getElementById('data-especifica-planilha')?.value || ''; const sl = document.getElementById('status-leitura-banco'); const bm = document.getElementById('btn-carregar-mais');
     if(sl) sl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Lendo banco...';
     try {
-        let qH = null; if(ds === 'HOJE') { qH = query(collection(db, "registros"), where("dia_particao", "==", obterDataString('HOJE'))); if(bm) bm.classList.add('hidden'); } else if(ds === 'ONTEM') { qH = query(collection(db, "registros"), where("dia_particao", "==", obterDataString('ONTEM'))); if(bm) bm.classList.add('hidden'); } else if(ds === 'ESPECIFICA') { if(!de) return; const e = de.split('-'); qH = query(collection(db, "registros"), where("dia_particao", "==", `${e[2]}/${e[1]}/${e[0]}`)); if(bm) bm.classList.add('hidden'); } else { qH = query(collection(db, "registros"), orderBy("id", "desc"), limit(limitePaginacao)); if(bm) bm.classList.remove('hidden'); }
+        let qH = null;
+        if(ds === 'HOJE') { qH = query(collection(db, "registros"), where("dia_particao", "==", obterDataString('HOJE'))); if(bm) bm.classList.add('hidden'); }
+        else if(ds === 'ONTEM') { qH = query(collection(db, "registros"), where("dia_particao", "==", obterDataString('ONTEM'))); if(bm) bm.classList.add('hidden'); }
+        else if(ds === 'ESPECIFICA') { if(!de) return; const e = de.split('-'); qH = query(collection(db, "registros"), where("dia_particao", "==", `${e[2]}/${e[1]}/${e[0]}`)); if(bm) bm.classList.add('hidden'); }
+        else { qH = query(collection(db, "registros"), orderBy("id", "desc"), limit(limitePaginacao)); if(bm) bm.classList.remove('hidden'); }
         const sn = await getDocs(qH); registrosHistorico = []; sn.forEach(d => registrosHistorico.push({ firebase_id: d.id, ...d.data() })); registrosHistorico.sort((a, b) => (b.id || 0) - (a.id || 0));
         if(sl) sl.innerHTML = `<i class="fas fa-check-circle text-green-600"></i> ${registrosHistorico.length} sincronizados.`; window.filtrarListas();
     } catch (err) { if(sl) sl.innerHTML = `<i class="fas fa-exclamation-circle text-red-600"></i> Erro DB.`; }
@@ -480,13 +488,18 @@ window.filtrarListas = function() {
     const tp = document.getElementById('busca-patio')?.value.toUpperCase() || ''; const sp = document.getElementById('filtro-status-patio')?.value || 'NO_PATIO'; const dpS = document.getElementById('filtro-data-patio')?.value || 'TODAS'; const dpE = document.getElementById('data-especifica-patio')?.value || '';
     const tl = document.getElementById('busca-planilha')?.value.toUpperCase() || ''; const sl = document.getElementById('filtro-status-planilha')?.value || 'TODOS'; const dlS = document.getElementById('filtro-data-planilha')?.value || 'HOJE'; const dlE = document.getElementById('data-especifica-planilha')?.value || '';
     const lP = document.getElementById('lista-patio'); const lL = document.getElementById('lista-planilha'); if(!lP || !lL) return;
-    lP.innerHTML = ''; lL.innerHTML = ''; let cP = 0, cL = 0; const hj = obterDataString('HOJE'); const on = obterDataString('ONTEM'); const un = obterUnificada();
+    lP.innerHTML = ''; lL.innerHTML = ''; let cP = 0, cL = 0;
+
+    const hj = obterDataString('HOJE'); const on = obterDataString('ONTEM'); const un = obterUnificada();
 
     un.forEach(r => {
         const pend = !r.saida; const tb = Object.values(r.dados_dinamicos || {}).join(" ").toUpperCase() + " " + r.placa; const dt = r.dia_particao || r.entrada.substring(0, 10);
         
-        let sPatio = true; if(sp === 'NO_PATIO' && !pend) sPatio = false; if(sp === 'SAIRAM' && pend) sPatio = false; if(dpS === 'HOJE' && dt !== hj) sPatio = false; if(dpS === 'ONTEM' && dt !== on) sPatio = false; if(dpS === 'ESPECIFICA' && dpE) { const e = dpE.split('-'); if(dt !== `${e[2]}/${e[1]}/${e[0]}`) sPatio = false; } if(tp && !tb.includes(tp)) sPatio = false;
-        let sPlanilha = true; if(sl === 'NO_PATIO' && !pend) sPlanilha = false; if(sl === 'SAIRAM' && pend) sPlanilha = false; if(dlS === 'HOJE' && dt !== hj) sPlanilha = false; if(dlS === 'ONTEM' && dt !== on) sPlanilha = false; if(dlS === 'ESPECIFICA' && dlE) { const e = dlE.split('-'); if(dt !== `${e[2]}/${e[1]}/${e[0]}`) sPlanilha = false; } if(tl && !tb.includes(tl)) sPlanilha = false;
+        let sPatio = true;
+        if(sp === 'NO_PATIO' && !pend) sPatio = false; if(sp === 'SAIRAM' && pend) sPatio = false; if(dpS === 'HOJE' && dt !== hj) sPatio = false; if(dpS === 'ONTEM' && dt !== on) sPatio = false; if(dpS === 'ESPECIFICA' && dpE) { const e = dpE.split('-'); if(dt !== `${e[2]}/${e[1]}/${e[0]}`) sPatio = false; } if(tp && !tb.includes(tp)) sPatio = false;
+
+        let sPlanilha = true;
+        if(sl === 'NO_PATIO' && !pend) sPlanilha = false; if(sl === 'SAIRAM' && pend) sPlanilha = false; if(dlS === 'HOJE' && dt !== hj) sPlanilha = false; if(dlS === 'ONTEM' && dt !== on) sPlanilha = false; if(dlS === 'ESPECIFICA' && dlE) { const e = dlE.split('-'); if(dt !== `${e[2]}/${e[1]}/${e[0]}`) sPlanilha = false; } if(tl && !tb.includes(tl)) sPlanilha = false;
 
         const iE = r.foto ? `<img src="${r.foto}" onclick="event.stopPropagation(); window.abrirZoom('${r.foto}')" class="w-11 h-11 object-cover rounded-lg border shadow-sm cursor-zoom-in no-print">` : `<div class="w-11 h-11 bg-gray-100 rounded-lg flex items-center justify-center text-gray-400 no-print"><i class="fas fa-camera"></i></div>`;
         const iS = r.foto_saida ? `<img src="${r.foto_saida}" onclick="event.stopPropagation(); window.abrirZoom('${r.foto_saida}')" class="w-11 h-11 object-cover rounded-lg border border-emerald-400 shadow-sm cursor-zoom-in no-print">` : '';
@@ -512,7 +525,7 @@ window.filtrarListas = function() {
     });
 
     const bP = document.getElementById('contador-patio-topo'); if(bP) bP.innerText = `${registrosPatioAtivo.length} No Pátio`;
-    if(cP === 0) lP.innerHTML = '<p class="text-center text-gray-400 py-10 font-bold uppercase">Nenhum veículo.</p>';
+    if(cP === 0) lP.innerHTML = '<p class="text-center text-gray-400 py-10 font-bold uppercase">Nenhum veículo no pátio.</p>';
     if(cL === 0) lL.innerHTML = '<tr><td colspan="17" class="text-center py-6 font-bold text-gray-400 uppercase">Nenhum registro.</td></tr>';
 };
 
