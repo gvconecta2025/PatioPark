@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>PátioPark - Gestão & Auditoria</title>
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/exif-js"></script>
@@ -17,6 +18,7 @@
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         .fade-in { animation: fadeIn 0.25s ease-out; }
         .pop-in { animation: popIn 0.2s cubic-bezier(0.16, 1, 0.3, 1); }
+        
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes popIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
 
@@ -42,7 +44,7 @@
 </head>
 <body class="h-[100dvh] flex flex-col overflow-hidden text-gray-800">
 
-    <!-- TOASTS & MODAIS DE AVISO GLOBAIS -->
+    <!-- TOASTS E MODAIS GLOBAIS -->
     <div id="toast-container" class="fixed top-4 left-1/2 -translate-x-1/2 z-[350] w-[92vw] max-w-md space-y-2 pointer-events-none no-print"></div>
 
     <div id="modal-dialogo-app" class="hidden fixed inset-0 z-[300] bg-blue-950/80 backdrop-blur-sm flex items-center justify-center p-4 no-print modal-custom">
@@ -58,7 +60,7 @@
         </div>
     </div>
 
-    <!-- MODAL DO GUIA TUTORIAL -->
+    <!-- TUTORIAL MODAL -->
     <div id="modal-guia-tutorial" class="hidden fixed inset-0 z-[290] bg-blue-950/85 backdrop-blur-sm flex items-center justify-center p-4 no-print modal-custom">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border-2 border-amber-400 pop-in">
             <div class="bg-gradient-to-r from-blue-900 to-blue-800 text-white p-4 flex justify-between items-center">
@@ -78,7 +80,6 @@
         </div>
     </div>
 
-    <!-- MODAL DE ZOOM NAS FOTOS -->
     <div id="modal-zoom" class="hidden fixed inset-0 z-[250] bg-black/95 flex items-center justify-center p-2 backdrop-blur-md no-print modal-custom" onclick="window.fecharZoom()">
         <button class="absolute top-4 right-4 text-white text-4xl">&times;</button>
         <img id="img-zoom" src="" class="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl">
@@ -102,7 +103,7 @@
         </div>
     </div>
 
-    <!-- CABEÇALHO DO APLICATIVO -->
+    <!-- CABEÇALHO SUPERIOR -->
     <header id="app-header" class="hidden bg-blue-900 text-white px-3 py-2.5 shadow-md flex-shrink-0 z-10 flex justify-between items-center no-print">
         <div class="flex items-center space-x-2">
             <i class="fas fa-truck text-blue-300 text-lg"></i>
@@ -122,7 +123,7 @@
 
     <main class="hidden flex-1 overflow-y-auto p-4 relative" id="main-content">
 
-        <!-- ABA 0: DASHBOARD -->
+        <!-- ABA: DASHBOARD -->
         <div id="view-dashboard" class="hidden pb-24 fade-in no-print">
             <div class="tutorial-box">
                 <div class="flex justify-between items-start">
@@ -174,11 +175,10 @@
             <div id="dash-secao-dev" class="hidden space-y-4">
                 <div class="tutorial-box">
                     <div class="flex justify-between items-center">
-                        <h4 class="font-black text-blue-950 text-xs uppercase"><i class="fas fa-shield-alt text-red-600 mr-1"></i> Guia DEV: Antifraudes</h4>
+                        <h4 class="font-black text-blue-950 text-xs uppercase"><i class="fas fa-shield-alt text-red-600 mr-1"></i> Guia DEV</h4>
                         <button onclick="window.abrirGuiaDetalhado('RADAR_DEV')" class="bg-blue-700 text-white text-[9px] font-black px-2.5 py-1 rounded-lg uppercase">Ler mais</button>
                     </div>
                 </div>
-
                 <div class="bg-red-950 text-white p-4 rounded-2xl shadow-lg border border-red-800">
                     <div class="flex justify-between items-center border-b border-red-800 pb-2 mb-3">
                         <h3 class="font-black text-sm uppercase tracking-wider text-red-200"><i class="fas fa-shield-alt mr-1"></i> Radar Antifraudes</h3>
@@ -205,10 +205,9 @@
             </div>
         </div>
 
-        <!-- ABA 2: REGISTRAR ENTRADA -->
+        <!-- ABA: REGISTRAR ENTRADA -->
         <div id="view-registro" class="hidden pb-24 fade-in no-print">
             <h2 class="text-xl font-bold mb-3 flex items-center uppercase"><i class="fas fa-edit mr-2 text-blue-700"></i> Entrada</h2>
-            
             <div class="tutorial-box">
                 <div class="flex justify-between items-start">
                     <div class="flex items-center space-x-2">
@@ -218,21 +217,18 @@
                     <button onclick="window.abrirGuiaDetalhado('ENTRADA')" class="bg-blue-700 text-white text-[9px] font-black px-2.5 py-1 rounded-lg uppercase shadow">Ver Detalhes</button>
                 </div>
             </div>
-
             <div class="space-y-4 bg-white p-4 rounded-xl shadow" id="formulario-dinamico"></div>
-            
             <button onclick="window.salvarRegistro()" id="btn-salvar-entrada" class="w-full bg-green-600 active:bg-green-700 text-white font-black p-4 rounded-xl mt-4 text-xl shadow-lg flex justify-center items-center uppercase transition">
                 <i class="fas fa-save mr-2"></i> SALVAR ENTRADA
             </button>
         </div>
 
-        <!-- ABA 3: PÁTIO -->
+        <!-- ABA: PÁTIO -->
         <div id="view-patio" class="hidden pb-24 fade-in no-print">
             <div class="flex justify-between items-center mb-3">
                 <h2 class="text-xl font-bold flex items-center uppercase"><i class="fas fa-truck-loading mr-2 text-blue-700"></i> Pátio Atual</h2>
                 <span id="contador-patio-topo" class="bg-blue-100 text-blue-800 text-xs font-black px-3 py-1 rounded-full uppercase">0 No Pátio</span>
             </div>
-            
             <div class="tutorial-box">
                 <div class="flex justify-between items-start">
                     <div class="flex items-center space-x-2">
@@ -242,7 +238,6 @@
                     <button onclick="window.abrirGuiaDetalhado('PATIO')" class="bg-blue-700 text-white text-[9px] font-black px-2.5 py-1 rounded-lg uppercase shadow">Ver Detalhes</button>
                 </div>
             </div>
-
             <div class="bg-white p-3 rounded-xl shadow-sm mb-4 border border-gray-200">
                 <div class="grid grid-cols-2 gap-2 mb-2">
                     <select id="filtro-status-patio" onchange="window.mudarFiltroPatio()" class="w-full p-2 border border-gray-300 rounded-lg text-sm uppercase bg-gray-50 font-bold">
@@ -263,11 +258,10 @@
                     <input type="text" id="busca-patio" onkeyup="window.filtrarListas()" placeholder="Buscar Placa..." class="w-full pl-10 pr-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 uppercase font-bold">
                 </div>
             </div>
-            
             <div id="lista-patio" class="space-y-4"></div>
         </div>
 
-        <!-- ABA 4: PLANILHA -->
+        <!-- ABA: PLANILHA -->
         <div id="view-planilha" class="hidden pb-24 fade-in">
             <div class="flex justify-between items-center mb-3 no-print">
                 <h2 class="text-xl font-bold flex items-center uppercase"><i class="fas fa-table mr-2 text-blue-700"></i> Histórico</h2>
@@ -276,7 +270,6 @@
                     <button id="btn-excluir-lote" onclick="window.excluirEmLote()" class="hidden bg-red-600 text-white font-bold px-3 py-2 rounded-lg text-xs shadow hover:bg-red-700"><i class="fas fa-trash-alt"></i> Excluir</button>
                 </div>
             </div>
-
             <div class="tutorial-box no-print">
                 <div class="flex justify-between items-start">
                     <div class="flex items-center space-x-2">
@@ -286,7 +279,6 @@
                     <button onclick="window.abrirGuiaDetalhado('PLANILHA')" class="bg-blue-700 text-white text-[9px] font-black px-2.5 py-1 rounded-lg uppercase shadow">Ver Detalhes</button>
                 </div>
             </div>
-
             <div class="bg-white p-3 rounded-xl shadow-sm mb-4 border border-gray-200 no-print">
                 <div class="grid grid-cols-2 gap-2 mb-2">
                     <select id="filtro-status-planilha" onchange="window.filtrarListas()" class="w-full p-2 border border-gray-300 rounded-lg text-sm uppercase bg-gray-50 font-bold">
@@ -325,14 +317,12 @@
                     </table>
                 </div>
             </div>
-
             <button id="btn-carregar-mais" onclick="window.carregarMaisHistorico()" class="hidden w-full bg-blue-100 text-blue-800 font-bold py-3 rounded-xl mt-3 text-xs uppercase shadow-sm no-print">Carregar +50 Antigos</button>
         </div>
 
         <!-- ABA 5: DEV CONFIG -->
         <div id="view-config" class="hidden pb-24 fade-in no-print">
             <h2 class="text-xl font-bold mb-3 flex items-center uppercase text-red-600"><i class="fas fa-user-shield mr-2"></i> Central DEV</h2>
-            
             <div class="tutorial-box">
                 <div class="flex justify-between items-start">
                     <div class="flex items-center space-x-2">
@@ -342,9 +332,7 @@
                     <button onclick="window.abrirGuiaDetalhado('DEV_CONFIG')" class="bg-blue-700 text-white text-[9px] font-black px-2.5 py-1 rounded-lg uppercase shadow">Ver Detalhes</button>
                 </div>
             </div>
-
             <div class="space-y-6">
-                <!-- Log -->
                 <div class="bg-white p-4 rounded-xl shadow border border-l-4 border-l-red-600">
                     <div class="flex justify-between items-center border-b pb-2 mb-3">
                         <h3 class="font-black text-gray-800 uppercase text-sm"><i class="fas fa-fingerprint text-red-600 mr-1"></i> Log de Auditoria</h3>
@@ -359,14 +347,12 @@
                             <option value="ENTRADA">Entradas</option>
                             <option value="SAIDA_PLANO_A">Saídas Plano A</option>
                             <option value="LOGIN">Acessos</option>
-                            <option value="CONFIG">Configurações</option>
                         </select>
                         <input type="text" id="busca-log-input" onkeyup="window.filtrarLogsTela()" placeholder="Buscar..." class="border p-2 rounded-lg text-xs uppercase font-bold">
                     </div>
                     <div id="lista-logs-auditoria" class="space-y-2 max-h-80 overflow-y-auto pr-1"></div>
                 </div>
                 
-                <!-- Usuários -->
                 <div class="bg-white p-4 rounded-xl shadow border border-l-4 border-l-purple-500">
                     <h3 class="font-bold text-gray-800 uppercase border-b pb-2 mb-3"><i class="fas fa-users-cog text-purple-600"></i> Cargos e Delegação</h3>
                     <div id="lista-usuarios-admin" class="space-y-3 mb-4 max-h-[50vh] overflow-y-auto pr-1"></div>
@@ -388,7 +374,6 @@
                     </div>
                 </div>
                 
-                <!-- Campos -->
                 <div class="bg-white p-4 rounded-xl shadow border border-l-4 border-l-green-500">
                     <h3 class="font-bold text-gray-800 uppercase border-b pb-2 mb-1"><i class="fas fa-list-ol text-green-600"></i> Construtor de Campos</h3>
                     <div id="lista-campos-admin" class="space-y-2 mb-4 mt-3"></div>
@@ -405,7 +390,6 @@
                     </div>
                 </div>
                 
-                <!-- Backup -->
                 <div class="bg-white p-4 rounded-xl shadow border">
                     <button id="btn-backup-nuvem" onclick="window.gerarBackupNuvem()" class="w-full bg-blue-600 text-white font-bold py-3 rounded-xl uppercase">Baixar Backup JSON</button>
                 </div>
@@ -424,7 +408,7 @@
         <button onclick="window.solicitarLogoff()" class="flex flex-col items-center flex-1 py-2 text-gray-400 font-bold transition hover:text-red-500"><i class="fas fa-sign-out-alt text-lg mb-0.5"></i><span class="text-[9px] md:text-xs">Sair</span></button>
     </nav>
 
-    <!-- MODAIS OPERACIONAIS -->
+    <!-- MODAIS DE OPERAÇÃO: FICHA, EDIÇÃO, SAÍDA, LOG -->
     <div id="modal-detalhes" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-blue-950/80 backdrop-blur-sm p-2 no-print modal-custom">
         <div class="bg-white rounded-2xl shadow-2xl w-[95vw] max-w-[540px] h-[94vh] flex flex-col overflow-hidden relative pop-in">
             <div class="bg-blue-900 text-white p-4 flex justify-between items-center flex-shrink-0">
@@ -458,7 +442,6 @@
                 </div>
                 <button onclick="window.fecharModalSaida()" class="text-white text-3xl leading-none">&times;</button>
             </div>
-
             <div class="tutorial-box mx-3 mt-3 mb-0">
                 <h4 class="font-black text-blue-950 text-[11px] uppercase"><i class="fas fa-graduation-cap mr-1"></i> Saída (Plano A vs Plano B)</h4>
                 <p class="text-[10px] text-blue-900 font-bold mt-1 leading-snug">
@@ -466,7 +449,6 @@
                     • <b>Plano B:</b> Digite a placa à mão se a câmera falhar.
                 </p>
             </div>
-
             <div class="grid grid-cols-2 bg-gray-100 p-1.5 m-3 rounded-xl border border-gray-200">
                 <button type="button" id="tab-saida-plano-a" onclick="window.alternarModoSaida('A')" class="py-2 rounded-lg font-black text-xs uppercase bg-blue-600 text-white shadow transition">
                     <i class="fas fa-camera mr-1"></i> Plano A: Foto
@@ -475,9 +457,7 @@
                     <i class="fas fa-keyboard mr-1"></i> Plano B: Manual
                 </button>
             </div>
-
             <div class="px-5 pb-5">
-                <!-- PLANO A -->
                 <div id="box-saida-plano-a" class="space-y-3">
                     <div class="grid grid-cols-2 gap-3">
                         <label class="bg-blue-50 text-blue-700 border-2 border-blue-300 rounded-xl p-4 flex flex-col items-center justify-center cursor-pointer hover:bg-blue-100 transition">
@@ -489,7 +469,6 @@
                             <input type="file" accept="image/*" class="hidden" onchange="window.processarFotoSaida(event)">
                         </label>
                     </div>
-                    
                     <div id="preview-saida-container" class="hidden p-3 border-2 border-emerald-300 rounded-xl bg-emerald-50/60 flex items-center space-x-3">
                         <img id="preview-saida-img" class="h-16 w-16 object-cover rounded-lg border border-emerald-400">
                         <div class="flex-1 text-[9px] font-bold uppercase text-gray-700">
@@ -500,8 +479,6 @@
                     </div>
                     <div id="status-foto-saida" class="text-xs font-bold text-orange-600 text-center hidden"></div>
                 </div>
-
-                <!-- PLANO B -->
                 <div id="box-saida-plano-b" class="hidden space-y-3">
                     <div class="bg-amber-50 border-l-4 border-amber-500 p-3 rounded-r-xl text-[10px] text-amber-900 font-bold uppercase">
                         <i class="fas fa-exclamation-triangle text-amber-600 mr-1"></i> Contingência: Digite a placa para liberar.
@@ -514,16 +491,14 @@
                         <option value="LIBERAÇÃO RÁPIDA DE EMERGÊNCIA">Emergência</option>
                     </select>
                 </div>
-
                 <div class="flex space-x-2 mt-5">
-                    <button type="button" onclick="window.fecharModalSaida()" class="w-1/3 bg-gray-200 text-gray-800 font-black py-3.5 rounded-xl uppercase text-xs hover:bg-gray-300 transition">Cancelar</button>
-                    <button type="button" onclick="window.confirmarSaida()" id="btn-confirmar-saida" class="flex-1 bg-red-600 text-white font-black py-3.5 rounded-xl uppercase text-sm hover:bg-red-700 transition">Confirmar</button>
+                    <button type="button" onclick="window.fecharModalSaida()" class="w-1/3 bg-gray-200 text-gray-800 font-black py-3.5 rounded-xl uppercase text-xs">Cancelar</button>
+                    <button type="button" onclick="window.confirmarSaida()" id="btn-confirmar-saida" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-black py-3.5 rounded-xl uppercase text-sm transition">Confirmar</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- MODAL DETALHE DE LOG (AUDITORIA) -->
     <div id="modal-detalhe-log" class="hidden fixed inset-0 z-[80] bg-blue-950/85 backdrop-blur-sm flex items-center justify-center p-3 no-print modal-custom">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col overflow-hidden pop-in border border-red-200">
             <div class="bg-red-900 text-white p-4 flex justify-between items-center flex-shrink-0">
@@ -535,8 +510,7 @@
         </div>
     </div>
 
-    <!-- CARREGAMENTO DO ARQUIVO DE LÓGICA (app.js DEVE ESTAR NA MESMA PASTA) -->
+    <!-- O ARQUIVO EXTERNO COM A LÓGICA -->
     <script type="module" src="app.js"></script>
-
 </body>
 </html>
