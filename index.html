@@ -73,7 +73,10 @@
 
         <!-- ABA 2: PÁTIO -->
         <div id="view-patio" class="hidden pb-20 fade-in no-print">
-            <h2 class="text-xl font-bold mb-4 flex items-center uppercase"><i class="fas fa-truck-loading mr-2"></i> Pátio Atual</h2>
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold flex items-center uppercase"><i class="fas fa-truck-loading mr-2"></i> Pátio Atual</h2>
+                <span id="contador-patio-topo" class="bg-blue-100 text-blue-800 text-xs font-black px-2.5 py-1 rounded-full uppercase">0 Veículos</span>
+            </div>
             <div class="bg-white p-3 rounded-lg shadow-sm mb-4 border border-gray-200">
                 <div class="grid grid-cols-2 gap-2 mb-2">
                     <select id="filtro-status-patio" onchange="window.filtrarListas()" class="w-full p-2 border border-gray-300 rounded text-sm uppercase bg-gray-50 font-bold">
@@ -102,6 +105,11 @@
             <div class="flex justify-between items-center mb-4 no-print">
                 <h2 class="text-xl font-bold flex items-center uppercase"><i class="fas fa-table mr-2"></i> Histórico</h2>
                 <div class="flex space-x-2">
+                    <select id="limite-consulta" onchange="window.alterarLimiteConsulta(this.value)" class="bg-white border border-gray-300 text-gray-700 font-bold px-2 py-2 rounded text-xs shadow-sm uppercase">
+                        <option value="100">Últimos 100</option>
+                        <option value="300">Últimos 300</option>
+                        <option value="600">Últimos 600</option>
+                    </select>
                     <button id="btn-imprimir" onclick="window.imprimirRelatorio()" class="bg-gray-700 text-white font-bold px-3 py-2 rounded text-xs shadow hover:bg-gray-800 transition"><i class="fas fa-print"></i> PDF</button>
                     <button id="btn-excluir-lote" onclick="window.excluirEmLote()" class="hidden bg-red-600 text-white font-bold px-3 py-2 rounded text-xs shadow hover:bg-red-700 transition"><i class="fas fa-trash-alt"></i> Excluir Lote</button>
                 </div>
@@ -163,12 +171,14 @@
                 </div>
 
                 <div class="bg-white p-4 rounded-lg shadow border border-gray-200">
-                    <h3 class="font-bold text-gray-800 uppercase border-b pb-2 mb-3"><i class="fas fa-database"></i> Backup do Sistema</h3>
-                    <button onclick="window.gerarBackupNuvem()" class="w-full bg-blue-600 text-white font-bold py-3 rounded uppercase shadow hover:bg-blue-700"><i class="fas fa-cloud-download-alt"></i> Baixar Backup Completo</button>
+                    <h3 class="font-bold text-gray-800 uppercase border-b pb-2 mb-3"><i class="fas fa-database"></i> Backup Completo da Nuvem</h3>
+                    <p class="text-[10px] text-gray-500 mb-3 uppercase font-bold">Varre o banco de dados inteiro no servidor e baixa 100% dos registros.</p>
+                    <button id="btn-backup-nuvem" onclick="window.gerarBackupNuvem()" class="w-full bg-blue-600 text-white font-bold py-3 rounded uppercase shadow hover:bg-blue-700"><i class="fas fa-cloud-download-alt"></i> Baixar Backup Completo</button>
                 </div>
 
-                <div class="bg-white p-4 rounded-lg shadow border border-gray-200">
-                    <h3 class="font-bold text-gray-800 uppercase border-b pb-2 mb-3"><i class="fas fa-list-ol"></i> Estrutura de Campos</h3>
+                <div class="bg-white p-4 rounded-lg shadow border border-gray-200 border-l-4 border-l-green-500">
+                    <h3 class="font-bold text-gray-800 uppercase border-b pb-2 mb-1"><i class="fas fa-list-ol text-green-600"></i> Estrutura de Campos (Sincronizada)</h3>
+                    <p class="text-[10px] text-gray-500 mb-3 font-bold uppercase">Qualquer alteração aqui atualiza todos os celulares da equipe instantaneamente.</p>
                     <div id="lista-campos-admin" class="space-y-2 mb-4"></div>
                     <div class="border-t pt-4 mt-2">
                         <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Criar Novo Campo</label>
@@ -244,7 +254,7 @@
     <!-- SCRIPT TIPO MODULE -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, updateDoc, doc, deleteDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, setDoc, updateDoc, doc, deleteDoc, onSnapshot, query, orderBy, limit, where, getDocs } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDYXFu-soolSOoCAxNYlVVgeJVwzJef_fk",
@@ -270,9 +280,71 @@
         let registroSelecionadoFirebaseId = null;
         let fotoAtualUrl = null; let dataHoraMetadata = null; let gpsLocalizacao = null; 
         let ultimoVeiculoEncontrado = null;
+        let unsubscribeRegistros = null;
+        let limiteAtual = 100;
 
         // PERMISSÕES SUPER ADMIN
         const permissoesAdminDev = { reg: true, pat: true, sai: true, pla: true, imp: true, edi: true, exc: true };
+
+        // ==========================================
+        // 1. SINCRONIZAÇÃO DE CAMPOS NA NUVEM (FIRESTORE)
+        // ==========================================
+        const camposPadrao = [
+            { id: "placa", nome: "Placa", tipo: "placa", fixo: true },
+            { id: "local", nome: "Local de Entrega", tipo: "text", fixo: false },
+            { id: "motorista", nome: "Motorista Principal", tipo: "text", fixo: false },
+            { id: "documento", nome: "Documento", tipo: "text", fixo: false },
+            { id: "empresa", nome: "Nome da Empresa", tipo: "text", fixo: false },
+            { id: "modelo", nome: "Modelo do Veículo", tipo: "select_modelo", fixo: false },
+            { id: "nota", nome: "Nota Fiscal", tipo: "text", fixo: false },
+            { id: "observacoes", nome: "Observações", tipo: "textarea", fixo: false }
+        ];
+
+        let schemaCampos = [...camposPadrao];
+
+        // Escuta alterações na estrutura de campos em tempo real para todos os aparelhos
+        onSnapshot(doc(db, "configuracoes", "schema"), (docSnap) => {
+            if (docSnap.exists() && Array.isArray(docSnap.data().campos)) {
+                schemaCampos = docSnap.data().campos;
+            } else {
+                // Inicializa o documento na nuvem caso seja o primeiro acesso
+                setDoc(doc(db, "configuracoes", "schema"), { campos: camposPadrao }).catch(() => {});
+            }
+            if (usuarioLogado) window.renderizarTudo();
+        });
+
+        async function salvarSchema() {
+            try {
+                await setDoc(doc(db, "configuracoes", "schema"), { campos: schemaCampos });
+            } catch (e) {
+                alert("Erro ao sincronizar campos na nuvem: " + e.message);
+            }
+        }
+
+        // ==========================================
+        // 2. CONSULTA OTIMIZADA COM LIMITE DINÂMICO
+        // ==========================================
+        function iniciarListenerRegistros(qtdLimite) {
+            if (unsubscribeRegistros) unsubscribeRegistros();
+            
+            const q = query(collection(db, "registros"), orderBy("id", "desc"), limit(Number(qtdLimite)));
+            unsubscribeRegistros = onSnapshot(q, (snapshot) => {
+                registros = [];
+                snapshot.forEach((doc) => registros.push({ firebase_id: doc.id, ...doc.data() }));
+                window.filtrarListas();
+                document.getElementById('status-conexao').innerHTML = '<i class="fas fa-wifi text-green-400"></i> Online';
+            }, (error) => {
+                document.getElementById('status-conexao').innerHTML = '<i class="fas fa-exclamation-triangle text-red-400"></i> Erro DB';
+            });
+        }
+
+        window.alterarLimiteConsulta = function(novoLimite) {
+            limiteAtual = Number(novoLimite);
+            iniciarListenerRegistros(limiteAtual);
+        };
+
+        // Inicia o listener padrão otimizado (100 registros mais recentes)
+        iniciarListenerRegistros(limiteAtual);
 
         // ==========================================
         // SISTEMA RBAC (PERMISSÕES E LOGIN)
@@ -281,6 +353,8 @@
             usuarios = [];
             snapshot.forEach((doc) => usuarios.push({ id: doc.id, ...doc.data() }));
             window.renderizarUsuarios();
+        }, (error) => {
+            document.getElementById('login-status').innerHTML = '<i class="fas fa-exclamation-triangle"></i> Sem permissão. Atualize as Regras do Firestore.';
         });
 
         window.fazerLogin = function() {
@@ -301,7 +375,6 @@
             if(func) {
                 usuarioLogado = func.nome;
                 isAdmin = false;
-                // Carrega permissões ou defaults básicos se for um usuário antigo
                 permissoesAtuais = func.permissoes || { reg: true, pat: true, sai: true, pla: false, imp: false, edi: false, exc: false };
                 iniciarAplicativo();
             } else {
@@ -316,7 +389,6 @@
             document.getElementById('bottom-nav').classList.remove('hidden');
             document.getElementById('nome-usuario-header').innerHTML = `<i class="fas fa-user-shield"></i> ${usuarioLogado}`;
             
-            // CONFIGURA A INTERFACE BASEADA NAS PERMISSÕES
             document.getElementById('tab-registro').style.display = permissoesAtuais.reg ? 'flex' : 'none';
             document.getElementById('tab-patio').style.display = permissoesAtuais.pat ? 'flex' : 'none';
             document.getElementById('tab-planilha').style.display = permissoesAtuais.pla ? 'flex' : 'none';
@@ -327,7 +399,6 @@
 
             window.renderizarTudo();
             
-            // Força abrir a primeira aba que o usuário tem permissão
             if(permissoesAtuais.reg) window.mudarAba('registro');
             else if(permissoesAtuais.pat) window.mudarAba('patio');
             else if(permissoesAtuais.pla) window.mudarAba('planilha');
@@ -400,25 +471,18 @@
         };
 
         // ==========================================
-        // SISTEMA DE CAMPOS E DADOS
+        // RENDERIZAÇÃO DA ESTRUTURA DINÂMICA
         // ==========================================
-        const camposPadrao = [
-            { id: "placa", nome: "Placa", tipo: "placa", fixo: true },
-            { id: "local", nome: "Local de Entrega", tipo: "text", fixo: false },
-            { id: "motorista", nome: "Motorista Principal", tipo: "text", fixo: false },
-            { id: "documento", nome: "Documento", tipo: "text", fixo: false },
-            { id: "empresa", nome: "Nome da Empresa", tipo: "text", fixo: false },
-            { id: "modelo", nome: "Modelo do Veículo", tipo: "select_modelo", fixo: false },
-            { id: "nota", nome: "Nota Fiscal", tipo: "text", fixo: false },
-            { id: "observacoes", nome: "Observações", tipo: "textarea", fixo: false }
-        ];
-
-        let schemaCampos = JSON.parse(localStorage.getItem('patiopark_schema')) || camposPadrao;
-        function salvarSchema() { localStorage.setItem('patiopark_schema', JSON.stringify(schemaCampos)); window.renderizarTudo(); }
-
         window.renderizarTudo = function() {
             const formContainer = document.getElementById('formulario-dinamico');
             if(formContainer) {
+                // Preserva valores digitados caso uma atualização ocorra durante o preenchimento
+                const valoresAtuais = {};
+                schemaCampos.forEach(c => {
+                    const el = document.getElementById('campo_' + c.id);
+                    if(el) valoresAtuais[c.id] = el.value;
+                });
+
                 formContainer.innerHTML = '';
                 schemaCampos.forEach((campo, index) => {
                     let html = '';
@@ -451,6 +515,12 @@
                     }
                     formContainer.insertAdjacentHTML('beforeend', html);
                 });
+
+                // Restaura valores caso existissem
+                schemaCampos.forEach(c => {
+                    const el = document.getElementById('campo_' + c.id);
+                    if(el && valoresAtuais[c.id]) el.value = valoresAtuais[c.id];
+                });
             }
 
             const cabecalho = document.getElementById('cabecalho-planilha');
@@ -479,16 +549,8 @@
             window.filtrarListas();
         };
 
-        const q = query(collection(db, "registros"), orderBy("id", "desc"));
-        onSnapshot(q, (snapshot) => {
-            registros = [];
-            snapshot.forEach((doc) => registros.push({ firebase_id: doc.id, ...doc.data() }));
-            window.filtrarListas();
-            document.getElementById('status-conexao').innerHTML = '<i class="fas fa-wifi text-green-400"></i> Online';
-        }, (error) => { document.getElementById('status-conexao').innerHTML = '<i class="fas fa-exclamation-triangle text-red-400"></i> Erro DB'; });
-
         // ==========================================
-        // NAVEGAÇÃO E INTERFACE
+        // NAVEGAÇÃO E BUSCA PROFUNDA DE HISTÓRICO
         // ==========================================
         const botNav = document.getElementById('bottom-nav');
         document.addEventListener('focusin', (e) => { if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') botNav.style.transform = 'translateY(100%)'; });
@@ -524,20 +586,39 @@
             }
         };
 
-        window.verificarHistorico = function(placaStr) {
+        // Busca inteligente: procura primeiro nos 100 da memória; se não achar, consulta o banco completo na nuvem
+        window.verificarHistorico = async function(placaStr) {
             const placa = placaStr.trim().toUpperCase();
-            if(placa.length < 7) return;
+            const alertaBox = document.getElementById('alerta_historico_completo');
+            const textoBox = document.getElementById('texto_historico_completo');
+            if(!alertaBox || !textoBox) return;
 
-            const historico = registros.filter(r => r.placa === placa);
+            if(placa.length < 7) {
+                alertaBox.classList.add('hidden');
+                window._veiculo_temp = null;
+                return;
+            }
+
+            let historico = registros.filter(r => r.placa === placa);
+            
+            // Se não encontrou nos últimos 100 da memória, busca no arquivo completo do Firestore
+            if(historico.length === 0) {
+                try {
+                    const snap = await getDocs(query(collection(db, "registros"), where("placa", "==", placa)));
+                    snap.forEach(d => historico.push({ firebase_id: d.id, ...d.data() }));
+                    historico.sort((a, b) => (b.id || 0) - (a.id || 0));
+                } catch(e) { console.error("Erro na busca profunda:", e); }
+            }
+
             if(historico.length > 0) {
                 ultimoVeiculoEncontrado = historico[0];
                 const empresa = ultimoVeiculoEncontrado.dados_dinamicos?.empresa || 'S/ EMPRESA';
-                const texto = `Visitas: ${historico.length} <br> Última: ${ultimoVeiculoEncontrado.entrada.split(' ')[0]} <br> Emp: ${empresa}`;
-                document.getElementById('alerta_historico_completo').classList.remove('hidden');
-                document.getElementById('texto_historico_completo').innerHTML = texto;
+                const texto = `Visitas registradas: ${historico.length} <br> Última: ${ultimoVeiculoEncontrado.entrada.split(' ')[0]} <br> Emp: ${empresa}`;
+                alertaBox.classList.remove('hidden');
+                textoBox.innerHTML = texto;
                 window._veiculo_temp = ultimoVeiculoEncontrado;
             } else {
-                document.getElementById('alerta_historico_completo').classList.add('hidden');
+                alertaBox.classList.add('hidden');
                 window._veiculo_temp = null;
             }
         };
@@ -559,29 +640,52 @@
         };
 
         // ==========================================
-        // ADMIN LÓGICA DE CAMPOS E BACKUP
+        // ADMIN LÓGICA DE CAMPOS E BACKUP INTEGRAL
         // ==========================================
-        window.adicionarCampo = function() {
-            const nome = document.getElementById('novo-campo-nome').value.trim();
+        window.adicionarCampo = async function() {
+            const nome = document.getElementById('novo-campo-nome').value.trim().toUpperCase();
             const tipo = document.getElementById('novo-campo-tipo').value;
             if(!nome) return alert("Digite um nome.");
             schemaCampos.push({ id: "custom_" + Date.now(), nome, tipo, fixo: false });
-            document.getElementById('novo-campo-nome').value = ''; salvarSchema();
+            document.getElementById('novo-campo-nome').value = '';
+            await salvarSchema();
         };
-        window.excluirCampo = function(index) { if(confirm("Excluir campo?")) { schemaCampos.splice(index, 1); salvarSchema(); } };
-        window.moverCampo = function(index, dir) {
-            const nIndex = index + dir;
-            if(nIndex >= 0 && nIndex < schemaCampos.length) {
-                const temp = schemaCampos[index]; schemaCampos[index] = schemaCampos[nIndex]; schemaCampos[nIndex] = temp; salvarSchema();
+        window.excluirCampo = async function(index) {
+            if(confirm("Excluir campo para toda a equipe?")) {
+                schemaCampos.splice(index, 1);
+                await salvarSchema();
             }
         };
-        window.gerarBackupNuvem = function() {
-            if(registros.length === 0) return alert("Banco vazio.");
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(registros, null, 2));
-            const dl = document.createElement('a');
-            dl.setAttribute("href", dataStr);
-            dl.setAttribute("download", `patiopark_backup_${new Date().getTime()}.json`);
-            dl.click();
+        window.moverCampo = async function(index, dir) {
+            const nIndex = index + dir;
+            if(nIndex >= 0 && nIndex < schemaCampos.length) {
+                const temp = schemaCampos[index]; schemaCampos[index] = schemaCampos[nIndex]; schemaCampos[nIndex] = temp;
+                await salvarSchema();
+            }
+        };
+
+        // Faz uma leitura sob demanda de 100% da coleção para o arquivo de backup
+        window.gerarBackupNuvem = async function() {
+            const btn = document.getElementById('btn-backup-nuvem');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Baixando banco completo...';
+            btn.disabled = true;
+            try {
+                const snap = await getDocs(query(collection(db, "registros"), orderBy("id", "desc")));
+                const todosRegistros = [];
+                snap.forEach(d => todosRegistros.push({ firebase_id: d.id, ...d.data() }));
+                
+                if(todosRegistros.length === 0) return alert("Banco vazio.");
+                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(todosRegistros, null, 2));
+                const dl = document.createElement('a');
+                dl.setAttribute("href", dataStr);
+                dl.setAttribute("download", `patiopark_backup_completo_${new Date().getTime()}.json`);
+                dl.click();
+            } catch (e) {
+                alert("Erro ao gerar backup: " + e.message);
+            } finally {
+                btn.innerHTML = '<i class="fas fa-cloud-download-alt"></i> Baixar Backup Completo';
+                btn.disabled = false;
+            }
         };
 
         // ==========================================
@@ -604,7 +708,8 @@
                 const exifDate = EXIF.getTag(this, "DateTimeOriginal");
                 if (exifDate) {
                     const partes = exifDate.split(' ');
-                    dataHoraMetadata = `${partes[0].replace(/:/g,'/')} ${partes[1].substring(0,5)}`;
+                    const d = partes[0].split(':');
+                    dataHoraMetadata = `${d[2]}/${d[1]}/${d[0]} ${partes[1].substring(0,5)}`;
                 } else {
                     const fallback = new Date(file.lastModified);
                     dataHoraMetadata = fallback.toLocaleDateString('pt-BR') + ' ' + fallback.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
@@ -758,18 +863,19 @@
         };
 
         window.filtrarListas = function() {
-            const termoPatio = document.getElementById('busca-patio').value.toUpperCase();
-            const statusPatio = document.getElementById('filtro-status-patio').value;
-            const dataPatioSel = document.getElementById('filtro-data-patio').value;
-            const dataPatioEsp = document.getElementById('data-especifica-patio').value;
+            const termoPatio = document.getElementById('busca-patio')?.value.toUpperCase() || '';
+            const statusPatio = document.getElementById('filtro-status-patio')?.value || 'NO_PATIO';
+            const dataPatioSel = document.getElementById('filtro-data-patio')?.value || 'TODAS';
+            const dataPatioEsp = document.getElementById('data-especifica-patio')?.value || '';
 
-            const termoPlanilha = document.getElementById('busca-planilha').value.toUpperCase();
-            const statusPlanilha = document.getElementById('filtro-status-planilha').value;
-            const dataPlanilhaSel = document.getElementById('filtro-data-planilha').value;
-            const dataPlanilhaEsp = document.getElementById('data-especifica-planilha').value;
+            const termoPlanilha = document.getElementById('busca-planilha')?.value.toUpperCase() || '';
+            const statusPlanilha = document.getElementById('filtro-status-planilha')?.value || 'TODOS';
+            const dataPlanilhaSel = document.getElementById('filtro-data-planilha')?.value || 'TODAS';
+            const dataPlanilhaEsp = document.getElementById('data-especifica-planilha')?.value || '';
 
             const listaPatio = document.getElementById('lista-patio');
             const listaPlanilha = document.getElementById('lista-planilha');
+            if(!listaPatio || !listaPlanilha) return;
             
             listaPatio.innerHTML = ''; listaPlanilha.innerHTML = '';
             let countPatio = 0, countPlanilha = 0;
@@ -807,7 +913,6 @@
 
                 const imgThumb = r.foto ? `<img src="${r.foto}" onclick="event.stopPropagation(); window.abrirZoom('${r.foto}')" class="w-12 h-12 object-cover rounded-lg border shadow-sm cursor-zoom-in no-print">` : `<div class="w-12 h-12 bg-gray-100 rounded flex flex-col items-center justify-center text-gray-400 text-[10px] no-print"><i class="fas fa-camera"></i></div>`;
                 
-                // Botões de Ação respeitando Permissões
                 const btnEdit = permissoesAtuais.edi ? `<button onclick="event.stopPropagation(); window.abrirEdicao('${r.firebase_id}')" class="text-blue-500 hover:text-blue-700 bg-blue-50 p-2 rounded mr-1 no-print"><i class="fas fa-pen"></i></button>` : '';
                 const btnDel = permissoesAtuais.exc ? `<button onclick="event.stopPropagation(); window.excluirIndiv('${r.firebase_id}')" class="text-red-500 hover:text-red-700 bg-red-50 p-2 rounded no-print"><i class="fas fa-trash"></i></button>` : '';
 
@@ -865,6 +970,9 @@
                     listaPlanilha.appendChild(tr);
                 }
             });
+
+            const badgePatio = document.getElementById('contador-patio-topo');
+            if(badgePatio) badgePatio.innerText = `${countPatio} Veículo(s)`;
 
             if(countPatio === 0) listaPatio.innerHTML = '<p class="text-center text-gray-500 py-10 font-bold uppercase">Nenhum veículo.</p>';
             if(countPlanilha === 0) listaPlanilha.innerHTML = '<tr><td colspan="15" class="text-center py-6 font-bold text-gray-500 uppercase">Nenhum registro.</td></tr>';
