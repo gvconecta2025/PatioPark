@@ -20,17 +20,33 @@
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes popIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
 
+        /* ESTILO DAS JANELAS EXPLICATIVAS DO MODO TUTORIAL */
+        .tutorial-box {
+            display: none;
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+            border: 2px solid #3b82f6;
+            border-left: 6px solid #1d4ed8;
+            border-radius: 0.85rem;
+            padding: 0.75rem;
+            margin-bottom: 0.85rem;
+            box-shadow: 0 4px 12px rgba(29, 78, 216, 0.12);
+            animation: popIn 0.25s ease-out;
+        }
+        body.tutorial-ativo .tutorial-box {
+            display: block;
+        }
+
         /* REGRAS DE IMPRESSÃO (PDF / PAISAGEM) */
         @media print {
             @page { size: A4 landscape; margin: 10mm; }
             body, main { height: auto !important; overflow: visible !important; background-color: white !important; }
-            header, nav, #view-dashboard, #view-registro, #view-patio, #view-config, #view-login, .no-print, .modal-custom, #toast-container { display: none !important; }
+            header, nav, #view-dashboard, #view-registro, #view-patio, #view-config, #view-login, .no-print, .modal-custom, .tutorial-box, #toast-container { display: none !important; }
             #view-planilha { display: block !important; position: absolute; left: 0; top: 0; width: 100%; height: auto !important; }
             #cabecalho-impressao { display: block !important; text-align: center; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #000; }
             .bg-white { box-shadow: none !important; border: none !important; }
             .overflow-x-auto { overflow: visible !important; }
             table { width: 100% !important; border-collapse: collapse !important; }
-            th, td { border: 1px solid #000 !important; padding: 6px !important; font-size: 10px !important; white-space: normal !important; color: black !important; background: white !important; }
+            th, td { border: 1px solid #000 !important; padding: 6px !important; font-size: 9px !important; white-space: normal !important; color: black !important; background: white !important; }
             th { background-color: #e5e7eb !important; font-weight: bold !important; -webkit-print-color-adjust: exact; }
             td img, td button, td input[type="checkbox"] { display: none !important; }
         }
@@ -41,7 +57,7 @@
     <!-- CONTAINER DE NOTIFICAÇÕES FLUTUANTES (TOASTS PERSONALIZADOS) -->
     <div id="toast-container" class="fixed top-4 left-1/2 -translate-x-1/2 z-[350] w-[92vw] max-w-md space-y-2 pointer-events-none no-print"></div>
 
-    <!-- JANELA DE DIÁLOGO TEMÁTICA DO APP (SUBSTITUI ALERT, CONFIRM E PROMPT NATIVOS) -->
+    <!-- JANELA DE DIÁLOGO TEMÁTICA DO APP (SUBSTITUI ALERT E CONFIRM NATIVOS) -->
     <div id="modal-dialogo-app" class="hidden fixed inset-0 z-[300] bg-blue-950/80 backdrop-blur-sm flex items-center justify-center p-4 no-print modal-custom">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden border border-blue-100 pop-in">
             <div id="dialogo-header" class="bg-blue-900 text-white p-4 flex items-center space-x-3">
@@ -50,10 +66,27 @@
             </div>
             <div class="p-5">
                 <p id="dialogo-mensagem" class="text-sm text-gray-700 font-bold leading-relaxed whitespace-pre-line"></p>
-                <div id="dialogo-input-wrap" class="hidden mt-4">
-                    <input type="text" id="dialogo-input" class="w-full border-2 border-blue-400 p-3 rounded-xl focus:border-blue-600 focus:outline-none uppercase text-center font-black">
-                </div>
                 <div id="dialogo-botoes" class="flex space-x-3 mt-6"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JANELA MODAL DE EXPLICAÇÃO PROFUNDA DO TUTORIAL -->
+    <div id="modal-guia-tutorial" class="hidden fixed inset-0 z-[290] bg-blue-950/85 backdrop-blur-sm flex items-center justify-center p-4 no-print modal-custom">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border-2 border-amber-400 pop-in">
+            <div class="bg-gradient-to-r from-blue-900 to-blue-800 text-white p-4 flex justify-between items-center">
+                <div class="flex items-center space-x-2">
+                    <span class="bg-amber-400 text-blue-950 w-8 h-8 rounded-lg flex items-center justify-center font-black"><i class="fas fa-graduation-cap"></i></span>
+                    <div>
+                        <span class="text-[9px] text-amber-300 font-black uppercase tracking-widest block">Tutorial Interativo PátioPark</span>
+                        <h3 id="tutorial-modal-titulo" class="font-black text-sm uppercase">Como Funciona</h3>
+                    </div>
+                </div>
+                <button onclick="window.fecharModalGuiaTutorial()" class="text-white text-2xl leading-none">&times;</button>
+            </div>
+            <div id="tutorial-modal-corpo" class="p-5 space-y-3 text-xs text-gray-700 font-medium leading-relaxed max-h-[70vh] overflow-y-auto"></div>
+            <div class="p-3 bg-gray-50 border-t flex justify-end">
+                <button onclick="window.fecharModalGuiaTutorial()" class="bg-blue-700 hover:bg-blue-800 text-white font-black px-5 py-2.5 rounded-xl text-xs uppercase shadow">Entendi, Fechar Guia</button>
             </div>
         </div>
     </div>
@@ -76,26 +109,45 @@
         </div>
     </div>
 
-    <!-- CABEÇALHO -->
-    <header id="app-header" class="hidden bg-blue-900 text-white px-4 py-3 shadow-md flex-shrink-0 z-10 flex justify-between items-center no-print">
+    <!-- CABEÇALHO SUPERIOR COM BOTÃO DE MOSTRAR/OCULTAR TUTORIAL -->
+    <header id="app-header" class="hidden bg-blue-900 text-white px-3 py-2.5 shadow-md flex-shrink-0 z-10 flex justify-between items-center no-print">
         <div class="flex items-center space-x-2">
             <i class="fas fa-truck text-blue-300 text-lg"></i>
             <div>
-                <h1 class="text-base font-black uppercase leading-none tracking-wide">PÁTIOPARK</h1>
-                <span id="cargo-usuario-header" class="text-[9px] text-blue-300 font-bold uppercase tracking-widest">OPERACIONAL</span>
+                <h1 class="text-sm md:text-base font-black uppercase leading-none tracking-wide">PÁTIOPARK</h1>
+                <span id="cargo-usuario-header" class="text-[8px] text-blue-300 font-bold uppercase tracking-widest block">OPERACIONAL</span>
             </div>
         </div>
-        <div class="flex items-center space-x-3 text-xs font-bold">
-            <span id="nome-usuario-header" class="text-white bg-blue-800 px-2.5 py-1 rounded-lg border border-blue-700"><i class="fas fa-user-circle mr-1"></i>...</span>
-            <div id="status-conexao" class="text-yellow-300"><i class="fas fa-spinner fa-spin"></i></div>
+        <div class="flex items-center space-x-1.5 text-xs font-bold">
+            <!-- BOTÃO DE ATIVAR / OCULTAR MODO TUTORIAL -->
+            <button id="btn-toggle-tutorial" onclick="window.alternarModoTutorial()" class="bg-blue-800 hover:bg-blue-700 text-blue-100 border border-blue-600 px-2.5 py-1.5 rounded-xl flex items-center space-x-1.5 transition shadow-sm" title="Mostrar ou Ocultar Explicações do Sistema">
+                <i class="fas fa-graduation-cap text-amber-300"></i>
+                <span id="lbl-tutorial" class="text-[10px] font-black uppercase">Tutorial: OFF</span>
+            </button>
+            <span id="nome-usuario-header" class="text-white bg-blue-800 px-2 py-1.5 rounded-xl border border-blue-700 text-[10px] truncate max-w-[95px]"><i class="fas fa-user-circle mr-1"></i>...</span>
+            <div id="status-conexao" class="text-yellow-300 pl-1"><i class="fas fa-spinner fa-spin"></i></div>
         </div>
     </header>
 
     <main class="hidden flex-1 overflow-y-auto p-4 relative" id="main-content">
 
-        <!-- ABA 0: DASHBOARD (ADAPTATIVA PARA DEV OU CARGO DO USUÁRIO) -->
+        <!-- ABA 0: DASHBOARD -->
         <div id="view-dashboard" class="hidden pb-24 fade-in no-print">
-            <!-- Saudação e Resumo do Cargo -->
+            
+            <!-- Janela Explicativa Tutorial: Dashboard -->
+            <div class="tutorial-box">
+                <div class="flex justify-between items-start">
+                    <div class="flex items-center space-x-2">
+                        <span class="bg-blue-700 text-white text-xs w-6 h-6 rounded-full flex items-center justify-center font-black"><i class="fas fa-info"></i></span>
+                        <h4 class="font-black text-blue-950 text-xs uppercase">Guia da Tela: Painel de Controle (Dashboard)</h4>
+                    </div>
+                    <button onclick="window.abrirGuiaDetalhado('DASHBOARD')" class="bg-blue-700 text-white text-[9px] font-black px-2.5 py-1 rounded-lg uppercase shadow">Passo a Passo</button>
+                </div>
+                <p class="text-[11px] text-blue-900 font-bold mt-1.5 leading-snug">
+                    Esta tela resume o pátio em tempo real. Você vê quantos veículos estão aguardando saída agora, quantas entradas e saídas você registrou hoje e o caminhão estacionado há mais tempo.
+                </p>
+            </div>
+
             <div class="bg-gradient-to-r from-blue-900 to-blue-800 text-white p-4 rounded-2xl shadow-md mb-4 flex justify-between items-center">
                 <div>
                     <span id="dash-cargo-badge" class="bg-blue-700 text-blue-200 text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-widest">CARGO</span>
@@ -107,7 +159,6 @@
                 </button>
             </div>
 
-            <!-- Cards Operacionais (Visíveis conforme cargo) -->
             <div class="grid grid-cols-2 gap-3 mb-4">
                 <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-blue-600">
                     <div class="text-[10px] font-black text-gray-400 uppercase">No Pátio Agora</div>
@@ -131,14 +182,23 @@
                 </div>
             </div>
 
-            <!-- Atalhos Rápidos do Cargo -->
             <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 mb-4">
                 <h3 class="text-xs font-black text-gray-500 uppercase tracking-widest mb-3"><i class="fas fa-bolt text-yellow-500 mr-1"></i> Ações Rápidas do seu Cargo</h3>
                 <div id="dash-atalhos-cargo" class="grid grid-cols-2 gap-2"></div>
             </div>
 
-            <!-- SEÇÃO EXCLUSIVA DO DEV / ADMIN: AUDITORIA E FRAUDES -->
+            <!-- SEÇÃO EXCLUSIVA DO DEV / ADMIN -->
             <div id="dash-secao-dev" class="hidden space-y-4">
+                <div class="tutorial-box">
+                    <div class="flex justify-between items-center">
+                        <h4 class="font-black text-blue-950 text-xs uppercase"><i class="fas fa-shield-alt text-red-600 mr-1"></i> Guia DEV: Radar Antifraude</h4>
+                        <button onclick="window.abrirGuiaDetalhado('RADAR_DEV')" class="bg-blue-700 text-white text-[9px] font-black px-2.5 py-1 rounded-lg uppercase">Como Auditar</button>
+                    </div>
+                    <p class="text-[11px] text-blue-900 font-bold mt-1">
+                        Acompanhe aqui quantas saídas foram feitas sem foto (Plano B) e quantas entradas não tiveram foto anexada. Clique em qualquer evento abaixo para inspecionar ou reverter.
+                    </p>
+                </div>
+
                 <div class="bg-red-950 text-white p-4 rounded-2xl shadow-lg border border-red-800">
                     <div class="flex justify-between items-center border-b border-red-800 pb-2 mb-3">
                         <h3 class="font-black text-sm uppercase tracking-wider text-red-200"><i class="fas fa-shield-alt mr-1"></i> Radar de Auditoria & Fraudes (DEV)</h3>
@@ -160,10 +220,9 @@
                     </div>
                 </div>
 
-                <!-- Distribuição por Tipo de Veículo e Operadores -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
-                        <h4 class="text-xs font-black text-gray-600 uppercase mb-3"><i class="fas fa-truck-pickup text-blue-600 mr-1"></i> Frota no Pátio / Hoje por Tipo</h4>
+                        <h4 class="text-xs font-black text-gray-600 uppercase mb-3"><i class="fas fa-truck-pickup text-blue-600 mr-1"></i> Frota por Tipo de Veículo</h4>
                         <div id="dash-lista-modelos" class="space-y-2 text-xs"></div>
                     </div>
                     <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
@@ -172,7 +231,6 @@
                     </div>
                 </div>
 
-                <!-- Últimos Eventos do Log do DEV -->
                 <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
                     <div class="flex justify-between items-center mb-3">
                         <h4 class="text-xs font-black text-gray-700 uppercase"><i class="fas fa-terminal text-red-600 mr-1"></i> Últimas Ações Auditadas</h4>
@@ -183,9 +241,25 @@
             </div>
         </div>
 
-        <!-- ABA 1: REGISTRAR -->
+        <!-- ABA 1: REGISTRAR ENTRADA -->
         <div id="view-registro" class="hidden pb-24 fade-in no-print">
-            <h2 class="text-xl font-bold mb-4 flex items-center uppercase"><i class="fas fa-edit mr-2 text-blue-700"></i> Novo Registro de Entrada</h2>
+            <h2 class="text-xl font-bold mb-3 flex items-center uppercase"><i class="fas fa-edit mr-2 text-blue-700"></i> Novo Registro de Entrada</h2>
+            
+            <!-- Janela Explicativa Tutorial: Entrada -->
+            <div class="tutorial-box">
+                <div class="flex justify-between items-start">
+                    <div class="flex items-center space-x-2">
+                        <span class="bg-blue-700 text-white text-xs w-6 h-6 rounded-full flex items-center justify-center font-black">1</span>
+                        <h4 class="font-black text-blue-950 text-xs uppercase">Como Registrar a Entrada de um Veículo</h4>
+                    </div>
+                    <button onclick="window.abrirGuiaDetalhado('ENTRADA')" class="bg-blue-700 text-white text-[9px] font-black px-2.5 py-1 rounded-lg uppercase shadow">Ver Detalhes</button>
+                </div>
+                <ul class="text-[11px] text-blue-900 font-bold mt-2 space-y-1 list-disc list-inside">
+                    <li><b>Placa e Foto:</b> Digite a placa e toque no ícone azul de <b>Câmera</b> (ou roxo de Galeria). O app extrai automaticamente a <b>Data/Hora real da foto (EXIF)</b> e o <b>GPS</b>.</li>
+                    <li><b>Ficha Automática:</b> Se o caminhão já esteve aqui antes, um aviso azul aparecerá. Toque em <b>Autopreencher</b> para puxar todos os dados e use o botão <i class="fas fa-times-circle text-red-500"></i> caso queira trocar apenas o motorista.</li>
+                </ul>
+            </div>
+
             <div class="space-y-4 bg-white p-4 rounded-xl shadow" id="formulario-dinamico"></div>
             <button onclick="window.salvarRegistro()" id="btn-salvar-entrada" class="w-full bg-green-600 active:bg-green-700 text-white font-black p-4 rounded-xl mt-4 text-xl shadow-lg flex justify-center items-center uppercase transition">
                 <i class="fas fa-save mr-2"></i> SALVAR ENTRADA
@@ -194,10 +268,26 @@
 
         <!-- ABA 2: PÁTIO -->
         <div id="view-patio" class="hidden pb-24 fade-in no-print">
-            <div class="flex justify-between items-center mb-4">
+            <div class="flex justify-between items-center mb-3">
                 <h2 class="text-xl font-bold flex items-center uppercase"><i class="fas fa-truck-loading mr-2 text-blue-700"></i> Pátio Atual</h2>
                 <span id="contador-patio-topo" class="bg-blue-100 text-blue-800 text-xs font-black px-3 py-1 rounded-full uppercase">0 No Pátio</span>
             </div>
+
+            <!-- Janela Explicativa Tutorial: Pátio -->
+            <div class="tutorial-box">
+                <div class="flex justify-between items-start">
+                    <div class="flex items-center space-x-2">
+                        <span class="bg-blue-700 text-white text-xs w-6 h-6 rounded-full flex items-center justify-center font-black">2</span>
+                        <h4 class="font-black text-blue-950 text-xs uppercase">Como Gerenciar o Pátio e Dar Saída</h4>
+                    </div>
+                    <button onclick="window.abrirGuiaDetalhado('PATIO')" class="bg-blue-700 text-white text-[9px] font-black px-2.5 py-1 rounded-lg uppercase shadow">Ver Detalhes</button>
+                </div>
+                <ul class="text-[11px] text-blue-900 font-bold mt-2 space-y-1 list-disc list-inside">
+                    <li><b>Ver Ficha Completa (95%):</b> Toque em qualquer card de caminhão para abrir a ficha gigante com fotos de entrada/saída, zoom e mapa de GPS.</li>
+                    <li><b>Dar Saída:</b> Toque no botão vermelho <b>Dar Saída (Foto / Plano B)</b> para fotografar o veículo saindo (colhendo EXIF + GPS de saída) ou usar o Plano B manual.</li>
+                </ul>
+            </div>
+
             <div class="bg-white p-3 rounded-xl shadow-sm mb-4 border border-gray-200">
                 <div class="grid grid-cols-2 gap-2 mb-2">
                     <select id="filtro-status-patio" onchange="window.mudarFiltroPatio()" class="w-full p-2 border border-gray-300 rounded-lg text-sm uppercase bg-gray-50 font-bold">
@@ -226,12 +316,26 @@
 
         <!-- ABA 3: PLANILHA -->
         <div id="view-planilha" class="hidden pb-24 fade-in">
-            <div class="flex justify-between items-center mb-4 no-print">
+            <div class="flex justify-between items-center mb-3 no-print">
                 <h2 class="text-xl font-bold flex items-center uppercase"><i class="fas fa-table mr-2 text-blue-700"></i> Histórico</h2>
                 <div class="flex space-x-2">
-                    <button id="btn-imprimir" onclick="window.imprimirRelatorio()" class="bg-gray-700 text-white font-bold px-3 py-2 rounded-lg text-xs shadow hover:bg-gray-800 transition"><i class="fas fa-print"></i> PDF</button>
+                    <button id="btn-imprimir" onclick="window.imprimirRelatorio()" class="bg-gray-700 text-white font-bold px-3 py-2 rounded-lg text-xs shadow hover:bg-gray-800 transition"><i class="fas fa-print"></i> PDF Paisagem</button>
                     <button id="btn-excluir-lote" onclick="window.excluirEmLote()" class="hidden bg-red-600 text-white font-bold px-3 py-2 rounded-lg text-xs shadow hover:bg-red-700 transition"><i class="fas fa-trash-alt"></i> Excluir Lote</button>
                 </div>
+            </div>
+
+            <!-- Janela Explicativa Tutorial: Planilha -->
+            <div class="tutorial-box no-print">
+                <div class="flex justify-between items-start">
+                    <div class="flex items-center space-x-2">
+                        <span class="bg-blue-700 text-white text-xs w-6 h-6 rounded-full flex items-center justify-center font-black">3</span>
+                        <h4 class="font-black text-blue-950 text-xs uppercase">Como Consultar Histórico e Gerar PDF</h4>
+                    </div>
+                    <button onclick="window.abrirGuiaDetalhado('PLANILHA')" class="bg-blue-700 text-white text-[9px] font-black px-2.5 py-1 rounded-lg uppercase shadow">Ver Detalhes</button>
+                </div>
+                <p class="text-[11px] text-blue-900 font-bold mt-1.5 leading-snug">
+                    Filtre por dia (Hoje, Ontem ou data específica) sem pesar a memória do celular. Para pesquisar uma placa antiga no servidor, digite-a e clique em <b>Placa</b>. O botão <b>PDF Paisagem</b> formata toda a tabela automaticamente em folha A4 deitada com cabeçalho oficial.
+                </p>
             </div>
 
             <div class="bg-white p-3 rounded-xl shadow-sm mb-4 border border-gray-200 no-print">
@@ -280,9 +384,23 @@
 
         <!-- ABA 4: CONFIGURAÇÕES & AUDITORIA DO DEV -->
         <div id="view-config" class="hidden pb-24 fade-in no-print">
-            <h2 class="text-xl font-bold mb-4 flex items-center uppercase text-red-600"><i class="fas fa-user-shield mr-2"></i> Central do DEV / Admin</h2>
-            <div class="space-y-6">
+            <h2 class="text-xl font-bold mb-3 flex items-center uppercase text-red-600"><i class="fas fa-user-shield mr-2"></i> Central do DEV / Admin</h2>
+            
+            <!-- Janela Explicativa Tutorial: Central DEV -->
+            <div class="tutorial-box">
+                <div class="flex justify-between items-start">
+                    <div class="flex items-center space-x-2">
+                        <span class="bg-red-700 text-white text-xs w-6 h-6 rounded-full flex items-center justify-center font-black"><i class="fas fa-lock"></i></span>
+                        <h4 class="font-black text-blue-950 text-xs uppercase">Guia Exclusivo DEV: Auditoria, Permissões e Campos</h4>
+                    </div>
+                    <button onclick="window.abrirGuiaDetalhado('DEV_CONFIG')" class="bg-blue-700 text-white text-[9px] font-black px-2.5 py-1 rounded-lg uppercase shadow">Ver Detalhes</button>
+                </div>
+                <p class="text-[11px] text-blue-900 font-bold mt-1.5 leading-snug">
+                    Aqui você audita cada ação da equipe, restaura veículos apagados por engano, delega permissões individuais por funcionário e altera a ordem/criação dos campos sincronizados na nuvem.
+                </p>
+            </div>
 
+            <div class="space-y-6">
                 <!-- 1. LOG COMPLETO DE AUDITORIA E RECUPERAÇÃO -->
                 <div class="bg-white p-4 rounded-xl shadow border border-gray-200 border-l-4 border-l-red-600">
                     <div class="flex justify-between items-center border-b pb-2 mb-3">
@@ -387,10 +505,10 @@
         </div>
     </div>
 
-    <!-- MODAL DE SAÍDA COM PLANO A (FOTO) E PLANO B (CONTINGÊNCIA MANUAL) -->
+    <!-- MODAL DE SAÍDA COM PLANO A (FOTO + EXIF + GPS) E PLANO B (CONTINGÊNCIA MANUAL) -->
     <div id="modal-saida" class="hidden fixed inset-0 z-[70] bg-blue-950/85 backdrop-blur-sm flex items-center justify-center p-3 no-print modal-custom">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden pop-in border border-red-200">
-            <div class="bg-red-600 text-white p-4 flex justify-between items-center">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[94vh] overflow-y-auto pop-in border border-red-200">
+            <div class="bg-red-600 text-white p-4 flex justify-between items-center sticky top-0 z-10">
                 <div>
                     <h3 class="font-black text-base uppercase tracking-wider"><i class="fas fa-sign-out-alt mr-1"></i> Registrar Saída do Veículo</h3>
                     <p id="saida-placa-alvo" class="text-xs text-red-100 font-black uppercase mt-0.5">PLACA: ---</p>
@@ -398,10 +516,19 @@
                 <button onclick="window.fecharModalSaida()" class="text-white text-3xl leading-none">&times;</button>
             </div>
 
+            <!-- Explicação Tutorial dentro do Modal de Saída -->
+            <div class="tutorial-box mx-3 mt-3 mb-0">
+                <h4 class="font-black text-blue-950 text-[11px] uppercase"><i class="fas fa-graduation-cap mr-1"></i> Como Funciona a Saída (Plano A vs Plano B)</h4>
+                <p class="text-[10px] text-blue-900 font-bold mt-1 leading-snug">
+                    • <b>Plano A (Padrão):</b> Tire a foto do veículo saindo. O sistema colhe automaticamente a <b>Data/Hora EXIF da foto</b> e o <b>GPS de saída</b>.<br>
+                    • <b>Plano B (Contingência):</b> Se a câmera ou internet falhar, mude para o Plano B e digite a placa à mão para validar com o sistema.
+                </p>
+            </div>
+
             <!-- Seletor Plano A vs Plano B -->
             <div class="grid grid-cols-2 bg-gray-100 p-1.5 m-3 rounded-xl border border-gray-200">
                 <button type="button" id="tab-saida-plano-a" onclick="window.alternarModoSaida('A')" class="py-2 rounded-lg font-black text-xs uppercase bg-blue-600 text-white shadow transition">
-                    <i class="fas fa-camera mr-1"></i> Plano A: Foto
+                    <i class="fas fa-camera mr-1"></i> Plano A: Foto + GPS
                 </button>
                 <button type="button" id="tab-saida-plano-b" onclick="window.alternarModoSaida('B')" class="py-2 rounded-lg font-black text-xs uppercase text-gray-600 hover:text-gray-900 transition">
                     <i class="fas fa-keyboard mr-1"></i> Plano B: Manual
@@ -409,9 +536,9 @@
             </div>
 
             <div class="px-5 pb-5">
-                <!-- CONTEÚDO PLANO A: FOTO DE SAÍDA -->
+                <!-- CONTEÚDO PLANO A: FOTO DE SAÍDA + METADADOS EXIF + GPS -->
                 <div id="box-saida-plano-a" class="space-y-3">
-                    <p class="text-xs text-gray-600 font-bold uppercase text-center">Tire a foto da placa na saída para autenticar data, hora e GPS:</p>
+                    <p class="text-xs text-gray-600 font-bold uppercase text-center">Capture a foto na saída para extrair Data/Hora EXIF e Localização GPS:</p>
                     <div class="grid grid-cols-2 gap-3">
                         <label class="bg-blue-50 hover:bg-blue-100 text-blue-700 border-2 border-blue-300 rounded-xl p-4 flex flex-col items-center justify-center cursor-pointer shadow-sm transition">
                             <i class="fas fa-camera text-3xl mb-1"></i>
@@ -425,9 +552,16 @@
                         </label>
                     </div>
 
-                    <div id="preview-saida-container" class="hidden p-2.5 border rounded-xl bg-gray-50 flex items-center justify-between">
-                        <img id="preview-saida-img" src="" class="h-16 w-16 object-cover rounded-lg border">
-                        <div id="preview-saida-info" class="text-[10px] font-bold text-right uppercase text-gray-600"></div>
+                    <!-- Painel de Metadados Colhidos na Saída -->
+                    <div id="preview-saida-container" class="hidden p-3 border-2 border-emerald-300 rounded-xl bg-emerald-50/60 space-y-2">
+                        <div class="flex items-center space-x-3">
+                            <img id="preview-saida-img" src="" class="h-16 w-16 object-cover rounded-lg border border-emerald-400 shadow-sm">
+                            <div class="flex-1 text-[10px] font-bold uppercase text-gray-700 space-y-1">
+                                <div><i class="fas fa-clock text-blue-600 mr-1"></i> <span id="saida-meta-horario">Extraindo horário...</span></div>
+                                <div><i class="fas fa-map-marker-alt text-red-600 mr-1"></i> <span id="saida-meta-gps">Capturando GPS...</span></div>
+                                <div><i class="fas fa-cloud text-emerald-600 mr-1"></i> <span id="saida-meta-cloud">Enviando WebP...</span></div>
+                            </div>
+                        </div>
                     </div>
                     <div id="status-foto-saida" class="text-xs font-bold text-orange-600 text-center hidden"></div>
                 </div>
@@ -435,7 +569,7 @@
                 <!-- CONTEÚDO PLANO B: DIGITAÇÃO MANUAL AUDITADA -->
                 <div id="box-saida-plano-b" class="hidden space-y-3">
                     <div class="bg-amber-50 border-l-4 border-amber-500 p-3 rounded-r-xl text-xs text-amber-900 font-bold">
-                        <i class="fas fa-exclamation-triangle text-amber-600 mr-1"></i> <b>MODO CONTINGÊNCIA (AUDITADO):</b> Use apenas se a câmera ou internet falharem. Digite a placa exata do veículo para liberar a saída com os dados do sistema.
+                        <i class="fas fa-exclamation-triangle text-amber-600 mr-1"></i> <b>MODO CONTINGÊNCIA (AUDITADO):</b> Digite a placa exata do veículo à mão para validar com os dados do sistema.
                     </div>
                     <div>
                         <label class="block text-[11px] font-black text-gray-700 uppercase mb-1">Confirme a Placa à Mão:</label>
@@ -474,7 +608,7 @@
         </div>
     </div>
 
-    <!-- MODAL INSPETOR DE LOG DO DEV (COM BOTÃO DE RESTAURAR/REVERTER) -->
+    <!-- MODAL INSPETOR DE LOG DO DEV -->
     <div id="modal-detalhe-log" class="hidden fixed inset-0 z-[80] bg-blue-950/85 backdrop-blur-sm flex items-center justify-center p-3 no-print modal-custom">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col overflow-hidden pop-in border border-red-200">
             <div class="bg-red-900 text-white p-4 flex justify-between items-center flex-shrink-0">
@@ -516,12 +650,13 @@
         let cargoLogado = 'OPERADOR';
         let permissoesAtuais = {};
         let isAdmin = false;
+        let tutorialAtivo = false;
         
         let registroSelecionadoFirebaseId = null;
         let fotoAtualUrl = null; let dataHoraMetadata = null; let gpsLocalizacao = null;
         
         // VARIÁVEIS DE SAÍDA (PLANO A & PLANO B)
-        let modoSaidaAtual = 'A'; // 'A' (Foto) ou 'B' (Manual)
+        let modoSaidaAtual = 'A';
         let fotoSaidaUrl = null;
         let dataHoraSaidaMetadata = null;
         let gpsSaidaLocalizacao = null;
@@ -546,15 +681,139 @@
         let schemaCampos = [...camposPadrao];
 
         // ==========================================
-        // 4. SISTEMA DE JANELAS E TOASTS PERSONALIZADOS (ZERO JANELAS NATIVAS)
+        // SISTEMA DE TUTORIAL INTERATIVO (MOSTRAR / OCULTAR)
+        // ==========================================
+        window.alternarModoTutorial = function() {
+            tutorialAtivo = !tutorialAtivo;
+            const btn = document.getElementById('btn-toggle-tutorial');
+            const lbl = document.getElementById('lbl-tutorial');
+
+            if(tutorialAtivo) {
+                document.body.classList.add('tutorial-ativo');
+                btn.className = "bg-amber-400 hover:bg-amber-300 text-blue-950 border border-amber-200 px-2.5 py-1.5 rounded-xl flex items-center space-x-1.5 transition shadow-md";
+                lbl.innerText = "Tutorial: ON";
+                window.mostrarToast("Modo Tutorial Ativado! Veja as janelas explicativas em cada tela.", "info");
+            } else {
+                document.body.classList.remove('tutorial-ativo');
+                btn.className = "bg-blue-800 hover:bg-blue-700 text-blue-100 border border-blue-600 px-2.5 py-1.5 rounded-xl flex items-center space-x-1.5 transition shadow-sm";
+                lbl.innerText = "Tutorial: OFF";
+                window.mostrarToast("Modo Tutorial Ocultado.", "info");
+            }
+        };
+
+        const TextosGuiaTutorial = {
+            DASHBOARD: {
+                titulo: "Painel de Controle (Dashboard)",
+                html: `
+                    <div class="bg-blue-50 p-3 rounded-xl border border-blue-200">
+                        <b class="text-blue-900 uppercase block mb-1">1. Indicadores em Tempo Real</b>
+                        O card <b>No Pátio Agora</b> mostra exatamente quantos veículos entraram e ainda não registraram saída.
+                    </div>
+                    <div class="bg-emerald-50 p-3 rounded-xl border border-emerald-200">
+                        <b class="text-emerald-900 uppercase block mb-1">2. Sua Produtividade</b>
+                        O sistema contabiliza automaticamente todas as entradas e saídas carimbadas pelo seu usuário no dia de hoje.
+                    </div>
+                    <div class="bg-amber-50 p-3 rounded-xl border border-amber-200">
+                        <b class="text-amber-900 uppercase block mb-1">3. Alerta de Permanência</b>
+                        O card <b>Mais Antigo no Pátio</b> destaca a placa e empresa do caminhão que está aguardando há mais tempo.
+                    </div>
+                `
+            },
+            RADAR_DEV: {
+                titulo: "Radar Antifraude (Exclusivo DEV)",
+                html: `
+                    <div class="bg-red-50 p-3 rounded-xl border border-red-200">
+                        <b class="text-red-900 uppercase block mb-1">1. Monitoramento do Plano B</b>
+                        Sempre que um porteiro libera um veículo sem tirar foto (usando o Plano B manual), o contador amarelo sobe e grava o motivo no Log.
+                    </div>
+                    <div class="bg-blue-50 p-3 rounded-xl border border-blue-200">
+                        <b class="text-blue-900 uppercase block mb-1">2. Restauração de Dados</b>
+                        Se algum registro for editado ou excluído por engano ou má-fé, basta clicar no evento dentro do Log de Auditoria e acionar o botão <b>Restaurar / Reverter</b>.
+                    </div>
+                `
+            },
+            ENTRADA: {
+                titulo: "Registro de Entrada + Foto e Autopreenchimento",
+                html: `
+                    <div class="bg-blue-50 p-3 rounded-xl border border-blue-200">
+                        <b class="text-blue-900 uppercase block mb-1">Passo 1: Placa e Foto Autenticada</b>
+                        Digite a placa e clique no botão azul (<i class="fas fa-camera"></i>) para abrir a câmera traseira, ou no botão roxo (<i class="fas fa-image"></i>) para abrir a galeria. O app comprime a foto em <b>WebP</b>, sobe para o ImgBB e extrai a <b>Data/Hora EXIF</b> e o <b>GPS</b>.
+                    </div>
+                    <div class="bg-indigo-50 p-3 rounded-xl border border-indigo-200">
+                        <b class="text-indigo-900 uppercase block mb-1">Passo 2: Ficha do Veículo (Autopreencher)</b>
+                        Ao terminar de digitar a placa, o sistema consulta o banco. Se o caminhão já veio antes, clique em <b>Autopreencher</b>. Se apenas o motorista mudou, toque no <i class="fas fa-times-circle text-red-500"></i> ao lado do nome do motorista para limpá-lo e digitar o novo.
+                    </div>
+                    <div class="bg-emerald-50 p-3 rounded-xl border border-emerald-200">
+                        <b class="text-emerald-900 uppercase block mb-1">Passo 3: Assinatura Automática</b>
+                        Ao clicar em <b>Salvar Entrada</b>, seu nome de usuário logado é gravado automaticamente como responsável pela entrada.
+                    </div>
+                `
+            },
+            PATIO: {
+                titulo: "Controle de Pátio e Saída (Plano A / Plano B)",
+                html: `
+                    <div class="bg-blue-50 p-3 rounded-xl border border-blue-200">
+                        <b class="text-blue-900 uppercase block mb-1">1. Ficha de 95% da Tela e Zoom</b>
+                        Toque sobre qualquer card para abrir a Ficha Completa. Nela você vê as fotos de entrada e saída (toque na foto para dar Zoom em tela cheia) e links diretos para abrir o <b>GPS de Entrada e Saída no Google Maps</b>.
+                    </div>
+                    <div class="bg-red-50 p-3 rounded-xl border border-red-200">
+                        <b class="text-red-900 uppercase block mb-1">2. Saída Plano A (Com Foto + EXIF + GPS)</b>
+                        Ao clicar em <b>Dar Saída</b>, tire a foto do veículo saindo. O sistema colhe a hora EXIF da foto de saída e a coordenada GPS do momento da saída.
+                    </div>
+                    <div class="bg-amber-50 p-3 rounded-xl border border-amber-200">
+                        <b class="text-amber-900 uppercase block mb-1">3. Saída Plano B (Contingência Manual)</b>
+                        Se a câmera falhar, alterne para a aba <b>Plano B: Manual</b>, digite a placa à mão (deve conferir com a placa cadastrada) e escolha o motivo.
+                    </div>
+                `
+            },
+            PLANILHA: {
+                titulo: "Histórico Otimizado e Impressão PDF Paisagem",
+                html: `
+                    <div class="bg-blue-50 p-3 rounded-xl border border-blue-200">
+                        <b class="text-blue-900 uppercase block mb-1">1. Economia de Dados</b>
+                        O histórico carrega por padrão apenas o movimento de <b>Hoje</b>. Você pode alternar para <b>Ontem</b>, escolher um dia específico no calendário ou carregar lotes de 50 registros.
+                    </div>
+                    <div class="bg-gray-100 p-3 rounded-xl border border-gray-300">
+                        <b class="text-gray-900 uppercase block mb-1">2. Impressão PDF em Paisagem</b>
+                        Clique no botão <b>PDF Paisagem</b> no topo da planilha. O sistema oculta menus e botões e gera um relatório limpo em folha A4 horizontal com cabeçalho, data/hora e nome do operador.
+                    </div>
+                `
+            },
+            DEV_CONFIG: {
+                titulo: "Administração, RBAC e Campos Dinâmicos",
+                html: `
+                    <div class="bg-purple-50 p-3 rounded-xl border border-purple-200">
+                        <b class="text-purple-900 uppercase block mb-1">1. Delegação de Funções (RBAC)</b>
+                        Marque ou desmarque as caixas de seleção em cada funcionário para liberar ou bloquear telas e botões em tempo real.
+                    </div>
+                    <div class="bg-emerald-50 p-3 rounded-xl border border-emerald-200">
+                        <b class="text-emerald-900 uppercase block mb-1">2. Construtor de Campos na Nuvem</b>
+                        Use as setas para reordenar os campos ou crie campos novos. Todos os celulares da portaria recebem a nova estrutura no mesmo instante.
+                    </div>
+                `
+            }
+        };
+
+        window.abrirGuiaDetalhado = function(chave) {
+            const item = TextosGuiaTutorial[chave];
+            if(!item) return;
+            document.getElementById('tutorial-modal-titulo').innerText = item.titulo;
+            document.getElementById('tutorial-modal-corpo').innerHTML = item.html;
+            document.getElementById('modal-guia-tutorial').classList.remove('hidden');
+        };
+
+        window.fecharModalGuiaTutorial = () => document.getElementById('modal-guia-tutorial').classList.add('hidden');
+
+        // ==========================================
+        // SISTEMA DE JANELAS E TOASTS PERSONALIZADOS
         // ==========================================
         window.mostrarToast = function(mensagem, tipo = 'sucesso') {
             const container = document.getElementById('toast-container');
             const cores = {
-                sucesso: 'bg-emerald-700 border-emerald-500 text-white',
-                erro: 'bg-red-700 border-red-500 text-white',
-                aviso: 'bg-amber-600 border-amber-400 text-white',
-                info: 'bg-blue-800 border-blue-500 text-white'
+                sucesso: 'bg-emerald-700 border-emerald-400 text-white',
+                erro: 'bg-red-700 border-red-400 text-white',
+                aviso: 'bg-amber-600 border-amber-300 text-white',
+                info: 'bg-blue-800 border-blue-400 text-white'
             };
             const icones = {
                 sucesso: 'fa-check-circle',
@@ -584,7 +843,6 @@
 
                 document.getElementById('dialogo-titulo').innerText = titulo;
                 document.getElementById('dialogo-mensagem').innerText = mensagem;
-                document.getElementById('dialogo-input-wrap').classList.add('hidden');
                 
                 const botoes = document.getElementById('dialogo-botoes');
                 botoes.innerHTML = `<button id="btn-dialogo-ok" class="w-full bg-blue-700 hover:bg-blue-800 text-white font-black py-3 rounded-xl uppercase shadow">Entendido</button>`;
@@ -608,7 +866,6 @@
 
                 document.getElementById('dialogo-titulo').innerText = titulo;
                 document.getElementById('dialogo-mensagem').innerText = mensagem;
-                document.getElementById('dialogo-input-wrap').classList.add('hidden');
                 
                 const corBtn = perigo ? 'bg-red-600 hover:bg-red-700' : 'bg-blue-700 hover:bg-blue-800';
                 const botoes = document.getElementById('dialogo-botoes');
@@ -624,7 +881,71 @@
         };
 
         // ==========================================
-        // 2. SISTEMA DE LOG COMPLETO E AUDITORIA DO DEV
+        // HELPER: EXTRAÇÃO DE METADADOS EXIF (DATA + GPS DA FOTO) E GPS DO APARELHO
+        // ==========================================
+        function converterDMSToDecimal(dmsArray, ref) {
+            if(!dmsArray || dmsArray.length < 3) return null;
+            const deg = Number(dmsArray[0]);
+            const min = Number(dmsArray[1]);
+            const sec = Number(dmsArray[2]);
+            if(isNaN(deg) || isNaN(min) || isNaN(sec)) return null;
+            let dec = deg + (min / 60) + (sec / 3600);
+            if(ref === 'S' || ref === 'W') dec = dec * -1;
+            return dec.toFixed(6);
+        }
+
+        function extrairMetadadosCompletosDaFoto(file) {
+            return new Promise((resolve) => {
+                let horarioExtraido = null;
+                let gpsExifExtraido = null;
+
+                EXIF.getData(file, function() {
+                    const exifDate = EXIF.getTag(this, "DateTimeOriginal");
+                    if (exifDate) {
+                        const partes = exifDate.split(' ');
+                        const d = partes[0].split(':');
+                        horarioExtraido = `${d[2]}/${d[1]}/${d[0]} ${partes[1].substring(0,5)} (EXIF)`;
+                    } else {
+                        const fallback = new Date(file.lastModified);
+                        horarioExtraido = fallback.toLocaleDateString('pt-BR', {day:'2-digit',month:'2-digit',year:'numeric'}) + ' ' + fallback.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'}) + ' (Arq)';
+                    }
+
+                    // Tenta extrair GPS diretamente do EXIF da foto caso exista
+                    const latDMS = EXIF.getTag(this, "GPSLatitude");
+                    const latRef = EXIF.getTag(this, "GPSLatitudeRef");
+                    const lonDMS = EXIF.getTag(this, "GPSLongitude");
+                    const lonRef = EXIF.getTag(this, "GPSLongitudeRef");
+                    if(latDMS && lonDMS) {
+                        const latDec = converterDMSToDecimal(latDMS, latRef || 'S');
+                        const lonDec = converterDMSToDecimal(lonDMS, lonRef || 'W');
+                        if(latDec && lonDec) gpsExifExtraido = `${latDec}, ${lonDec}`;
+                    }
+
+                    // Se a foto já trouxe GPS no EXIF, retorna direto; senão, colhe do GPS do aparelho
+                    if(gpsExifExtraido) {
+                        resolve({ horario: horarioExtraido, gps: gpsExifExtraido + ' (EXIF)' });
+                    } else if (navigator.geolocation) {
+                        navigator.geolocation.getCurrentPosition(
+                            (pos) => {
+                                resolve({
+                                    horario: horarioExtraido,
+                                    gps: `${pos.coords.latitude.toFixed(6)}, ${pos.coords.longitude.toFixed(6)}`
+                                });
+                            },
+                            () => {
+                                resolve({ horario: horarioExtraido, gps: "Sem Permissão de GPS" });
+                            },
+                            { enableHighAccuracy: true, timeout: 6000 }
+                        );
+                    } else {
+                        resolve({ horario: horarioExtraido, gps: "GPS Indisponível" });
+                    }
+                });
+            });
+        }
+
+        // ==========================================
+        // SISTEMA DE LOG COMPLETO E AUDITORIA DO DEV
         // ==========================================
         function getDataHoraAtualNavegador() {
             const now = new Date();
@@ -739,7 +1060,6 @@
 
             rodape.innerHTML = `<button onclick="window.fecharDetalheLog()" class="flex-1 bg-gray-200 text-gray-800 font-black py-3 rounded-xl uppercase text-xs">Fechar</button>`;
 
-            // Se for uma EXCLUSÃO ou EDIÇÃO, permite ao DEV restaurar os dados originais!
             if(l.acao === 'EXCLUSAO' && l.detalhes?.registro_apagado) {
                 rodape.innerHTML += `<button onclick="window.restaurarRegistroDoLog('${l.log_id}')" class="flex-1 bg-emerald-600 text-white font-black py-3 rounded-xl uppercase text-xs shadow"><i class="fas fa-undo mr-1"></i> Restaurar Veículo</button>`;
             } else if(l.acao === 'EDICAO' && l.detalhes?.antes && l.detalhes?.firebase_id) {
@@ -791,7 +1111,7 @@
         };
 
         // ==========================================
-        // 3. DASHBOARD DINÂMICA (DEV E CARGOS)
+        // DASHBOARD DINÂMICA (DEV E CARGOS)
         // ==========================================
         window.atualizarDashboard = async function() {
             const hojeStr = obterDataString('HOJE');
@@ -799,7 +1119,6 @@
             document.getElementById('dash-cargo-badge').innerText = cargoLogado;
             document.getElementById('dash-data-hoje').innerText = `Data Operacional: ${hojeStr}`;
 
-            // Garante que os registros de hoje foram carregados para compor os indicadores do dia
             try {
                 const snapHoje = await getDocs(query(collection(db, "registros"), where("dia_particao", "==", hojeStr)));
                 snapHoje.forEach(d => {
@@ -823,7 +1142,6 @@
             document.getElementById('kpi-minhas-ent').innerText = minhasEntHoje.length;
             document.getElementById('kpi-minhas-sai').innerText = minhasSaiHoje.length;
 
-            // Veículo mais antigo estacionado
             if(registrosPatioAtivo.length > 0) {
                 const maisAntigo = [...registrosPatioAtivo].sort((a, b) => (a.id || 0) - (b.id || 0))[0];
                 document.getElementById('kpi-mais-antigo').innerText = `${maisAntigo.placa} (${maisAntigo.dados_dinamicos?.empresa || 'S/ EMP'})`;
@@ -833,7 +1151,6 @@
                 document.getElementById('kpi-mais-antigo-hora').innerText = 'Pátio livre';
             }
 
-            // Atalhos rápidos conforme permissões do cargo
             const contAtalhos = document.getElementById('dash-atalhos-cargo');
             contAtalhos.innerHTML = '';
             if(permissoesAtuais.reg) {
@@ -849,7 +1166,6 @@
                 contAtalhos.innerHTML += `<button onclick="window.mudarAba('config'); window.carregarLogsAuditoria()" class="bg-red-50 hover:bg-red-100 text-red-800 border border-red-200 p-3 rounded-xl font-black text-xs uppercase flex items-center justify-center space-x-2"><i class="fas fa-fingerprint text-lg"></i><span>Auditoria DEV</span></button>`;
             }
 
-            // Seção Exclusiva DEV
             const secDev = document.getElementById('dash-secao-dev');
             if(isAdmin) {
                 secDev.classList.remove('hidden');
@@ -860,7 +1176,6 @@
                 document.getElementById('kpi-dev-semfoto-ent').innerText = qtdSemFotoEnt;
                 document.getElementById('kpi-dev-logs').innerText = logsAuditoria.length;
 
-                // Agrupamento por Modelo
                 const mapaModelos = {};
                 todos.forEach(r => {
                     const m = r.dados_dinamicos?.modelo || 'NÃO INFORMADO';
@@ -874,7 +1189,6 @@
                     </div>
                 `).join('') || '<div class="text-gray-400 italic">Sem dados.</div>';
 
-                // Agrupamento por Operador Hoje
                 const mapaOp = {};
                 entradasHoje.forEach(r => { const op = r.visto_entrada || 'N/A'; mapaOp[op] = (mapaOp[op] || 0) + 1; });
                 saidasHoje.forEach(r => { const op = r.visto_saida || 'N/A'; mapaOp[op] = (mapaOp[op] || 0) + 1; });
@@ -886,7 +1200,6 @@
                     </div>
                 `).join('') || '<div class="text-gray-400 italic">Nenhuma movimentação hoje.</div>';
 
-                // Últimos 5 logs no Dashboard
                 const contUltimosLogs = document.getElementById('dash-ultimos-logs');
                 if(logsAuditoria.length === 0) {
                     contUltimosLogs.innerHTML = '<div class="text-gray-400 italic">Clique em "Ver Log Completo" para sincronizar os eventos.</div>';
@@ -1052,7 +1365,6 @@
             if(!nome || !senha) return window.appAlert("Campos Obrigatórios", "Preencha o Nome de Login e a Senha do funcionário.", "aviso");
             if(usuarios.find(u => u.nome === nome) || nome === 'ADMIN') return window.appAlert("Usuário Existente", "Já existe um usuário com esse nome no sistema.", "erro");
             
-            // Permissões sugeridas pelo cargo
             let permissoesIniciais = { reg: true, pat: true, sai: true, pla: false, imp: false, edi: false, exc: false };
             if(cargo.includes('CONFERENTE')) permissoesIniciais = { reg: false, pat: true, sai: true, pla: true, imp: false, edi: false, exc: false };
             if(cargo.includes('SUPERVISOR')) permissoesIniciais = { reg: true, pat: true, sai: true, pla: true, imp: true, edi: true, exc: false };
@@ -1264,7 +1576,7 @@
                     if(campo.tipo === 'placa') {
                         html = `
                             <div class="mb-4">
-                                <label class="block text-sm font-bold text-gray-700 uppercase">${index+1}. ${campo.nome} (Foto de Entrada)</label>
+                                <label class="block text-sm font-bold text-gray-700 uppercase">${index+1}. ${campo.nome} (Foto de Entrada + EXIF + GPS)</label>
                                 <div class="relative flex items-center mt-1 no-print">
                                     <input type="text" id="campo_${campo.id}" class="w-full border-2 border-gray-300 p-3 pr-24 rounded-xl focus:border-blue-500 focus:outline-none uppercase" onblur="window.verificarHistorico(this.value)" placeholder="ABC-1234">
                                     <div class="absolute right-2 top-1/2 -translate-y-1/2 flex space-x-1">
@@ -1272,9 +1584,9 @@
                                         <label class="bg-purple-100 text-purple-600 rounded-lg w-10 h-10 flex items-center justify-center cursor-pointer border shadow-sm"><i class="fas fa-image text-lg"></i><input type="file" accept="image/*" class="hidden" onchange="window.processarFotoPlaca(event)"></label>
                                     </div>
                                 </div>
-                                <div id="preview-container" class="hidden mt-2 p-2 border rounded-xl bg-gray-50 flex items-center justify-between shadow-inner">
-                                    <img id="preview-img" src="" class="h-16 w-16 object-cover rounded-lg border border-gray-300">
-                                    <div class="text-[10px] text-gray-500 font-bold text-right ml-2 leading-tight uppercase" id="preview-info"></div>
+                                <div id="preview-container" class="hidden mt-2 p-2.5 border-2 border-blue-200 rounded-xl bg-blue-50/50 flex items-center justify-between shadow-inner">
+                                    <img id="preview-img" src="" class="h-16 w-16 object-cover rounded-lg border border-blue-300">
+                                    <div class="text-[10px] text-gray-700 font-bold text-right ml-2 leading-tight uppercase" id="preview-info"></div>
                                 </div>
                                 <div id="status_foto_completo" class="text-xs font-bold text-orange-600 mt-1 hidden"><i class="fas fa-info-circle"></i> Processando...</div>
                                 <div id="alerta_historico_completo" class="hidden bg-blue-50 border-l-4 border-blue-500 p-3 mt-2 rounded-r-xl shadow-sm">
@@ -1304,7 +1616,7 @@
                     if(c.tipo !== 'placa') cabecalho.innerHTML += `<th class="px-3 py-2 border-r border-blue-700">${c.nome}</th>`;
                     else cabecalho.innerHTML += `<th class="px-3 py-2 border-r border-blue-700">PLACA</th>`;
                 });
-                cabecalho.innerHTML += `<th class="px-3 py-2 no-print">Auditoria Saída</th>`;
+                cabecalho.innerHTML += `<th class="px-3 py-2 border-r border-blue-700 no-print">GPS (Ent / Saí)</th><th class="px-3 py-2 no-print">Auditoria Saída</th>`;
             }
 
             const painelCampos = document.getElementById('lista-campos-admin');
@@ -1471,7 +1783,7 @@
         };
 
         // ==========================================
-        // UPLOAD WEBP IMGBB (ENTRADA)
+        // UPLOAD WEBP IMGBB + EXIF + GPS (ENTRADA)
         // ==========================================
         window.processarFotoPlaca = async function(event) {
             const file = event.target.files[0];
@@ -1483,19 +1795,11 @@
             const previewInfo = document.getElementById('preview-info');
 
             statusLabel.classList.remove('hidden');
-            statusLabel.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Preparando foto...';
+            statusLabel.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Extraindo Data EXIF e GPS...';
 
-            EXIF.getData(file, function() {
-                const exifDate = EXIF.getTag(this, "DateTimeOriginal");
-                if (exifDate) {
-                    const partes = exifDate.split(' ');
-                    const d = partes[0].split(':');
-                    dataHoraMetadata = `${d[2]}/${d[1]}/${d[0]} ${partes[1].substring(0,5)}`;
-                } else {
-                    const fallback = new Date(file.lastModified);
-                    dataHoraMetadata = fallback.toLocaleDateString('pt-BR', {day:'2-digit',month:'2-digit',year:'numeric'}) + ' ' + fallback.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
-                }
-            });
+            const meta = await extrairMetadadosCompletosDaFoto(file);
+            dataHoraMetadata = meta.horario;
+            gpsLocalizacao = meta.gps;
 
             const reader = new FileReader();
             reader.onload = function(e) {
@@ -1511,6 +1815,7 @@
                     const webpDataStr = canvas.toDataURL('image/webp', 0.8);
                     previewImg.src = webpDataStr;
                     previewCont.classList.remove('hidden');
+                    previewInfo.innerHTML = `HORA: ${dataHoraMetadata}<br>GPS: ${gpsLocalizacao}<br><span class="text-blue-600">Enviando ImgBB...</span>`;
                     
                     const base64Data = webpDataStr.split(',')[1];
                     
@@ -1522,31 +1827,13 @@
                         
                         if(json.success) {
                             fotoAtualUrl = json.data.url; 
-                            statusLabel.innerHTML = `<i class="fas fa-satellite-dish fa-spin"></i> Capturando GPS...`;
-                            
-                            if (navigator.geolocation) {
-                                navigator.geolocation.getCurrentPosition(
-                                    (pos) => { 
-                                        gpsLocalizacao = `${pos.coords.latitude}, ${pos.coords.longitude}`; 
-                                        statusLabel.innerHTML = `<i class="fas fa-check-circle text-green-600"></i> Foto e GPS Autenticados!`; 
-                                        previewInfo.innerHTML = `EXIF: ${dataHoraMetadata}<br><span class='text-green-600'>GPS OK • IMGBB OK</span>`;
-                                    },
-                                    () => { 
-                                        gpsLocalizacao = "Sem Permissão de GPS"; 
-                                        statusLabel.innerHTML = `<i class="fas fa-check-circle text-green-600"></i> Foto Salva (Sem GPS).`; 
-                                        previewInfo.innerHTML = `EXIF: ${dataHoraMetadata}<br><span class='text-green-600'>IMGBB OK</span>`;
-                                    },
-                                    { timeout: 5000 }
-                                );
-                            } else { 
-                                gpsLocalizacao = "Sem suporte a GPS"; 
-                                statusLabel.innerHTML = `<i class="fas fa-check-circle text-green-600"></i> Foto Salva.`; 
-                            }
+                            statusLabel.innerHTML = `<i class="fas fa-check-circle text-green-600"></i> Foto, EXIF e GPS Autenticados!`;
+                            previewInfo.innerHTML = `HORA: ${dataHoraMetadata}<br>GPS: ${gpsLocalizacao}<br><span class='text-emerald-700 font-black'><i class='fas fa-check'></i> IMGBB OK</span>`;
                         } else throw new Error();
                     } catch (err) { 
                         fotoAtualUrl = null;
                         statusLabel.innerHTML = `<i class="fas fa-times-circle text-red-600"></i> Falha no Upload da Imagem.`; 
-                        previewInfo.innerHTML = "FALHA DE REDE";
+                        previewInfo.innerHTML = `HORA: ${dataHoraMetadata}<br><span class="text-red-600">FALHA DE REDE</span>`;
                     }
                 };
                 img.src = e.target.result;
@@ -1581,7 +1868,7 @@
                 return window.appAlert("Placa Obrigatória", "Informe a Placa do veículo antes de salvar a entrada.", "aviso");
             }
 
-            const entrada = dataHoraMetadata ? dataHoraMetadata + " (EXIF)" : getDataHoraAtualNavegador() + " (Sist)";
+            const entrada = dataHoraMetadata ? dataHoraMetadata : getDataHoraAtualNavegador() + " (Sist)";
             const diaParticao = entrada.substring(0, 10);
 
             const novo = {
@@ -1630,7 +1917,7 @@
         };
 
         // ==========================================
-        // 1. SISTEMA DE SAÍDA: PLANO A (FOTO) E PLANO B (PLACA À MÃO)
+        // 1. SISTEMA DE SAÍDA: PLANO A (FOTO + EXIF + GPS) E PLANO B (PLACA À MÃO)
         // ==========================================
         window.abrirModalSaida = function(id) { 
             if(!permissoesAtuais.sai) return;
@@ -1677,6 +1964,7 @@
             }
         };
 
+        // Extrai EXIF (Data/Hora + GPS da Foto) + GPS do Aparelho e envia WebP na Saída
         window.processarFotoSaida = async function(event) {
             const file = event.target.files[0];
             if(!file) return;
@@ -1684,28 +1972,31 @@
             const statusLabel = document.getElementById('status-foto-saida');
             const previewCont = document.getElementById('preview-saida-container');
             const previewImg = document.getElementById('preview-saida-img');
-            const previewInfo = document.getElementById('preview-saida-info');
+            const lblHorario = document.getElementById('saida-meta-horario');
+            const lblGps = document.getElementById('saida-meta-gps');
+            const lblCloud = document.getElementById('saida-meta-cloud');
 
             statusLabel.classList.remove('hidden');
-            statusLabel.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Extraindo metadados da foto de saída...';
+            statusLabel.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Colhendo EXIF e GPS da foto de saída...';
+            previewCont.classList.remove('hidden');
+            lblHorario.innerText = "Lendo EXIF...";
+            lblGps.innerText = "Obtendo coordenadas...";
+            lblCloud.innerText = "Aguardando...";
 
-            EXIF.getData(file, function() {
-                const exifDate = EXIF.getTag(this, "DateTimeOriginal");
-                if (exifDate) {
-                    const partes = exifDate.split(' ');
-                    const d = partes[0].split(':');
-                    dataHoraSaidaMetadata = `${d[2]}/${d[1]}/${d[0]} ${partes[1].substring(0,5)} (EXIF)`;
-                } else {
-                    const fallback = new Date(file.lastModified);
-                    dataHoraSaidaMetadata = fallback.toLocaleDateString('pt-BR', {day:'2-digit',month:'2-digit',year:'numeric'}) + ' ' + fallback.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'}) + ' (Arq)';
-                }
-            });
+            const meta = await extrairMetadadosCompletosDaFoto(file);
+            dataHoraSaidaMetadata = meta.horario;
+            gpsSaidaLocalizacao = meta.gps;
+
+            lblHorario.innerText = `HORA SAÍDA: ${dataHoraSaidaMetadata}`;
+            lblGps.innerText = `GPS SAÍDA: ${gpsSaidaLocalizacao}`;
 
             const reader = new FileReader();
             reader.onload = function(e) {
                 const img = new Image();
                 img.onload = async function() {
-                    statusLabel.innerHTML = '<i class="fas fa-cloud-upload-alt fa-bounce"></i> Subindo foto de saída p/ ImgBB...';
+                    statusLabel.innerHTML = '<i class="fas fa-cloud-upload-alt fa-bounce"></i> Subindo foto WebP de saída p/ ImgBB...';
+                    lblCloud.innerText = "Comprimindo WebP e enviando...";
+
                     const canvas = document.createElement('canvas');
                     const MAX_WIDTH = 800; 
                     const scaleSize = MAX_WIDTH / img.width;
@@ -1714,7 +2005,6 @@
                     
                     const webpDataStr = canvas.toDataURL('image/webp', 0.8);
                     previewImg.src = webpDataStr;
-                    previewCont.classList.remove('hidden');
                     
                     const base64Data = webpDataStr.split(',')[1];
                     
@@ -1726,31 +2016,13 @@
                         
                         if(json.success) {
                             fotoSaidaUrl = json.data.url;
-                            statusLabel.innerHTML = `<i class="fas fa-satellite-dish fa-spin"></i> Capturando GPS de saída...`;
-                            
-                            if (navigator.geolocation) {
-                                navigator.geolocation.getCurrentPosition(
-                                    (pos) => { 
-                                        gpsSaidaLocalizacao = `${pos.coords.latitude}, ${pos.coords.longitude}`; 
-                                        statusLabel.innerHTML = `<i class="fas fa-check-circle text-green-600"></i> Foto de Saída Pronta!`; 
-                                        previewInfo.innerHTML = `${dataHoraSaidaMetadata}<br><span class='text-green-600'>FOTO + GPS OK</span>`;
-                                    },
-                                    () => { 
-                                        gpsSaidaLocalizacao = "Sem GPS"; 
-                                        statusLabel.innerHTML = `<i class="fas fa-check-circle text-green-600"></i> Foto de Saída Pronta!`; 
-                                        previewInfo.innerHTML = `${dataHoraSaidaMetadata}<br><span class='text-green-600'>FOTO OK</span>`;
-                                    },
-                                    { timeout: 5000 }
-                                );
-                            } else {
-                                gpsSaidaLocalizacao = "Sem GPS";
-                                statusLabel.innerHTML = `<i class="fas fa-check-circle text-green-600"></i> Foto de Saída Pronta!`;
-                            }
+                            lblCloud.innerHTML = `<span class="text-emerald-700 font-black">UPLOAD IMGBB CONCLUÍDO</span>`;
+                            statusLabel.innerHTML = `<i class="fas fa-check-circle text-green-600"></i> Foto, Horário EXIF e GPS de Saída colhidos com sucesso!`;
                         } else throw new Error();
                     } catch (err) { 
                         fotoSaidaUrl = null;
+                        lblCloud.innerHTML = `<span class="text-red-600 font-black">ERRO NO UPLOAD</span>`;
                         statusLabel.innerHTML = `<i class="fas fa-exclamation-triangle text-red-600"></i> Falha no upload da foto. Use o Plano B acima se estiver sem internet.`; 
-                        previewInfo.innerHTML = "<span class='text-red-600'>ERRO NO UPLOAD</span>";
                     }
                 };
                 img.src = e.target.result;
@@ -1765,15 +2037,16 @@
             let horarioSaidaFinal = '';
             let metodoSaida = '';
             let motivoPlanoB = '';
+            let gpsSaidaFinal = '';
 
             if(modoSaidaAtual === 'A') {
                 if(!fotoSaidaUrl) {
-                    return window.appAlert("Foto de Saída Obrigatória", "No Plano A é obrigatório tirar a foto do veículo para comprovar a saída.\n\nCaso a câmera tenha falhado, selecione a aba 'Plano B: Manual' acima.", "aviso");
+                    return window.appAlert("Foto de Saída Obrigatória", "No Plano A é obrigatório tirar a foto do veículo para colher os metadados e comprovar a saída.\n\nCaso a câmera tenha falhado, selecione a aba 'Plano B: Manual' acima.", "aviso");
                 }
                 horarioSaidaFinal = dataHoraSaidaMetadata || (getDataHoraAtualNavegador() + " (Foto)");
+                gpsSaidaFinal = gpsSaidaLocalizacao || 'Sem GPS';
                 metodoSaida = 'PLANO_A';
             } else {
-                // Validação rigorosa do Plano B: escrever a placa à mão e bater com o sistema
                 const placaDigitada = document.getElementById('input-placa-plano-b').value.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
                 const placaSistema = (itemSaindo.placa || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
 
@@ -1781,6 +2054,7 @@
                     return window.appAlert("Placa Não Confere", `Para liberar via Plano B, você deve digitar à mão exatamente a placa cadastrada no sistema (${itemSaindo.placa}).`, "erro");
                 }
                 horarioSaidaFinal = getDataHoraAtualNavegador() + " (Plano B)";
+                gpsSaidaFinal = gpsSaidaLocalizacao || 'Plano B (Sem Foto)';
                 metodoSaida = 'PLANO_B';
                 motivoPlanoB = document.getElementById('motivo-plano-b').value;
             }
@@ -1794,7 +2068,7 @@
                     saida: horarioSaidaFinal,
                     visto_saida: usuarioLogado,
                     foto_saida: fotoSaidaUrl || '',
-                    gps_saida: gpsSaidaLocalizacao || 'Sem GPS',
+                    gps_saida: gpsSaidaFinal,
                     metodo_saida: metodoSaida,
                     motivo_plano_b: motivoPlanoB
                 };
@@ -1803,7 +2077,7 @@
 
                 await registrarLog(
                     metodoSaida === 'PLANO_A' ? 'SAIDA_PLANO_A' : 'SAIDA_PLANO_B',
-                    `SAÍDA (${metodoSaida}) DA PLACA ${itemSaindo.placa} ${motivoPlanoB ? '- MOTIVO: ' + motivoPlanoB : ''}`,
+                    `SAÍDA (${metodoSaida}) DA PLACA ${itemSaindo.placa} | GPS SAÍDA: ${gpsSaidaFinal} ${motivoPlanoB ? '| MOTIVO: ' + motivoPlanoB : ''}`,
                     { firebase_id: registroSelecionadoFirebaseId, placa: itemSaindo.placa, dados_saida: payloadSaida }
                 );
                 
@@ -1815,7 +2089,7 @@
                 window.fecharModalSaida();
                 window.filtrarListas();
                 window.atualizarDashboard();
-                window.mostrarToast(`Saída de ${itemSaindo.placa} concluída (${metodoSaida})!`, metodoSaida === 'PLANO_A' ? 'sucesso' : 'aviso');
+                window.mostrarToast(`Saída de ${itemSaindo.placa} registrada com sucesso!`, metodoSaida === 'PLANO_A' ? 'sucesso' : 'aviso');
             } catch (e) {
                 window.appAlert("Erro na Saída", e.message, "erro");
             } finally {
@@ -1899,7 +2173,7 @@
                 const btnDel = permissoesAtuais.exc ? `<button onclick="event.stopPropagation(); window.excluirIndiv('${r.firebase_id}')" class="text-red-600 hover:text-red-800 bg-red-50 p-2 rounded-lg no-print"><i class="fas fa-trash"></i></button>` : '';
 
                 const badgeMetodoSaida = r.metodo_saida === 'PLANO_B' ? `<span class="bg-amber-100 text-amber-800 border border-amber-300 px-1.5 py-0.5 rounded text-[9px] font-black uppercase">Plano B (Manual)</span>` :
-                                         r.metodo_saida === 'PLANO_A' ? `<span class="bg-emerald-100 text-emerald-800 border border-emerald-300 px-1.5 py-0.5 rounded text-[9px] font-black uppercase">Plano A (Foto)</span>` : '---';
+                                         r.metodo_saida === 'PLANO_A' ? `<span class="bg-emerald-100 text-emerald-800 border border-emerald-300 px-1.5 py-0.5 rounded text-[9px] font-black uppercase">Plano A (Foto+GPS)</span>` : '---';
 
                 if(showPatio) {
                     countPatio++;
@@ -1950,6 +2224,7 @@
                         else rowHtml += `<td class="px-3 py-2 border-r uppercase max-w-[150px] truncate" title="${r.dados_dinamicos?.[c.id] || ''}">${r.dados_dinamicos?.[c.id] || ''}</td>`;
                     });
                     
+                    rowHtml += `<td class="px-2 py-2 border-r text-[10px] whitespace-nowrap no-print"><b>E:</b> ${r.gps || '---'}<br><b>S:</b> ${r.gps_saida || '---'}</td>`;
                     rowHtml += `<td class="px-2 py-2 text-xs whitespace-nowrap no-print">${badgeMetodoSaida} ${r.motivo_plano_b ? `<span class="text-[9px] text-gray-500 block">${r.motivo_plano_b}</span>` : ''}</td>`;
                     tr.innerHTML = rowHtml;
                     listaPlanilha.appendChild(tr);
@@ -1960,7 +2235,7 @@
             if(badgePatio) badgePatio.innerText = `${registrosPatioAtivo.length} No Pátio`;
 
             if(countPatio === 0) listaPatio.innerHTML = '<p class="text-center text-gray-400 py-10 font-bold uppercase">Nenhum veículo para este filtro.</p>';
-            if(countPlanilha === 0) listaPlanilha.innerHTML = '<tr><td colspan="15" class="text-center py-6 font-bold text-gray-400 uppercase">Nenhum registro carregado.</td></tr>';
+            if(countPlanilha === 0) listaPlanilha.innerHTML = '<tr><td colspan="16" class="text-center py-6 font-bold text-gray-400 uppercase">Nenhum registro carregado.</td></tr>';
         };
 
         // ==========================================
@@ -1972,17 +2247,23 @@
         };
         window.fecharZoom = () => document.getElementById('modal-zoom').classList.add('hidden');
 
+        function formatarLinkMapa(coordStr) {
+            if(!coordStr || coordStr.includes('Sem') || coordStr.includes('Indisponível') || coordStr.includes('Plano B')) return '';
+            const limpa = coordStr.replace(' (EXIF)', '').trim();
+            return `<a href="https://maps.google.com/?q=${encodeURIComponent(limpa)}" target="_blank" class="inline-block bg-blue-600 text-white text-[9px] font-black px-2 py-0.5 rounded ml-1 uppercase"><i class="fas fa-map-marked-alt mr-0.5"></i> Mapa</a>`;
+        }
+
         window.abrirDetalhes = function(firebase_id) {
             const r = obterListaUnificada().find(reg => reg.firebase_id === firebase_id);
             if(!r) return;
             const pendente = !r.saida;
 
             const boxFotoEntrada = r.foto 
-                ? `<div class="border rounded-xl p-2 bg-gray-50"><span class="block text-[10px] font-black uppercase text-blue-700 mb-1">Foto de Entrada</span><img src="${r.foto}" onclick="window.abrirZoom('${r.foto}')" class="w-full h-40 object-cover rounded-lg cursor-zoom-in shadow"></div>`
+                ? `<div class="border rounded-xl p-2 bg-gray-50"><span class="block text-[10px] font-black uppercase text-blue-700 mb-1">Foto de Entrada (Toque p/ Zoom)</span><img src="${r.foto}" onclick="window.abrirZoom('${r.foto}')" class="w-full h-40 object-cover rounded-lg cursor-zoom-in shadow"></div>`
                 : `<div class="border rounded-xl p-4 bg-gray-50 flex items-center justify-center text-gray-400 font-bold text-xs uppercase">Sem Foto de Entrada</div>`;
 
             const boxFotoSaida = r.foto_saida 
-                ? `<div class="border rounded-xl p-2 bg-emerald-50"><span class="block text-[10px] font-black uppercase text-emerald-700 mb-1">Foto de Saída (Plano A)</span><img src="${r.foto_saida}" onclick="window.abrirZoom('${r.foto_saida}')" class="w-full h-40 object-cover rounded-lg cursor-zoom-in shadow"></div>`
+                ? `<div class="border rounded-xl p-2 bg-emerald-50"><span class="block text-[10px] font-black uppercase text-emerald-700 mb-1">Foto de Saída (Toque p/ Zoom)</span><img src="${r.foto_saida}" onclick="window.abrirZoom('${r.foto_saida}')" class="w-full h-40 object-cover rounded-lg cursor-zoom-in shadow"></div>`
                 : `<div class="border rounded-xl p-4 bg-gray-50 flex items-center justify-center text-gray-400 font-bold text-xs uppercase">${pendente ? 'Aguardando Saída' : 'Saída via Plano B (Sem Foto)'}</div>`;
 
             let infos = '';
@@ -1995,18 +2276,19 @@
             document.getElementById('conteudo-detalhes').innerHTML = `
                 <div class="text-center"><div class="text-4xl font-black tracking-wider text-blue-950">${r.placa}</div></div>
                 <div class="grid grid-cols-2 gap-2">${boxFotoEntrada}${boxFotoSaida}</div>
-                <div class="grid grid-cols-2 gap-2 text-sm">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
                     <div class="bg-blue-50 p-3 rounded-xl border border-blue-200">
-                        <span class="block text-[10px] text-blue-700 font-black uppercase">Entrada</span>
-                        <span class="font-black text-sm block">${r.entrada}</span>
-                        <span class="block text-[10px] text-gray-600 mt-1 font-bold uppercase">Op: ${r.visto_entrada}</span>
-                        <span class="block text-[9px] text-gray-500 uppercase">GPS: ${r.gps || 'N/A'}</span>
+                        <span class="block text-[10px] text-blue-700 font-black uppercase">Dados da Entrada</span>
+                        <span class="font-black text-sm block mt-0.5">${r.entrada}</span>
+                        <span class="block text-[10px] text-gray-600 mt-1 font-bold uppercase">Operador: ${r.visto_entrada}</span>
+                        <span class="block text-[10px] text-gray-600 mt-1 font-bold uppercase">GPS Ent: ${r.gps || 'N/A'} ${formatarLinkMapa(r.gps)}</span>
                     </div>
                     <div class="bg-${pendente?'amber':'emerald'}-50 p-3 rounded-xl border border-${pendente?'amber':'emerald'}-200">
-                        <span class="block text-[10px] text-${pendente?'amber':'emerald'}-700 font-black uppercase">Saída ${r.metodo_saida ? `(${r.metodo_saida})` : ''}</span>
-                        <span class="font-black text-sm block">${r.saida || 'No Pátio...'}</span>
-                        ${r.visto_saida ? `<span class="block text-[10px] text-gray-600 mt-1 font-bold uppercase">Op: ${r.visto_saida}</span>` : ''}
-                        ${r.motivo_plano_b ? `<span class="block text-[9px] text-amber-800 font-black uppercase mt-0.5">Motivo: ${r.motivo_plano_b}</span>` : ''}
+                        <span class="block text-[10px] text-${pendente?'amber':'emerald'}-700 font-black uppercase">Dados da Saída ${r.metodo_saida ? `(${r.metodo_saida})` : ''}</span>
+                        <span class="font-black text-sm block mt-0.5">${r.saida || 'Aguardando no Pátio...'}</span>
+                        ${r.visto_saida ? `<span class="block text-[10px] text-gray-600 mt-1 font-bold uppercase">Operador: ${r.visto_saida}</span>` : ''}
+                        ${!pendente ? `<span class="block text-[10px] text-gray-600 mt-1 font-bold uppercase">GPS Saí: ${r.gps_saida \vert{}\vert{} 'N/A'}${formatarLinkMapa(r.gps_saida)}</span>` : ''}
+                        ${r.motivo_plano_b ? `<span class="block text-[9px] text-amber-800 font-black uppercase mt-1">Contingência: ${r.motivo_plano_b}</span>` : ''}
                     </div>
                 </div>
                 <div class="bg-white p-3 border rounded-xl shadow-sm">${infos}</div>
