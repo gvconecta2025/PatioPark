@@ -79,8 +79,8 @@
             </div>
             <div class="bg-white p-3 rounded-lg shadow-sm mb-4 border border-gray-200">
                 <div class="grid grid-cols-2 gap-2 mb-2">
-                    <select id="filtro-status-patio" onchange="window.filtrarListas()" class="w-full p-2 border border-gray-300 rounded text-sm uppercase bg-gray-50 font-bold">
-                        <option value="NO_PATIO">No Pátio (Aguardando)</option>
+                    <select id="filtro-status-patio" onchange="window.mudarFiltroPatio()" class="w-full p-2 border border-gray-300 rounded text-sm uppercase bg-gray-50 font-bold">
+                        <option value="NO_PATIO">No Pátio (Tempo Real)</option>
                         <option value="TODOS">Todos os Status</option>
                         <option value="SAIRAM">Já Saíram</option>
                     </select>
@@ -91,10 +91,13 @@
                         <option value="ESPECIFICA">Escolher Dia...</option>
                     </select>
                 </div>
-                <input type="date" id="data-especifica-patio" onchange="window.filtrarListas()" class="w-full p-2 border border-gray-300 rounded text-sm uppercase bg-gray-50 font-bold hidden mb-2">
-                <div class="relative">
-                    <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
-                    <input type="text" id="busca-patio" onkeyup="window.filtrarListas()" placeholder="Pesquisar Placa, Motorista..." class="w-full pl-10 pr-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none font-bold uppercase">
+                <input type="date" id="data-especifica-patio" onchange="window.mudarFiltroPatio()" class="w-full p-2 border border-gray-300 rounded text-sm uppercase bg-gray-50 font-bold hidden mb-2">
+                <div class="relative flex space-x-2">
+                    <div class="relative flex-1">
+                        <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                        <input type="text" id="busca-patio" onkeyup="window.filtrarListas()" placeholder="Filtrar Placa, Motorista..." class="w-full pl-10 pr-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none font-bold uppercase">
+                    </div>
+                    <button onclick="window.buscarPlacaServidor('patio')" title="Buscar placa antiga no banco" class="bg-blue-600 text-white px-3 rounded-lg font-bold text-xs uppercase shadow"><i class="fas fa-cloud-download-alt"></i></button>
                 </div>
             </div>
             <div id="lista-patio" class="space-y-4"></div>
@@ -105,11 +108,6 @@
             <div class="flex justify-between items-center mb-4 no-print">
                 <h2 class="text-xl font-bold flex items-center uppercase"><i class="fas fa-table mr-2"></i> Histórico</h2>
                 <div class="flex space-x-2">
-                    <select id="limite-consulta" onchange="window.alterarLimiteConsulta(this.value)" class="bg-white border border-gray-300 text-gray-700 font-bold px-2 py-2 rounded text-xs shadow-sm uppercase">
-                        <option value="100">Últimos 100</option>
-                        <option value="300">Últimos 300</option>
-                        <option value="600">Últimos 600</option>
-                    </select>
                     <button id="btn-imprimir" onclick="window.imprimirRelatorio()" class="bg-gray-700 text-white font-bold px-3 py-2 rounded text-xs shadow hover:bg-gray-800 transition"><i class="fas fa-print"></i> PDF</button>
                     <button id="btn-excluir-lote" onclick="window.excluirEmLote()" class="hidden bg-red-600 text-white font-bold px-3 py-2 rounded text-xs shadow hover:bg-red-700 transition"><i class="fas fa-trash-alt"></i> Excluir Lote</button>
                 </div>
@@ -123,17 +121,21 @@
                         <option value="SAIRAM">Já Saíram</option>
                     </select>
                     <select id="filtro-data-planilha" onchange="window.verificarFiltroData('planilha')" class="w-full p-2 border border-gray-300 rounded text-sm uppercase bg-gray-50 font-bold">
-                        <option value="TODAS">Qualquer Data</option>
-                        <option value="HOJE">Somente Hoje</option>
+                        <option value="HOJE" selected>Somente Hoje</option>
                         <option value="ONTEM">Somente Ontem</option>
                         <option value="ESPECIFICA">Escolher Dia...</option>
+                        <option value="TODAS">Últimos (Paginado)</option>
                     </select>
                 </div>
-                <input type="date" id="data-especifica-planilha" onchange="window.filtrarListas()" class="w-full p-2 border border-gray-300 rounded text-sm uppercase bg-gray-50 font-bold hidden mb-2">
-                <div class="relative">
-                    <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
-                    <input type="text" id="busca-planilha" onkeyup="window.filtrarListas()" placeholder="Pesquisar Placa, Motorista..." class="w-full pl-10 pr-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none font-bold uppercase">
+                <input type="date" id="data-especifica-planilha" onchange="window.carregarHistoricoSobDemanda(true)" class="w-full p-2 border border-gray-300 rounded text-sm uppercase bg-gray-50 font-bold hidden mb-2">
+                <div class="relative flex space-x-2">
+                    <div class="relative flex-1">
+                        <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                        <input type="text" id="busca-planilha" onkeyup="window.filtrarListas()" placeholder="Filtrar Placa, Motorista..." class="w-full pl-10 pr-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none font-bold uppercase">
+                    </div>
+                    <button onclick="window.buscarPlacaServidor('planilha')" title="Buscar placa antiga no servidor" class="bg-blue-600 text-white px-3 rounded-lg font-bold text-xs uppercase shadow"><i class="fas fa-cloud-download-alt mr-1"></i> Buscar Placa</button>
                 </div>
+                <div id="status-leitura-banco" class="text-[10px] font-bold text-blue-700 mt-2 uppercase"></div>
             </div>
 
             <div id="cabecalho-impressao" class="hidden">
@@ -149,6 +151,10 @@
                     </table>
                 </div>
             </div>
+
+            <button id="btn-carregar-mais" onclick="window.carregarMaisHistorico()" class="hidden w-full bg-blue-100 hover:bg-blue-200 text-blue-800 font-bold py-3 rounded-lg mt-3 text-xs uppercase border border-blue-300 shadow-sm no-print">
+                <i class="fas fa-plus-circle mr-1"></i> Carregar +50 Registros Antigos
+            </button>
         </div>
 
         <!-- ABA 4: CONFIGURAÇÕES / ADMIN -->
@@ -172,7 +178,7 @@
 
                 <div class="bg-white p-4 rounded-lg shadow border border-gray-200">
                     <h3 class="font-bold text-gray-800 uppercase border-b pb-2 mb-3"><i class="fas fa-database"></i> Backup Completo da Nuvem</h3>
-                    <p class="text-[10px] text-gray-500 mb-3 uppercase font-bold">Varre o banco de dados inteiro no servidor e baixa 100% dos registros.</p>
+                    <p class="text-[10px] text-gray-500 mb-3 uppercase font-bold">Executa leitura sob demanda para baixar os registros em JSON.</p>
                     <button id="btn-backup-nuvem" onclick="window.gerarBackupNuvem()" class="w-full bg-blue-600 text-white font-bold py-3 rounded uppercase shadow hover:bg-blue-700"><i class="fas fa-cloud-download-alt"></i> Baixar Backup Completo</button>
                 </div>
 
@@ -271,8 +277,11 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        let registros = [];
+        // SEPARAÇÃO DE MEMÓRIA: PÁTIO ATIVO (TEMPO REAL) vs HISTÓRICO (SOB DEMANDA)
+        let registrosPatioAtivo = []; // Apenas veículos com saida == ""
+        let registrosHistorico = [];  // Carregados sob demanda por data/paginação
         let usuarios = [];
+        
         let usuarioLogado = null;
         let permissoesAtuais = {};
         let isAdmin = false;
@@ -280,15 +289,14 @@
         let registroSelecionadoFirebaseId = null;
         let fotoAtualUrl = null; let dataHoraMetadata = null; let gpsLocalizacao = null; 
         let ultimoVeiculoEncontrado = null;
-        let unsubscribeRegistros = null;
-        let limiteAtual = 100;
+        
+        let unsubscribePatioAtivo = null;
+        let unsubscribeSchema = null;
+        let unsubscribeUsuarios = null;
+        let limitePaginacao = 50;
 
-        // PERMISSÕES SUPER ADMIN
         const permissoesAdminDev = { reg: true, pat: true, sai: true, pla: true, imp: true, edi: true, exc: true };
 
-        // ==========================================
-        // 1. SINCRONIZAÇÃO DE CAMPOS NA NUVEM (FIRESTORE)
-        // ==========================================
         const camposPadrao = [
             { id: "placa", nome: "Placa", tipo: "placa", fixo: true },
             { id: "local", nome: "Local de Entrega", tipo: "text", fixo: false },
@@ -299,89 +307,237 @@
             { id: "nota", nome: "Nota Fiscal", tipo: "text", fixo: false },
             { id: "observacoes", nome: "Observações", tipo: "textarea", fixo: false }
         ];
-
         let schemaCampos = [...camposPadrao];
 
-        // Escuta alterações na estrutura de campos em tempo real para todos os aparelhos
-        onSnapshot(doc(db, "configuracoes", "schema"), (docSnap) => {
-            if (docSnap.exists() && Array.isArray(docSnap.data().campos)) {
-                schemaCampos = docSnap.data().campos;
-            } else {
-                // Inicializa o documento na nuvem caso seja o primeiro acesso
-                setDoc(doc(db, "configuracoes", "schema"), { campos: camposPadrao }).catch(() => {});
-            }
-            if (usuarioLogado) window.renderizarTudo();
-        });
-
-        async function salvarSchema() {
-            try {
-                await setDoc(doc(db, "configuracoes", "schema"), { campos: schemaCampos });
-            } catch (e) {
-                alert("Erro ao sincronizar campos na nuvem: " + e.message);
-            }
-        }
-
         // ==========================================
-        // 2. CONSULTA OTIMIZADA COM LIMITE DINÂMICO
+        // 1. LOGIN PONTUAL (ZERO LEITURAS ANTES DO LOGIN)
         // ==========================================
-        function iniciarListenerRegistros(qtdLimite) {
-            if (unsubscribeRegistros) unsubscribeRegistros();
-            
-            const q = query(collection(db, "registros"), orderBy("id", "desc"), limit(Number(qtdLimite)));
-            unsubscribeRegistros = onSnapshot(q, (snapshot) => {
-                registros = [];
-                snapshot.forEach((doc) => registros.push({ firebase_id: doc.id, ...doc.data() }));
-                window.filtrarListas();
-                document.getElementById('status-conexao').innerHTML = '<i class="fas fa-wifi text-green-400"></i> Online';
-            }, (error) => {
-                document.getElementById('status-conexao').innerHTML = '<i class="fas fa-exclamation-triangle text-red-400"></i> Erro DB';
-            });
-        }
-
-        window.alterarLimiteConsulta = function(novoLimite) {
-            limiteAtual = Number(novoLimite);
-            iniciarListenerRegistros(limiteAtual);
-        };
-
-        // Inicia o listener padrão otimizado (100 registros mais recentes)
-        iniciarListenerRegistros(limiteAtual);
-
-        // ==========================================
-        // SISTEMA RBAC (PERMISSÕES E LOGIN)
-        // ==========================================
-        onSnapshot(collection(db, "usuarios"), (snapshot) => {
-            usuarios = [];
-            snapshot.forEach((doc) => usuarios.push({ id: doc.id, ...doc.data() }));
-            window.renderizarUsuarios();
-        }, (error) => {
-            document.getElementById('login-status').innerHTML = '<i class="fas fa-exclamation-triangle"></i> Sem permissão. Atualize as Regras do Firestore.';
-        });
-
-        window.fazerLogin = function() {
+        window.fazerLogin = async function() {
             const status = document.getElementById('login-status');
+            const btn = document.getElementById('btn-login');
             const u = document.getElementById('login-usuario').value.trim().toUpperCase();
             const s = document.getElementById('login-senha').value;
-            status.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Autenticando...';
+            
+            if(!u || !s) {
+                status.innerHTML = 'Preencha usuário e senha.';
+                return;
+            }
+
+            status.innerHTML = '<i class="fas fa-spinner fa-spin text-blue-600"></i> Autenticando...';
+            btn.disabled = true;
             
             if(u === 'ADMIN' && s === SENHA_ADMIN) {
                 usuarioLogado = 'DEV / ADMIN';
                 isAdmin = true;
                 permissoesAtuais = permissoesAdminDev;
+                btn.disabled = false;
                 iniciarAplicativo();
                 return;
             }
 
-            const func = usuarios.find(user => user.nome === u && user.senha === s);
-            if(func) {
-                usuarioLogado = func.nome;
-                isAdmin = false;
-                permissoesAtuais = func.permissoes || { reg: true, pat: true, sai: true, pla: false, imp: false, edi: false, exc: false };
-                iniciarAplicativo();
-            } else {
-                status.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Usuário ou Senha incorretos.';
+            try {
+                // Lê apenas 1 documento correspondente ao usuário/senha no banco
+                const qUser = query(collection(db, "usuarios"), where("nome", "==", u), where("senha", "==", s), limit(1));
+                const snap = await getDocs(qUser);
+
+                if(!snap.empty) {
+                    const func = snap.docs[0].data();
+                    usuarioLogado = func.nome;
+                    isAdmin = false;
+                    permissoesAtuais = func.permissoes || { reg: true, pat: true, sai: true, pla: false, imp: false, edi: false, exc: false };
+                    iniciarAplicativo();
+                } else {
+                    status.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Usuário ou Senha incorretos.';
+                }
+            } catch (error) {
+                status.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Erro de permissão no Firestore.';
+            } finally {
+                btn.disabled = false;
             }
         };
 
+        // ==========================================
+        // 2. LISTENERS ENXUTOS PÓS-LOGIN
+        // ==========================================
+        function iniciarConexoesPosLogin() {
+            // A. Escuta Schema de Campos (1 único documento)
+            if(!unsubscribeSchema) {
+                unsubscribeSchema = onSnapshot(doc(db, "configuracoes", "schema"), (docSnap) => {
+                    if (docSnap.exists() && Array.isArray(docSnap.data().campos)) {
+                        schemaCampos = docSnap.data().campos;
+                    } else if (isAdmin) {
+                        setDoc(doc(db, "configuracoes", "schema"), { campos: camposPadrao }).catch(() => {});
+                    }
+                    window.renderizarTudo();
+                });
+            }
+
+            // B. Escuta em Tempo Real APENAS Veículos DENTRO DO PÁTIO (saida == "")
+            if(!unsubscribePatioAtivo) {
+                const qPatio = query(collection(db, "registros"), where("saida", "==", ""));
+                unsubscribePatioAtivo = onSnapshot(qPatio, (snapshot) => {
+                    registrosPatioAtivo = [];
+                    snapshot.forEach((d) => registrosPatioAtivo.push({ firebase_id: d.id, ...d.data() }));
+                    // Ordena em memória para evitar exigir índice composto no Firebase
+                    registrosPatioAtivo.sort((a, b) => (b.id || 0) - (a.id || 0));
+                    
+                    window.filtrarListas();
+                    document.getElementById('status-conexao').innerHTML = '<i class="fas fa-wifi text-green-400"></i> Online';
+                }, (error) => {
+                    document.getElementById('status-conexao').innerHTML = '<i class="fas fa-exclamation-triangle text-red-400"></i> Erro DB';
+                });
+            }
+
+            // C. Escuta lista de usuários APENAS se for Admin
+            if(isAdmin && !unsubscribeUsuarios) {
+                unsubscribeUsuarios = onSnapshot(collection(db, "usuarios"), (snapshot) => {
+                    usuarios = [];
+                    snapshot.forEach((d) => usuarios.push({ id: d.id, ...d.data() }));
+                    window.renderizarUsuarios();
+                });
+            }
+        }
+
+        function encerrarConexoes() {
+            if(unsubscribePatioAtivo) { unsubscribePatioAtivo(); unsubscribePatioAtivo = null; }
+            if(unsubscribeSchema) { unsubscribeSchema(); unsubscribeSchema = null; }
+            if(unsubscribeUsuarios) { unsubscribeUsuarios(); unsubscribeUsuarios = null; }
+            registrosPatioAtivo = [];
+            registrosHistorico = [];
+        }
+
+        // ==========================================
+        // 3. LEITURA SOB DEMANDA DO HISTÓRICO (POR DATA OU PAGINADA)
+        // ==========================================
+        function obterDataString(tipo) {
+            const d = new Date();
+            if(tipo === 'ONTEM') d.setDate(d.getDate() - 1);
+            return d.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit', year:'numeric'});
+        }
+
+        window.carregarHistoricoSobDemanda = async function(resetPaginacao = true) {
+            if(resetPaginacao) limitePaginacao = 50;
+            
+            const dataSel = document.getElementById('filtro-data-planilha')?.value || 'HOJE';
+            const dataEsp = document.getElementById('data-especifica-planilha')?.value || '';
+            const statusLabel = document.getElementById('status-leitura-banco');
+            const btnMais = document.getElementById('btn-carregar-mais');
+
+            if(statusLabel) statusLabel.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Consultando registros no servidor...';
+
+            try {
+                let qHist = null;
+                if(dataSel === 'HOJE') {
+                    const hojeStr = obterDataString('HOJE');
+                    qHist = query(collection(db, "registros"), where("dia_particao", "==", hojeStr));
+                    if(btnMais) btnMais.classList.add('hidden');
+                } else if(dataSel === 'ONTEM') {
+                    const ontemStr = obterDataString('ONTEM');
+                    qHist = query(collection(db, "registros"), where("dia_particao", "==", ontemStr));
+                    if(btnMais) btnMais.classList.add('hidden');
+                } else if(dataSel === 'ESPECIFICA') {
+                    if(!dataEsp) {
+                        if(statusLabel) statusLabel.innerHTML = 'Selecione uma data no calendário acima.';
+                        return;
+                    }
+                    const e = dataEsp.split('-');
+                    const dataFormatada = `${e[2]}/${e[1]}/${e[0]}`;
+                    qHist = query(collection(db, "registros"), where("dia_particao", "==", dataFormatada));
+                    if(btnMais) btnMais.classList.add('hidden');
+                } else {
+                    // Modo "TODAS": Paginado de 50 em 50
+                    qHist = query(collection(db, "registros"), orderBy("id", "desc"), limit(limitePaginacao));
+                    if(btnMais) btnMais.classList.remove('hidden');
+                }
+
+                const snap = await getDocs(qHist);
+                registrosHistorico = [];
+                snap.forEach(d => registrosHistorico.push({ firebase_id: d.id, ...d.data() }));
+                registrosHistorico.sort((a, b) => (b.id || 0) - (a.id || 0));
+
+                if(statusLabel) statusLabel.innerHTML = `<i class="fas fa-check-circle text-green-600"></i> ${registrosHistorico.length} registro(s) carregado(s) do banco.`;
+                window.filtrarListas();
+            } catch (err) {
+                if(statusLabel) statusLabel.innerHTML = `<i class="fas fa-exclamation-circle text-red-600"></i> Erro ao consultar histórico.`;
+            }
+        };
+
+        window.carregarMaisHistorico = function() {
+            limitePaginacao += 50;
+            window.carregarHistoricoSobDemanda(false);
+        };
+
+        // Busca cirúrgica de uma placa específica em todo o banco de dados
+        window.buscarPlacaServidor = async function(origem) {
+            const inputId = origem === 'patio' ? 'busca-patio' : 'busca-planilha';
+            const termo = document.getElementById(inputId).value.trim().toUpperCase();
+            if(termo.length < 3) return alert("Digite a placa completa no campo de pesquisa para buscar no servidor.");
+
+            const statusLabel = document.getElementById('status-leitura-banco');
+            if(statusLabel) statusLabel.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Buscando placa ${termo} no servidor...`;
+
+            try {
+                const snap = await getDocs(query(collection(db, "registros"), where("placa", "==", termo)));
+                const encontrados = [];
+                snap.forEach(d => encontrados.push({ firebase_id: d.id, ...d.data() }));
+                encontrados.sort((a, b) => (b.id || 0) - (a.id || 0));
+
+                // Mescla sem duplicar no histórico carregado
+                encontrados.forEach(item => {
+                    if(!registrosHistorico.some(r => r.firebase_id === item.firebase_id)) {
+                        registrosHistorico.push(item);
+                    }
+                });
+                registrosHistorico.sort((a, b) => (b.id || 0) - (a.id || 0));
+
+                if(origem === 'patio' && encontrados.length > 0) {
+                    document.getElementById('filtro-status-patio').value = 'TODOS';
+                }
+                if(statusLabel) statusLabel.innerHTML = `<i class="fas fa-check-circle text-green-600"></i> ${encontrados.length} registro(s) encontrado(s) para a placa ${termo}.`;
+                window.filtrarListas();
+            } catch (e) {
+                alert("Erro ao buscar placa no servidor.");
+            }
+        };
+
+        window.mudarFiltroPatio = async function() {
+            const statusPatio = document.getElementById('filtro-status-patio').value;
+            const dataPatioSel = document.getElementById('filtro-data-patio').value;
+            const dataPatioEsp = document.getElementById('data-especifica-patio').value;
+
+            // Se o usuário quiser ver veículos que "JÁ SAÍRAM" na aba Pátio, buscamos sob demanda caso a memória esteja vazia
+            if(statusPatio !== 'NO_PATIO') {
+                let q = null;
+                if(dataPatioSel === 'HOJE') q = query(collection(db, "registros"), where("dia_particao", "==", obterDataString('HOJE')));
+                else if(dataPatioSel === 'ONTEM') q = query(collection(db, "registros"), where("dia_particao", "==", obterDataString('ONTEM')));
+                else if(dataPatioSel === 'ESPECIFICA' && dataPatioEsp) {
+                    const e = dataPatioEsp.split('-');
+                    q = query(collection(db, "registros"), where("dia_particao", "==", `${e[2]}/${e[1]}/${e[0]}`));
+                } else {
+                    q = query(collection(db, "registros"), orderBy("id", "desc"), limit(50));
+                }
+                const snap = await getDocs(q);
+                registrosHistorico = [];
+                snap.forEach(d => registrosHistorico.push({ firebase_id: d.id, ...d.data() }));
+                registrosHistorico.sort((a, b) => (b.id || 0) - (a.id || 0));
+            }
+            window.filtrarListas();
+        };
+
+        // Helper para unificar Pátio Ativo + Histórico sem duplicatas
+        function obterListaUnificada() {
+            const mapa = new Map();
+            registrosPatioAtivo.forEach(r => mapa.set(r.firebase_id, r));
+            registrosHistorico.forEach(r => {
+                if(!mapa.has(r.firebase_id)) mapa.set(r.firebase_id, r);
+                else mapa.set(r.firebase_id, { ...r, ...mapa.get(r.firebase_id) });
+            });
+            return Array.from(mapa.values()).sort((a, b) => (b.id || 0) - (a.id || 0));
+        }
+
+        // ==========================================
+        // INICIALIZAÇÃO DA SESSÃO E RBAC
+        // ==========================================
         function iniciarAplicativo() {
             document.getElementById('view-login').classList.add('hidden');
             document.getElementById('app-header').classList.remove('hidden');
@@ -397,6 +553,7 @@
             document.getElementById('btn-imprimir').style.display = permissoesAtuais.imp ? 'block' : 'none';
             document.getElementById('btn-excluir-lote').style.display = permissoesAtuais.exc ? 'block' : 'none';
 
+            iniciarConexoesPosLogin();
             window.renderizarTudo();
             
             if(permissoesAtuais.reg) window.mudarAba('registro');
@@ -406,6 +563,7 @@
         }
 
         window.fazerLogoff = function() {
+            encerrarConexoes();
             usuarioLogado = null; isAdmin = false; permissoesAtuais = {};
             document.getElementById('login-usuario').value = '';
             document.getElementById('login-senha').value = '';
@@ -473,10 +631,17 @@
         // ==========================================
         // RENDERIZAÇÃO DA ESTRUTURA DINÂMICA
         // ==========================================
+        async function salvarSchema() {
+            try {
+                await setDoc(doc(db, "configuracoes", "schema"), { campos: schemaCampos });
+            } catch (e) {
+                alert("Erro ao sincronizar campos na nuvem: " + e.message);
+            }
+        }
+
         window.renderizarTudo = function() {
             const formContainer = document.getElementById('formulario-dinamico');
             if(formContainer) {
-                // Preserva valores digitados caso uma atualização ocorra durante o preenchimento
                 const valoresAtuais = {};
                 schemaCampos.forEach(c => {
                     const el = document.getElementById('campo_' + c.id);
@@ -516,7 +681,6 @@
                     formContainer.insertAdjacentHTML('beforeend', html);
                 });
 
-                // Restaura valores caso existissem
                 schemaCampos.forEach(c => {
                     const el = document.getElementById('campo_' + c.id);
                     if(el && valoresAtuais[c.id]) el.value = valoresAtuais[c.id];
@@ -550,7 +714,7 @@
         };
 
         // ==========================================
-        // NAVEGAÇÃO E BUSCA PROFUNDA DE HISTÓRICO
+        // NAVEGAÇÃO E AUTOPREENCHIMENTO CIRÚRGICO
         // ==========================================
         const botNav = document.getElementById('bottom-nav');
         document.addEventListener('focusin', (e) => { if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') botNav.style.transform = 'translateY(100%)'; });
@@ -573,6 +737,11 @@
             document.getElementById(`view-${aba}`).classList.remove('hidden');
             if(aba === 'config') document.getElementById(`tab-${aba}`).classList.replace('text-gray-300', 'text-red-600');
             else document.getElementById(`tab-${aba}`).classList.replace('text-gray-500', 'text-blue-600');
+
+            // Carrega o histórico sob demanda apenas quando o usuário abre a aba Planilha
+            if(aba === 'planilha' && registrosHistorico.length === 0) {
+                window.carregarHistoricoSobDemanda(true);
+            }
         };
 
         window.limparCampo = (id) => { const input = document.getElementById(id); if(input) { input.value = ''; input.focus(); } };
@@ -586,7 +755,7 @@
             }
         };
 
-        // Busca inteligente: procura primeiro nos 100 da memória; se não achar, consulta o banco completo na nuvem
+        // Busca cirúrgica pela placa no banco sem precisar ter o histórico todo carregado
         window.verificarHistorico = async function(placaStr) {
             const placa = placaStr.trim().toUpperCase();
             const alertaBox = document.getElementById('alerta_historico_completo');
@@ -599,28 +768,24 @@
                 return;
             }
 
-            let historico = registros.filter(r => r.placa === placa);
-            
-            // Se não encontrou nos últimos 100 da memória, busca no arquivo completo do Firestore
-            if(historico.length === 0) {
-                try {
-                    const snap = await getDocs(query(collection(db, "registros"), where("placa", "==", placa)));
-                    snap.forEach(d => historico.push({ firebase_id: d.id, ...d.data() }));
-                    historico.sort((a, b) => (b.id || 0) - (a.id || 0));
-                } catch(e) { console.error("Erro na busca profunda:", e); }
-            }
+            try {
+                const snap = await getDocs(query(collection(db, "registros"), where("placa", "==", placa)));
+                const historico = [];
+                snap.forEach(d => historico.push({ firebase_id: d.id, ...d.data() }));
+                historico.sort((a, b) => (b.id || 0) - (a.id || 0));
 
-            if(historico.length > 0) {
-                ultimoVeiculoEncontrado = historico[0];
-                const empresa = ultimoVeiculoEncontrado.dados_dinamicos?.empresa || 'S/ EMPRESA';
-                const texto = `Visitas registradas: ${historico.length} <br> Última: ${ultimoVeiculoEncontrado.entrada.split(' ')[0]} <br> Emp: ${empresa}`;
-                alertaBox.classList.remove('hidden');
-                textoBox.innerHTML = texto;
-                window._veiculo_temp = ultimoVeiculoEncontrado;
-            } else {
-                alertaBox.classList.add('hidden');
-                window._veiculo_temp = null;
-            }
+                if(historico.length > 0) {
+                    ultimoVeiculoEncontrado = historico[0];
+                    const empresa = ultimoVeiculoEncontrado.dados_dinamicos?.empresa || 'S/ EMPRESA';
+                    const texto = `Visitas registradas: ${historico.length} <br> Última: ${ultimoVeiculoEncontrado.entrada.split(' ')[0]} <br> Emp: ${empresa}`;
+                    alertaBox.classList.remove('hidden');
+                    textoBox.innerHTML = texto;
+                    window._veiculo_temp = ultimoVeiculoEncontrado;
+                } else {
+                    alertaBox.classList.add('hidden');
+                    window._veiculo_temp = null;
+                }
+            } catch(e) { console.error("Erro na busca de placa:", e); }
         };
 
         window.aplicarAutopreenchimento = function() {
@@ -640,7 +805,7 @@
         };
 
         // ==========================================
-        // ADMIN LÓGICA DE CAMPOS E BACKUP INTEGRAL
+        // ADMIN LÓGICA DE CAMPOS E BACKUP
         // ==========================================
         window.adicionarCampo = async function() {
             const nome = document.getElementById('novo-campo-nome').value.trim().toUpperCase();
@@ -664,7 +829,6 @@
             }
         };
 
-        // Faz uma leitura sob demanda de 100% da coleção para o arquivo de backup
         window.gerarBackupNuvem = async function() {
             const btn = document.getElementById('btn-backup-nuvem');
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Baixando banco completo...';
@@ -846,7 +1010,7 @@
         };
 
         // ==========================================
-        // RENDERIZAÇÃO E LISTAS COM PERMISSÕES
+        // RENDERIZAÇÃO DE LISTAS E FILTROS
         // ==========================================
         window.imprimirRelatorio = function() {
             const now = new Date();
@@ -859,7 +1023,9 @@
             const inputDate = document.getElementById(`data-especifica-${origem}`);
             if(select.value === 'ESPECIFICA') inputDate.classList.remove('hidden');
             else inputDate.classList.add('hidden');
-            window.filtrarListas();
+            
+            if(origem === 'planilha') window.carregarHistoricoSobDemanda(true);
+            else window.mudarFiltroPatio();
         };
 
         window.filtrarListas = function() {
@@ -870,7 +1036,7 @@
 
             const termoPlanilha = document.getElementById('busca-planilha')?.value.toUpperCase() || '';
             const statusPlanilha = document.getElementById('filtro-status-planilha')?.value || 'TODOS';
-            const dataPlanilhaSel = document.getElementById('filtro-data-planilha')?.value || 'TODAS';
+            const dataPlanilhaSel = document.getElementById('filtro-data-planilha')?.value || 'HOJE';
             const dataPlanilhaEsp = document.getElementById('data-especifica-planilha')?.value || '';
 
             const listaPatio = document.getElementById('lista-patio');
@@ -880,15 +1046,17 @@
             listaPatio.innerHTML = ''; listaPlanilha.innerHTML = '';
             let countPatio = 0, countPlanilha = 0;
 
-            const hoje = new Date().toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit', year:'numeric'});
-            const ontemObj = new Date(); ontemObj.setDate(ontemObj.getDate() - 1);
-            const ontem = ontemObj.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit', year:'numeric'});
+            const hoje = obterDataString('HOJE');
+            const ontem = obterDataString('ONTEM');
 
-            registros.forEach(r => {
+            const todosConhecidos = obterListaUnificada();
+
+            todosConhecidos.forEach(r => {
                 const pendente = !r.saida;
                 let textoBusca = Object.values(r.dados_dinamicos || {}).join(" ").toUpperCase() + " " + r.placa;
                 const rData = r.dia_particao || r.entrada.substring(0, 10);
 
+                // Filtro Aba Pátio
                 let showPatio = true;
                 if(statusPatio === 'NO_PATIO' && !pendente) showPatio = false;
                 if(statusPatio === 'SAIRAM' && pendente) showPatio = false;
@@ -900,6 +1068,7 @@
                 }
                 if(termoPatio && !textoBusca.includes(termoPatio)) showPatio = false;
 
+                // Filtro Aba Planilha
                 let showPlanilha = true;
                 if(statusPlanilha === 'NO_PATIO' && !pendente) showPlanilha = false;
                 if(statusPlanilha === 'SAIRAM' && pendente) showPlanilha = false;
@@ -972,10 +1141,10 @@
             });
 
             const badgePatio = document.getElementById('contador-patio-topo');
-            if(badgePatio) badgePatio.innerText = `${countPatio} Veículo(s)`;
+            if(badgePatio) badgePatio.innerText = `${registrosPatioAtivo.length} No Pátio`;
 
-            if(countPatio === 0) listaPatio.innerHTML = '<p class="text-center text-gray-500 py-10 font-bold uppercase">Nenhum veículo.</p>';
-            if(countPlanilha === 0) listaPlanilha.innerHTML = '<tr><td colspan="15" class="text-center py-6 font-bold text-gray-500 uppercase">Nenhum registro.</td></tr>';
+            if(countPatio === 0) listaPatio.innerHTML = '<p class="text-center text-gray-500 py-10 font-bold uppercase">Nenhum veículo encontrado.</p>';
+            if(countPlanilha === 0) listaPlanilha.innerHTML = '<tr><td colspan="15" class="text-center py-6 font-bold text-gray-500 uppercase">Nenhum registro carregado para este filtro.</td></tr>';
         };
 
         // ==========================================
@@ -988,7 +1157,7 @@
         window.fecharZoom = () => document.getElementById('modal-zoom').classList.add('hidden');
 
         window.abrirDetalhes = function(firebase_id) {
-            const r = registros.find(reg => reg.firebase_id === firebase_id);
+            const r = obterListaUnificada().find(reg => reg.firebase_id === firebase_id);
             if(!r) return;
             const pendente = !r.saida;
             const imgHtml = r.foto ? `<img src="${r.foto}" onclick="window.abrirZoom('${r.foto}')" class="w-full max-h-64 object-contain bg-gray-100 rounded border mt-2 cursor-zoom-in shadow no-print">` : `<div class="w-full h-32 bg-gray-100 flex items-center justify-center text-gray-400 font-bold rounded border mt-2 uppercase no-print">Sem foto</div>`;
@@ -1025,7 +1194,11 @@
         window.excluirIndiv = async function(id) {
             if(!permissoesAtuais.exc) return;
             if(confirm("Confirmar exclusão DEFINITIVA deste registro?")) {
-                try { await deleteDoc(doc(db, "registros", id)); } catch (e) { alert("Erro: " + e.message); }
+                try {
+                    await deleteDoc(doc(db, "registros", id));
+                    registrosHistorico = registrosHistorico.filter(r => r.firebase_id !== id);
+                    window.filtrarListas();
+                } catch (e) { alert("Erro: " + e.message); }
             }
         };
 
@@ -1035,15 +1208,21 @@
             if(marcados.length === 0) return alert("Nenhum registro selecionado.");
             if(confirm(`Tem certeza que deseja excluir ${marcados.length} registros?`)) {
                 document.getElementById('btn-excluir-lote').innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-                for(let cb of marcados) { try { await deleteDoc(doc(db, "registros", cb.value)); } catch(e) {} }
+                for(let cb of marcados) {
+                    try {
+                        await deleteDoc(doc(db, "registros", cb.value));
+                        registrosHistorico = registrosHistorico.filter(r => r.firebase_id !== cb.value);
+                    } catch(e) {}
+                }
                 document.getElementById('btn-excluir-lote').innerHTML = '<i class="fas fa-trash-alt"></i> Excluir Lote';
+                window.filtrarListas();
                 alert("Exclusão concluída.");
             }
         };
 
         window.abrirEdicao = function(id) {
             if(!permissoesAtuais.edi) return;
-            const r = registros.find(reg => reg.firebase_id === id);
+            const r = obterListaUnificada().find(reg => reg.firebase_id === id);
             if(!r) return;
             registroSelecionadoFirebaseId = id;
             
@@ -1065,15 +1244,22 @@
             const btn = document.getElementById('btn-salvar-edicao');
             btn.innerHTML = 'Salvando...'; btn.disabled = true;
 
-            const r = registros.find(reg => reg.firebase_id === registroSelecionadoFirebaseId);
+            const r = obterListaUnificada().find(reg => reg.firebase_id === registroSelecionadoFirebaseId);
             const dados = { ...r.dados_dinamicos };
             
             schemaCampos.forEach(c => { if(c.tipo !== 'placa') dados[c.id] = document.getElementById('edit_' + c.id).value.trim().toUpperCase(); });
+            const novaPlaca = document.getElementById('edit_placa').value.trim().toUpperCase();
 
             try {
                 await updateDoc(doc(db, "registros", registroSelecionadoFirebaseId), {
-                    placa: document.getElementById('edit_placa').value.trim().toUpperCase(), dados_dinamicos: dados
+                    placa: novaPlaca, dados_dinamicos: dados
                 });
+                const idx = registrosHistorico.findIndex(item => item.firebase_id === registroSelecionadoFirebaseId);
+                if(idx !== -1) {
+                    registrosHistorico[idx].placa = novaPlaca;
+                    registrosHistorico[idx].dados_dinamicos = dados;
+                }
+                window.filtrarListas();
                 window.fecharEdicao();
             } catch (e) { alert("Erro ao editar."); } 
             finally { btn.innerHTML = 'SALVAR ALTERAÇÕES'; btn.disabled = false; }
@@ -1088,9 +1274,20 @@
         
         window.confirmarSaida = async function() {
             document.getElementById('btn-confirmar-saida').innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            const horarioSaida = getDataHoraAtualNavegador();
             try {
-                await updateDoc(doc(db, "registros", registroSelecionadoFirebaseId), { saida: getDataHoraAtualNavegador(), visto_saida: usuarioLogado });
+                const itemSaindo = obterListaUnificada().find(r => r.firebase_id === registroSelecionadoFirebaseId);
+                await updateDoc(doc(db, "registros", registroSelecionadoFirebaseId), { saida: horarioSaida, visto_saida: usuarioLogado });
+                
+                // Atualiza a lista de histórico em memória caso o usuário esteja na Planilha
+                if(itemSaindo) {
+                    const atualizado = { ...itemSaindo, saida: horarioSaida, visto_saida: usuarioLogado };
+                    const idx = registrosHistorico.findIndex(r => r.firebase_id === registroSelecionadoFirebaseId);
+                    if(idx !== -1) registrosHistorico[idx] = atualizado;
+                    else registrosHistorico.unshift(atualizado);
+                }
                 window.fecharModalSaida();
+                window.filtrarListas();
             } catch (e) { alert("Erro."); } 
             finally { document.getElementById('btn-confirmar-saida').innerHTML = 'Confirmar Saída'; }
         };
