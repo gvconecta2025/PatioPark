@@ -3,33 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PátioPark - Versão Estável</title>
-    
-    <!-- Bibliotecas Externas -->
+    <title>PátioPark - Gestão & Auditoria</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/exif-js"></script>
 
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f3f4f6; }
-        input, select, textarea { text-transform: uppercase; font-weight: bold; color: #000; font-size: 1.1rem; }
+        input:not([type="password"]), select, textarea { text-transform: uppercase; font-weight: bold; color: #000; font-size: 1.05rem; }
+        input[type="password"] { font-weight: bold; color: #000; font-size: 1.05rem; }
         input::placeholder, select::placeholder, textarea::placeholder { font-weight: normal; color: #6b7280; text-transform: none; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        .fade-in { animation: fadeIn 0.3s ease-in-out; }
+        .fade-in { animation: fadeIn 0.25s ease-out; }
+        .pop-in { animation: popIn 0.2s cubic-bezier(0.16, 1, 0.3, 1); }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes popIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+
+        /* ESTILO DAS JANELAS EXPLICATIVAS DO MODO TUTORIAL */
+        .tutorial-box {
+            display: none;
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+            border: 2px solid #3b82f6;
+            border-left: 6px solid #1d4ed8;
+            border-radius: 0.85rem;
+            padding: 0.75rem;
+            margin-bottom: 0.85rem;
+            box-shadow: 0 4px 12px rgba(29, 78, 216, 0.12);
+            animation: popIn 0.25s ease-out;
+        }
+        body.tutorial-ativo .tutorial-box {
+            display: block;
+        }
 
         /* REGRAS DE IMPRESSÃO (PDF / PAISAGEM) */
         @media print {
             @page { size: A4 landscape; margin: 10mm; }
             body, main { height: auto !important; overflow: visible !important; background-color: white !important; }
-            header, nav, #view-registro, #view-patio, #view-config, #view-login, .no-print, .modal { display: none !important; }
+            header, nav, #view-dashboard, #view-registro, #view-patio, #view-config, #view-login, .no-print, .modal-custom, .tutorial-box, #toast-container { display: none !important; }
             #view-planilha { display: block !important; position: absolute; left: 0; top: 0; width: 100%; height: auto !important; }
             #cabecalho-impressao { display: block !important; text-align: center; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #000; }
             .bg-white { box-shadow: none !important; border: none !important; }
             .overflow-x-auto { overflow: visible !important; }
             table { width: 100% !important; border-collapse: collapse !important; }
-            th, td { border: 1px solid #000 !important; padding: 4px !important; font-size: 10px !important; white-space: normal !important; color: black !important; background: white !important; }
+            th, td { border: 1px solid #000 !important; padding: 6px !important; font-size: 9px !important; white-space: normal !important; color: black !important; background: white !important; }
             th { background-color: #e5e7eb !important; font-weight: bold !important; -webkit-print-color-adjust: exact; }
             td img, td button, td input[type="checkbox"] { display: none !important; }
         }
@@ -37,215 +54,399 @@
 </head>
 <body class="h-[100dvh] flex flex-col overflow-hidden text-gray-800">
 
-    <!-- TELA DE LOGIN -->
-    <div id="view-login" class="fixed inset-0 z-[200] bg-blue-900 flex items-center justify-center p-4 fade-in">
-        <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-sm text-center">
-            <i class="fas fa-truck text-5xl text-blue-600 mb-2"></i>
-            <h1 class="text-3xl font-black text-gray-800 tracking-tight mb-1 uppercase">PátioPark</h1>
-            <p class="text-sm text-gray-500 mb-8 uppercase font-bold">Controle de Acesso</p>
-            
-            <div class="space-y-4">
-                <input type="text" id="login-usuario" placeholder="NOME DO USUÁRIO" class="w-full border-2 border-gray-300 p-3 rounded-lg focus:border-blue-500 focus:outline-none uppercase bg-gray-50 text-center font-bold">
-                <input type="password" id="login-senha" placeholder="SENHA" class="w-full border-2 border-gray-300 p-3 rounded-lg focus:border-blue-500 focus:outline-none uppercase bg-gray-50 text-center font-bold" onkeypress="if(event.key === 'Enter') window.fazerLogin()">
-                <button onclick="window.fazerLogin()" id="btn-login" class="w-full bg-blue-600 active:bg-blue-700 text-white font-bold p-4 rounded-lg mt-2 text-lg shadow-md uppercase transition">Entrar no Sistema</button>
+    <!-- NOTIFICAÇÕES (TOASTS) -->
+    <div id="toast-container" class="fixed top-4 left-1/2 -translate-x-1/2 z-[350] w-[92vw] max-w-md space-y-2 pointer-events-none no-print"></div>
+
+    <!-- DIÁLOGO CUSTOMIZADO -->
+    <div id="modal-dialogo-app" class="hidden fixed inset-0 z-[300] bg-blue-950/80 backdrop-blur-sm flex items-center justify-center p-4 no-print modal-custom">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden border border-blue-100 pop-in">
+            <div id="dialogo-header" class="bg-blue-900 text-white p-4 flex items-center space-x-3">
+                <i id="dialogo-icone" class="fas fa-info-circle text-2xl"></i>
+                <h3 id="dialogo-titulo" class="font-black text-base uppercase tracking-wider">Aviso</h3>
             </div>
-            <div id="login-status" class="mt-4 text-xs font-bold text-red-600 h-4"></div>
+            <div class="p-5">
+                <p id="dialogo-mensagem" class="text-sm text-gray-700 font-bold leading-relaxed whitespace-pre-line"></p>
+                <div id="dialogo-botoes" class="flex space-x-3 mt-6"></div>
+            </div>
         </div>
     </div>
 
-    <!-- CABEÇALHO -->
-    <header id="app-header" class="hidden bg-blue-900 text-white p-4 shadow-md flex-shrink-0 z-10 flex justify-between items-center no-print">
-        <div class="flex items-center">
-            <h1 class="text-xl font-bold uppercase"><i class="fas fa-truck mr-2"></i>PÁTIOPARK</h1>
+    <!-- GUIA TUTORIAL -->
+    <div id="modal-guia-tutorial" class="hidden fixed inset-0 z-[290] bg-blue-950/85 backdrop-blur-sm flex items-center justify-center p-4 no-print modal-custom">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border-2 border-amber-400 pop-in">
+            <div class="bg-gradient-to-r from-blue-900 to-blue-800 text-white p-4 flex justify-between items-center">
+                <div class="flex items-center space-x-2">
+                    <span class="bg-amber-400 text-blue-950 w-8 h-8 rounded-lg flex items-center justify-center font-black"><i class="fas fa-graduation-cap"></i></span>
+                    <div>
+                        <span class="text-[9px] text-amber-300 font-black uppercase tracking-widest block">Tutorial Interativo</span>
+                        <h3 id="tutorial-modal-titulo" class="font-black text-sm uppercase">Como Funciona</h3>
+                    </div>
+                </div>
+                <button onclick="window.fecharModalGuiaTutorial()" class="text-white text-2xl leading-none">&times;</button>
+            </div>
+            <div id="tutorial-modal-corpo" class="p-5 space-y-3 text-xs text-gray-700 font-medium leading-relaxed max-h-[70vh] overflow-y-auto"></div>
+            <div class="p-3 bg-gray-50 border-t flex justify-end">
+                <button onclick="window.fecharModalGuiaTutorial()" class="bg-blue-700 hover:bg-blue-800 text-white font-black px-5 py-2.5 rounded-xl text-xs uppercase shadow">Entendi, Fechar Guia</button>
+            </div>
         </div>
-        <div class="flex items-center space-x-3 text-xs font-bold">
-            <span id="nome-usuario-header" class="text-blue-200 border-r border-blue-700 pr-3"><i class="fas fa-user-circle"></i> ...</span>
-            <div id="status-conexao" class="text-yellow-300"><i class="fas fa-spinner fa-spin"></i> Conectando...</div>
+    </div>
+
+    <!-- TELA DE LOGIN -->
+    <div id="view-login" class="fixed inset-0 z-[200] bg-gradient-to-b from-blue-900 to-blue-950 flex items-center justify-center p-4 fade-in no-print">
+        <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-sm text-center border-t-8 border-blue-500">
+            <div class="w-16 h-16 bg-blue-50 text-blue-700 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-inner">
+                <i class="fas fa-truck text-3xl"></i>
+            </div>
+            <h1 class="text-3xl font-black text-gray-800 tracking-tight mb-1 uppercase">PátioPark</h1>
+            <p class="text-xs text-gray-400 mb-6 uppercase font-black tracking-widest">Controle & Auditoria de Pátio</p>
+            
+            <div class="space-y-4">
+                <input type="text" id="login-usuario" placeholder="USUÁRIO" class="w-full border-2 border-gray-300 p-3.5 rounded-xl focus:border-blue-600 focus:outline-none uppercase bg-gray-50 text-center font-bold">
+                <input type="password" id="login-senha" placeholder="SENHA" class="w-full border-2 border-gray-300 p-3.5 rounded-xl focus:border-blue-600 focus:outline-none bg-gray-50 text-center font-bold" onkeypress="if(event.key === 'Enter') window.fazerLogin()">
+                <button onclick="window.fazerLogin()" id="btn-login" class="w-full bg-blue-700 active:bg-blue-800 text-white font-black p-4 rounded-xl mt-2 text-lg shadow-lg uppercase transition">Entrar no Sistema</button>
+            </div>
+            <div id="login-status" class="mt-4 text-xs font-bold text-red-600 min-h-[16px]"></div>
+        </div>
+    </div>
+
+    <!-- CABEÇALHO SUPERIOR (COM TUTORIAL) -->
+    <header id="app-header" class="hidden bg-blue-900 text-white px-3 py-2.5 shadow-md flex-shrink-0 z-10 flex justify-between items-center no-print">
+        <div class="flex items-center space-x-2">
+            <i class="fas fa-truck text-blue-300 text-lg"></i>
+            <div>
+                <h1 class="text-sm md:text-base font-black uppercase leading-none tracking-wide">PÁTIOPARK</h1>
+                <span id="cargo-usuario-header" class="text-[8px] text-blue-300 font-bold uppercase tracking-widest block">OPERACIONAL</span>
+            </div>
+        </div>
+        <div class="flex items-center space-x-1.5 text-xs font-bold">
+            <button id="btn-toggle-tutorial" onclick="window.alternarModoTutorial()" class="bg-blue-800 hover:bg-blue-700 text-blue-100 border border-blue-600 px-2.5 py-1.5 rounded-xl flex items-center space-x-1.5 transition shadow-sm cursor-pointer" title="Mostrar/Ocultar Dicas">
+                <i class="fas fa-graduation-cap text-amber-300"></i>
+                <span id="lbl-tutorial" class="text-[10px] font-black uppercase">Tutorial: OFF</span>
+            </button>
+            <span id="nome-usuario-header" class="text-white bg-blue-800 px-2 py-1.5 rounded-xl border border-blue-700 text-[10px] truncate max-w-[95px]"><i class="fas fa-user-circle mr-1"></i>...</span>
         </div>
     </header>
 
     <main class="hidden flex-1 overflow-y-auto p-4 relative" id="main-content">
 
-        <!-- ABA 1: REGISTRAR (Gerado Dinamicamente) -->
-        <div id="view-registro" class="block pb-20 fade-in no-print">
-            <h2 class="text-xl font-bold mb-4 flex items-center uppercase"><i class="fas fa-edit mr-2"></i> Novo Registro</h2>
-            
-            <div class="space-y-4 bg-white p-4 rounded-lg shadow" id="formulario-dinamico">
-                <!-- O Formulário será injetado aqui pelo JS -->
+        <!-- ABA 0: DASHBOARD -->
+        <div id="view-dashboard" class="hidden pb-24 fade-in no-print">
+            <div class="tutorial-box">
+                <div class="flex justify-between items-start">
+                    <div class="flex items-center space-x-2">
+                        <span class="bg-blue-700 text-white text-xs w-6 h-6 rounded-full flex items-center justify-center font-black"><i class="fas fa-info"></i></span>
+                        <h4 class="font-black text-blue-950 text-xs uppercase">Guia da Tela: Painel de Controle (Dashboard)</h4>
+                    </div>
+                    <button onclick="window.abrirGuiaDetalhado('DASHBOARD')" class="bg-blue-700 text-white text-[9px] font-black px-2.5 py-1 rounded-lg uppercase shadow">Passo a Passo</button>
+                </div>
+                <p class="text-[11px] text-blue-900 font-bold mt-1.5 leading-snug">Visão geral do pátio e da sua produtividade diária.</p>
             </div>
+
+            <div class="bg-gradient-to-r from-blue-900 to-blue-800 text-white p-4 rounded-2xl shadow-md mb-4 flex justify-between items-center">
+                <div>
+                    <span id="dash-cargo-badge" class="bg-blue-700 text-blue-200 text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-widest">CARGO</span>
+                    <h2 id="dash-saudacao" class="text-xl font-black uppercase mt-1">Olá, Operador</h2>
+                    <p id="dash-data-hoje" class="text-xs text-blue-200 font-bold uppercase"></p>
+                </div>
+                <button onclick="window.atualizarDashboard()" class="bg-blue-800 hover:bg-blue-700 text-white p-3 rounded-xl border border-blue-600 shadow-sm" title="Atualizar Indicadores">
+                    <i class="fas fa-sync-alt"></i>
+                </button>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3 mb-4">
+                <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-blue-600">
+                    <div class="text-[10px] font-black text-gray-400 uppercase">No Pátio Agora</div>
+                    <div class="text-3xl font-black text-blue-700 mt-1" id="kpi-no-patio">0</div>
+                    <div class="text-[10px] text-gray-500 font-bold uppercase mt-1">Veículos aguardando</div>
+                </div>
+                <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-emerald-500">
+                    <div class="text-[10px] font-black text-gray-400 uppercase">Movimento Hoje</div>
+                    <div class="text-xl font-black text-emerald-700 mt-1"><span id="kpi-entradas-hoje">0</span> E / <span id="kpi-saidas-hoje">0</span> S</div>
+                    <div class="text-[10px] text-gray-500 font-bold uppercase mt-1">Registros do dia</div>
+                </div>
+                <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-indigo-500">
+                    <div class="text-[10px] font-black text-gray-400 uppercase">Sua Produtividade</div>
+                    <div class="text-xl font-black text-indigo-700 mt-1"><span id="kpi-minhas-ent">0</span> E / <span id="kpi-minhas-sai">0</span> S</div>
+                    <div class="text-[10px] text-gray-500 font-bold uppercase mt-1">No seu usuário</div>
+                </div>
+                <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-amber-500">
+                    <div class="text-[10px] font-black text-gray-400 uppercase">Mais Antigo no Pátio</div>
+                    <div class="text-sm font-black text-amber-700 mt-1 truncate" id="kpi-mais-antigo">---</div>
+                    <div class="text-[10px] text-gray-500 font-bold uppercase mt-1" id="kpi-mais-antigo-hora">Pátio livre</div>
+                </div>
+            </div>
+
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 mb-4">
+                <h3 class="text-xs font-black text-gray-500 uppercase tracking-widest mb-3"><i class="fas fa-bolt text-yellow-500 mr-1"></i> Ações Rápidas</h3>
+                <div id="dash-atalhos-cargo" class="grid grid-cols-2 gap-2"></div>
+            </div>
+
+            <div id="dash-secao-dev" class="hidden space-y-4">
+                <div class="tutorial-box">
+                    <div class="flex justify-between items-center">
+                        <h4 class="font-black text-blue-950 text-xs uppercase"><i class="fas fa-shield-alt text-red-600 mr-1"></i> Guia DEV: Radar Antifraudes</h4>
+                        <button onclick="window.abrirGuiaDetalhado('RADAR_DEV')" class="bg-blue-700 text-white text-[9px] font-black px-2.5 py-1 rounded-lg uppercase">Ver Detalhes</button>
+                    </div>
+                </div>
+
+                <div class="bg-red-950 text-white p-4 rounded-2xl shadow-lg border border-red-800">
+                    <div class="flex justify-between items-center border-b border-red-800 pb-2 mb-3">
+                        <h3 class="font-black text-sm uppercase tracking-wider text-red-200"><i class="fas fa-shield-alt mr-1"></i> Radar Antifraudes</h3>
+                    </div>
+                    <div class="grid grid-cols-3 gap-2 text-center">
+                        <div class="bg-red-900/60 p-2.5 rounded-xl border border-red-800">
+                            <div class="text-2xl font-black text-amber-300" id="kpi-dev-planob">0</div>
+                            <div class="text-[9px] font-bold uppercase text-red-200">Saídas Plano B</div>
+                        </div>
+                        <div class="bg-red-900/60 p-2.5 rounded-xl border border-red-800">
+                            <div class="text-2xl font-black text-orange-300" id="kpi-dev-semfoto-ent">0</div>
+                            <div class="text-[9px] font-bold uppercase text-red-200">Entradas S/ Foto</div>
+                        </div>
+                        <div class="bg-red-900/60 p-2.5 rounded-xl border border-red-800">
+                            <div class="text-2xl font-black text-white" id="kpi-dev-logs">0</div>
+                            <div class="text-[9px] font-bold uppercase text-red-200">Total no Log</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
+                    <h4 class="text-xs font-black text-gray-700 uppercase mb-3"><i class="fas fa-terminal text-red-600 mr-1"></i> Últimas Auditorias</h4>
+                    <div id="dash-ultimos-logs" class="space-y-2 text-xs"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ABA 1: REGISTRAR ENTRADA -->
+        <div id="view-registro" class="hidden pb-24 fade-in no-print">
+            <h2 class="text-xl font-bold mb-3 flex items-center uppercase"><i class="fas fa-edit mr-2 text-blue-700"></i> Entrada de Veículo</h2>
             
-            <button onclick="window.salvarRegistro()" id="btn-salvar-entrada" class="w-full bg-green-600 active:bg-green-700 text-white font-bold p-4 rounded-lg mt-4 text-xl shadow flex justify-center items-center uppercase transition">
+            <div class="tutorial-box">
+                <div class="flex justify-between items-start">
+                    <div class="flex items-center space-x-2">
+                        <span class="bg-blue-700 text-white text-xs w-6 h-6 rounded-full flex items-center justify-center font-black">1</span>
+                        <h4 class="font-black text-blue-950 text-xs uppercase">Como Registrar</h4>
+                    </div>
+                    <button onclick="window.abrirGuiaDetalhado('ENTRADA')" class="bg-blue-700 text-white text-[9px] font-black px-2.5 py-1 rounded-lg uppercase shadow">Ver Detalhes</button>
+                </div>
+            </div>
+
+            <div class="space-y-4 bg-white p-4 rounded-xl shadow" id="formulario-dinamico"></div>
+            <button onclick="window.salvarRegistro()" id="btn-salvar-entrada" class="w-full bg-green-600 active:bg-green-700 text-white font-black p-4 rounded-xl mt-4 text-xl shadow-lg flex justify-center items-center uppercase transition">
                 <i class="fas fa-save mr-2"></i> SALVAR ENTRADA
             </button>
         </div>
 
         <!-- ABA 2: PÁTIO -->
-        <div id="view-patio" class="hidden pb-20 fade-in no-print">
-            <h2 class="text-xl font-bold mb-4 flex items-center uppercase"><i class="fas fa-truck-loading mr-2"></i> Pátio Atual</h2>
-            
-            <div class="bg-white p-3 rounded-lg shadow-sm mb-4 border border-gray-200">
+        <div id="view-patio" class="hidden pb-24 fade-in no-print">
+            <div class="flex justify-between items-center mb-3">
+                <h2 class="text-xl font-bold flex items-center uppercase"><i class="fas fa-truck-loading mr-2 text-blue-700"></i> Pátio Atual</h2>
+                <span id="contador-patio-topo" class="bg-blue-100 text-blue-800 text-xs font-black px-3 py-1 rounded-full uppercase">0 No Pátio</span>
+            </div>
+
+            <div class="tutorial-box">
+                <div class="flex justify-between items-start">
+                    <div class="flex items-center space-x-2">
+                        <span class="bg-blue-700 text-white text-xs w-6 h-6 rounded-full flex items-center justify-center font-black">2</span>
+                        <h4 class="font-black text-blue-950 text-xs uppercase">Saída e Detalhes</h4>
+                    </div>
+                    <button onclick="window.abrirGuiaDetalhado('PATIO')" class="bg-blue-700 text-white text-[9px] font-black px-2.5 py-1 rounded-lg uppercase shadow">Ver Detalhes</button>
+                </div>
+            </div>
+
+            <div class="bg-white p-3 rounded-xl shadow-sm mb-4 border border-gray-200">
                 <div class="grid grid-cols-2 gap-2 mb-2">
-                    <select id="filtro-status-patio" onchange="window.mudarFiltroPatio()" class="w-full p-2 border border-gray-300 rounded text-sm uppercase bg-gray-50 font-bold">
-                        <option value="NO_PATIO">No Pátio (Aguardando)</option>
+                    <select id="filtro-status-patio" onchange="window.mudarFiltroPatio()" class="w-full p-2 border border-gray-300 rounded-lg text-sm uppercase bg-gray-50 font-bold">
+                        <option value="NO_PATIO">No Pátio (Tempo Real)</option>
                         <option value="TODOS">Todos os Status</option>
                         <option value="SAIRAM">Já Saíram</option>
                     </select>
-                    <select id="filtro-data-patio" onchange="window.verificarFiltroData('patio')" class="w-full p-2 border border-gray-300 rounded text-sm uppercase bg-gray-50 font-bold">
+                    <select id="filtro-data-patio" onchange="window.verificarFiltroData('patio')" class="w-full p-2 border border-gray-300 rounded-lg text-sm uppercase bg-gray-50 font-bold">
                         <option value="TODAS">Qualquer Data</option>
                         <option value="HOJE">Somente Hoje</option>
                         <option value="ONTEM">Somente Ontem</option>
                         <option value="ESPECIFICA">Escolher Dia...</option>
                     </select>
                 </div>
-                <input type="date" id="data-especifica-patio" onchange="window.mudarFiltroPatio()" class="w-full p-2 border border-gray-300 rounded text-sm uppercase bg-gray-50 font-bold hidden mb-2">
-                
+                <input type="date" id="data-especifica-patio" onchange="window.mudarFiltroPatio()" class="w-full p-2 border border-gray-300 rounded-lg text-sm uppercase bg-gray-50 font-bold hidden mb-2">
                 <div class="relative flex space-x-2">
                     <div class="relative flex-1">
                         <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
-                        <input type="text" id="busca-patio" onkeyup="window.filtrarListas()" placeholder="Pesquisar Placa, Motorista..." class="w-full pl-10 pr-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none font-bold uppercase">
+                        <input type="text" id="busca-patio" onkeyup="window.filtrarListas()" placeholder="Buscar Placa..." class="w-full pl-10 pr-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none font-bold uppercase">
                     </div>
-                    <button onclick="window.buscarPlacaServidor('patio')" class="bg-blue-600 text-white px-4 rounded-lg font-bold text-xs uppercase shadow">Buscar DB</button>
                 </div>
             </div>
-
             <div id="lista-patio" class="space-y-4"></div>
         </div>
 
         <!-- ABA 3: PLANILHA -->
-        <div id="view-planilha" class="hidden pb-20 fade-in">
-            <div class="flex justify-between items-center mb-4 no-print">
-                <h2 class="text-xl font-bold flex items-center uppercase"><i class="fas fa-table mr-2"></i> Histórico</h2>
+        <div id="view-planilha" class="hidden pb-24 fade-in">
+            <div class="flex justify-between items-center mb-3 no-print">
+                <h2 class="text-xl font-bold flex items-center uppercase"><i class="fas fa-table mr-2 text-blue-700"></i> Histórico</h2>
                 <div class="flex space-x-2">
-                    <button onclick="window.print()" class="bg-gray-700 text-white font-bold px-3 py-2 rounded text-xs shadow hover:bg-gray-800 transition"><i class="fas fa-print"></i> PDF</button>
-                    <button id="btn-excluir-lote" onclick="window.excluirEmLote()" class="hidden bg-red-600 text-white font-bold px-3 py-2 rounded text-xs shadow hover:bg-red-700 transition"><i class="fas fa-trash-alt"></i> Lote</button>
+                    <button id="btn-imprimir" onclick="window.imprimirRelatorio()" class="bg-gray-700 text-white font-bold px-3 py-2 rounded-lg text-xs shadow hover:bg-gray-800"><i class="fas fa-print"></i> PDF</button>
+                    <button id="btn-excluir-lote" onclick="window.excluirEmLote()" class="hidden bg-red-600 text-white font-bold px-3 py-2 rounded-lg text-xs shadow hover:bg-red-700"><i class="fas fa-trash-alt"></i> Lote</button>
                 </div>
             </div>
 
-            <div class="bg-white p-3 rounded-lg shadow-sm mb-4 border border-gray-200 no-print">
+            <div class="tutorial-box no-print">
+                <div class="flex justify-between items-start">
+                    <div class="flex items-center space-x-2">
+                        <span class="bg-blue-700 text-white text-xs w-6 h-6 rounded-full flex items-center justify-center font-black">3</span>
+                        <h4 class="font-black text-blue-950 text-xs uppercase">Consultas e PDF</h4>
+                    </div>
+                    <button onclick="window.abrirGuiaDetalhado('PLANILHA')" class="bg-blue-700 text-white text-[9px] font-black px-2.5 py-1 rounded-lg uppercase shadow">Ver Detalhes</button>
+                </div>
+            </div>
+
+            <div class="bg-white p-3 rounded-xl shadow-sm mb-4 border border-gray-200 no-print">
                 <div class="grid grid-cols-2 gap-2 mb-2">
-                    <select id="filtro-status-planilha" onchange="window.filtrarListas()" class="w-full p-2 border border-gray-300 rounded text-sm uppercase bg-gray-50 font-bold">
+                    <select id="filtro-status-planilha" onchange="window.filtrarListas()" class="w-full p-2 border border-gray-300 rounded-lg text-sm uppercase bg-gray-50 font-bold">
                         <option value="TODOS">Todos os Status</option>
-                        <option value="NO_PATIO">No Pátio (Aguardando)</option>
+                        <option value="NO_PATIO">No Pátio</option>
                         <option value="SAIRAM">Já Saíram</option>
                     </select>
-                    <select id="filtro-data-planilha" onchange="window.verificarFiltroData('planilha')" class="w-full p-2 border border-gray-300 rounded text-sm uppercase bg-gray-50 font-bold">
+                    <select id="filtro-data-planilha" onchange="window.verificarFiltroData('planilha')" class="w-full p-2 border border-gray-300 rounded-lg text-sm uppercase bg-gray-50 font-bold">
                         <option value="HOJE" selected>Somente Hoje</option>
                         <option value="ONTEM">Somente Ontem</option>
                         <option value="ESPECIFICA">Escolher Dia...</option>
-                        <option value="TODAS">Últimos 100 (Paginado)</option>
+                        <option value="TODAS">Paginado (Antigos)</option>
                     </select>
                 </div>
-                <input type="date" id="data-especifica-planilha" onchange="window.carregarHistoricoSobDemanda()" class="w-full p-2 border border-gray-300 rounded text-sm uppercase bg-gray-50 font-bold hidden mb-2">
-                
+                <input type="date" id="data-especifica-planilha" onchange="window.carregarHistoricoSobDemanda(true)" class="w-full p-2 border border-gray-300 rounded-lg text-sm uppercase bg-gray-50 font-bold hidden mb-2">
                 <div class="relative flex space-x-2">
                     <div class="relative flex-1">
                         <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
-                        <input type="text" id="busca-planilha" onkeyup="window.filtrarListas()" placeholder="Pesquisar Placa, Motorista..." class="w-full pl-10 pr-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none font-bold uppercase">
+                        <input type="text" id="busca-planilha" onkeyup="window.filtrarListas()" placeholder="Buscar..." class="w-full pl-10 pr-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none font-bold uppercase">
                     </div>
-                    <button onclick="window.buscarPlacaServidor('planilha')" class="bg-blue-600 text-white px-4 rounded-lg font-bold text-xs uppercase shadow">Buscar DB</button>
+                    <button onclick="window.buscarPlacaServidor('planilha')" class="bg-blue-600 text-white px-3 rounded-lg font-bold text-xs uppercase shadow" title="Busca placas em todo o servidor"><i class="fas fa-cloud-download-alt"></i> BD</button>
                 </div>
-                <div id="status-leitura-banco" class="text-[10px] font-bold text-blue-700 mt-2 uppercase"></div>
             </div>
 
-            <!-- Cabeçalho oficial de impressão -->
             <div id="cabecalho-impressao" class="hidden">
-                <h1 class="text-2xl font-black uppercase tracking-widest text-gray-900">Relatório PátioPark</h1>
+                <h1 class="text-2xl font-black uppercase tracking-widest text-gray-900">Relatório Oficial PátioPark</h1>
+                <p class="text-sm font-bold text-gray-600 uppercase" id="data-impressao"></p>
             </div>
 
-            <div class="bg-white rounded-lg shadow overflow-hidden" id="tabela-impressao">
+            <div class="bg-white rounded-xl shadow overflow-hidden" id="tabela-impressao">
                 <div class="overflow-x-auto no-scrollbar">
                     <table class="min-w-full text-sm text-left">
-                        <thead class="bg-blue-800 text-white text-xs uppercase font-bold whitespace-nowrap">
-                            <tr id="cabecalho-planilha">
-                                <!-- Gerado Dinamicamente -->
-                            </tr>
-                        </thead>
-                        <tbody id="lista-planilha" class="divide-y divide-gray-200 whitespace-nowrap text-xs">
-                        </tbody>
+                        <thead class="bg-blue-800 text-white text-xs uppercase font-bold whitespace-nowrap"><tr id="cabecalho-planilha"></tr></thead>
+                        <tbody id="lista-planilha" class="divide-y divide-gray-200 whitespace-nowrap text-xs"></tbody>
                     </table>
                 </div>
             </div>
+
+            <button id="btn-carregar-mais" onclick="window.carregarMaisHistorico()" class="hidden w-full bg-blue-100 hover:bg-blue-200 text-blue-800 font-bold py-3 rounded-xl mt-3 text-xs uppercase shadow-sm no-print">
+                <i class="fas fa-plus-circle mr-1"></i> Carregar +50 Antigos
+            </button>
         </div>
 
-        <!-- ABA 4: CONFIGURAÇÕES / ADMIN -->
-        <div id="view-config" class="hidden pb-20 fade-in no-print">
-            <h2 class="text-xl font-bold mb-4 flex items-center uppercase text-red-600"><i class="fas fa-cogs mr-2"></i> Painel de Administração</h2>
+        <!-- ABA 4: CONFIGURAÇÕES -->
+        <div id="view-config" class="hidden pb-24 fade-in no-print">
+            <h2 class="text-xl font-bold mb-3 flex items-center uppercase text-red-600"><i class="fas fa-user-shield mr-2"></i> Central DEV</h2>
             
-            <div class="space-y-6">
-                <!-- Gestão de Usuários (RBAC) -->
-                <div class="bg-white p-4 rounded-lg shadow border border-gray-200 border-l-4 border-l-purple-500">
-                    <h3 class="font-bold text-gray-800 uppercase border-b pb-2 mb-3"><i class="fas fa-users text-purple-600"></i> Gestão de Usuários e Permissões</h3>
-                    
-                    <div id="lista-usuarios-admin" class="space-y-2 mb-4 max-h-60 overflow-y-auto"></div>
+            <div class="tutorial-box">
+                <div class="flex justify-between items-start">
+                    <div class="flex items-center space-x-2">
+                        <span class="bg-red-700 text-white text-xs w-6 h-6 rounded-full flex items-center justify-center font-black"><i class="fas fa-lock"></i></span>
+                        <h4 class="font-black text-blue-950 text-xs uppercase">Guia do Administrador</h4>
+                    </div>
+                    <button onclick="window.abrirGuiaDetalhado('DEV_CONFIG')" class="bg-blue-700 text-white text-[9px] font-black px-2.5 py-1 rounded-lg uppercase shadow">Ver Detalhes</button>
+                </div>
+            </div>
 
-                    <div class="border-t pt-4 mt-2">
-                        <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Cadastrar Novo Usuário</label>
+            <div class="space-y-6">
+                <!-- 1. LOG COMPLETO DE AUDITORIA E RECUPERAÇÃO -->
+                <div class="bg-white p-4 rounded-xl shadow border border-gray-200 border-l-4 border-l-red-600">
+                    <div class="flex justify-between items-center border-b pb-2 mb-3">
+                        <div>
+                            <h3 class="font-black text-gray-800 uppercase text-sm"><i class="fas fa-fingerprint text-red-600 mr-1"></i> Log de Auditoria</h3>
+                        </div>
+                        <button onclick="window.carregarLogsAuditoria()" class="bg-red-600 text-white px-3 py-1.5 rounded-lg text-xs font-black uppercase shadow"><i class="fas fa-sync-alt mr-1"></i> Carregar</button>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 mb-3">
+                        <select id="filtro-tipo-log" onchange="window.filtrarLogsTela()" class="border p-2 rounded-lg text-xs uppercase bg-gray-50 font-bold">
+                            <option value="TODOS">Todas as Ações</option>
+                            <option value="SAIDA_PLANO_B">Saídas Plano B</option>
+                            <option value="EXCLUSAO">Exclusões (Recuperáveis)</option>
+                            <option value="EDICAO">Edições</option>
+                            <option value="ENTRADA">Entradas</option>
+                            <option value="SAIDA_PLANO_A">Saídas Plano A</option>
+                            <option value="LOGIN">Acessos</option>
+                        </select>
+                        <input type="text" id="busca-log-input" onkeyup="window.filtrarLogsTela()" placeholder="Placa / Op..." class="border p-2 rounded-lg text-xs uppercase font-bold">
+                    </div>
+                    <div id="lista-logs-auditoria" class="space-y-2 max-h-80 overflow-y-auto pr-1"></div>
+                </div>
+                
+                <!-- 2. GESTÃO DE USUÁRIOS E CARGOS -->
+                <div class="bg-white p-4 rounded-xl shadow border border-gray-200 border-l-4 border-l-purple-500">
+                    <h3 class="font-bold text-gray-800 uppercase border-b pb-2 mb-3"><i class="fas fa-users-cog text-purple-600"></i> Usuários, Cargos e Delegação</h3>
+                    <div id="lista-usuarios-admin" class="space-y-3 mb-4 max-h-[50vh] overflow-y-auto pr-1"></div>
+                    <div class="border-t pt-4 mt-2 space-y-2">
+                        <label class="block text-xs font-bold text-gray-700 uppercase">Cadastrar Funcionário</label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <input type="text" id="novo-user-nome" placeholder="NOME" class="border-2 border-gray-300 p-2 rounded-lg text-sm uppercase focus:border-purple-500 focus:outline-none">
+                            <input type="password" id="novo-user-senha" placeholder="SENHA" class="border-2 border-gray-300 p-2 rounded-lg text-sm focus:border-purple-500 focus:outline-none">
+                        </div>
                         <div class="flex space-x-2">
-                            <input type="text" id="novo-user-nome" placeholder="NOME" class="w-1/2 border-2 border-gray-300 p-2 rounded text-sm uppercase focus:border-purple-500 focus:outline-none">
-                            <input type="password" id="novo-user-senha" placeholder="SENHA" class="w-1/2 border-2 border-gray-300 p-2 rounded text-sm uppercase focus:border-purple-500 focus:outline-none">
-                            <button onclick="window.criarUsuario()" class="bg-purple-600 text-white px-4 rounded font-bold uppercase hover:bg-purple-700"><i class="fas fa-plus"></i></button>
+                            <select id="novo-user-cargo" class="flex-1 border-2 border-gray-300 p-2 rounded-lg text-xs uppercase bg-gray-50 font-bold">
+                                <option value="PORTEIRO / OPERADOR">Operador</option>
+                                <option value="CONFERENTE DE PÁTIO">Conferente</option>
+                                <option value="SUPERVISOR LOGÍSTICO">Supervisor</option>
+                                <option value="GERENTE OPERACIONAL">Gerente</option>
+                            </select>
+                            <button onclick="window.criarUsuario()" class="bg-purple-600 text-white px-5 rounded-lg font-black uppercase hover:bg-purple-700"><i class="fas fa-plus"></i></button>
                         </div>
                     </div>
                 </div>
 
-                <!-- Backup -->
-                <div class="bg-white p-4 rounded-lg shadow border border-gray-200">
-                    <h3 class="font-bold text-gray-800 uppercase border-b pb-2 mb-3"><i class="fas fa-database"></i> Backup do Sistema</h3>
-                    <button onclick="window.gerarBackupNuvem()" id="btn-backup-nuvem" class="w-full bg-blue-600 text-white font-bold py-3 rounded uppercase shadow hover:bg-blue-700"><i class="fas fa-cloud-download-alt"></i> Baixar Backup Completo JSON</button>
-                </div>
-
-                <!-- Construtor de Campos -->
-                <div class="bg-white p-4 rounded-lg shadow border border-gray-200 border-l-4 border-l-green-500">
-                    <h3 class="font-bold text-gray-800 uppercase border-b pb-2 mb-3"><i class="fas fa-list-ol text-green-600"></i> Estrutura de Campos (Formulário)</h3>
-                    
-                    <div id="lista-campos-admin" class="space-y-2 mb-4"></div>
-
+                <!-- 3. CAMPOS DINÂMICOS -->
+                <div class="bg-white p-4 rounded-xl shadow border border-gray-200 border-l-4 border-l-green-500">
+                    <h3 class="font-bold text-gray-800 uppercase border-b pb-2 mb-1"><i class="fas fa-list-ol text-green-600"></i> Construtor de Campos</h3>
+                    <div id="lista-campos-admin" class="space-y-2 mb-4 mt-3"></div>
                     <div class="border-t pt-4 mt-2">
                         <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Criar Novo Campo</label>
                         <div class="flex space-x-2">
-                            <input type="text" id="novo-campo-nome" placeholder="NOME DO CAMPO" class="flex-1 border-2 border-gray-300 p-2 rounded text-sm uppercase focus:border-green-500 focus:outline-none">
-                            <select id="novo-campo-tipo" class="border-2 border-gray-300 p-2 rounded text-sm uppercase bg-gray-50">
-                                <option value="text">Texto</option>
-                                <option value="textarea">Observação</option>
+                            <input type="text" id="novo-campo-nome" placeholder="NOME" class="flex-1 border-2 border-gray-300 p-2 rounded-lg text-sm uppercase focus:border-blue-500 focus:outline-none">
+                            <select id="novo-campo-tipo" class="border-2 border-gray-300 p-2 rounded-lg text-xs uppercase bg-gray-50">
+                                <option value="text">Texto</option><option value="textarea">Observação</option>
                             </select>
-                            <button onclick="window.adicionarCampo()" class="bg-green-600 text-white px-4 rounded font-bold uppercase hover:bg-green-700"><i class="fas fa-plus"></i></button>
+                            <button onclick="window.adicionarCampo()" class="bg-green-600 text-white px-4 rounded-lg font-bold uppercase"><i class="fas fa-plus"></i></button>
                         </div>
                     </div>
                 </div>
 
-                <button onclick="window.fazerLogoff()" class="w-full bg-red-100 text-red-700 font-bold py-4 rounded-lg shadow mt-4 uppercase border border-red-300 hover:bg-red-200"><i class="fas fa-sign-out-alt"></i> Sair da Conta (Logoff)</button>
+                <div class="bg-white p-4 rounded-xl shadow border border-gray-200">
+                    <h3 class="font-bold text-gray-800 uppercase border-b pb-2 mb-3"><i class="fas fa-database text-blue-600"></i> Backup Completo (JSON)</h3>
+                    <button id="btn-backup-nuvem" onclick="window.gerarBackupNuvem()" class="w-full bg-blue-600 text-white font-bold py-3 rounded-xl uppercase shadow hover:bg-blue-700">Baixar Backup</button>
+                </div>
             </div>
         </div>
 
     </main>
 
     <!-- MENU INFERIOR -->
-    <nav id="bottom-nav" class="hidden bg-white border-t border-gray-200 flex justify-around p-2 fixed bottom-0 w-full shadow-[0_-10px_20px_rgba(0,0,0,0.05)] z-20 transition-transform duration-300 uppercase no-print">
-        <button onclick="window.mudarAba('registro')" id="tab-registro" class="flex flex-col items-center flex-1 py-2 text-blue-600 font-bold transition">
-            <i class="fas fa-edit text-xl mb-1"></i><span class="text-[10px] md:text-xs">Registrar</span>
-        </button>
-        <button onclick="window.mudarAba('patio')" id="tab-patio" class="flex flex-col items-center flex-1 py-2 text-gray-500 font-bold transition">
-            <i class="fas fa-truck text-xl mb-1"></i><span class="text-[10px] md:text-xs">Pátio</span>
-        </button>
-        <button onclick="window.mudarAba('planilha')" id="tab-planilha" class="flex flex-col items-center flex-1 py-2 text-gray-500 font-bold transition">
-            <i class="fas fa-table text-xl mb-1"></i><span class="text-[10px] md:text-xs">Planilha</span>
-        </button>
-        <button onclick="window.mudarAba('config')" id="tab-config" class="hidden flex-col items-center flex-1 py-2 text-gray-400 font-bold transition hover:text-red-500">
-            <i class="fas fa-cogs text-xl mb-1"></i><span class="text-[10px] md:text-xs">Admin</span>
-        </button>
+    <nav id="bottom-nav" class="hidden bg-white border-t border-gray-200 flex justify-around p-1.5 fixed bottom-0 w-full shadow-[0_-10px_20px_rgba(0,0,0,0.05)] z-20 transition-transform duration-300 uppercase no-print">
+        <button onclick="window.mudarAba('dashboard')" id="tab-dashboard" class="flex flex-col items-center flex-1 py-2 text-blue-600 font-bold transition"><i class="fas fa-chart-pie text-lg mb-0.5"></i><span class="text-[9px] md:text-xs">Painel</span></button>
+        <button onclick="window.mudarAba('registro')" id="tab-registro" class="hidden flex-col items-center flex-1 py-2 text-gray-500 font-bold transition"><i class="fas fa-edit text-lg mb-0.5"></i><span class="text-[9px] md:text-xs">Entrada</span></button>
+        <button onclick="window.mudarAba('patio')" id="tab-patio" class="hidden flex-col items-center flex-1 py-2 text-gray-500 font-bold transition"><i class="fas fa-truck text-lg mb-0.5"></i><span class="text-[9px] md:text-xs">Pátio</span></button>
+        <button onclick="window.mudarAba('planilha')" id="tab-planilha" class="hidden flex-col items-center flex-1 py-2 text-gray-500 font-bold transition"><i class="fas fa-table text-lg mb-0.5"></i><span class="text-[9px] md:text-xs">Histórico</span></button>
+        <button onclick="window.mudarAba('config')" id="tab-config" class="hidden flex-col items-center flex-1 py-2 text-gray-400 font-bold transition"><i class="fas fa-user-shield text-lg mb-0.5"></i><span class="text-[9px] md:text-xs">DEV</span></button>
+        <button onclick="window.solicitarLogoff()" class="flex flex-col items-center flex-1 py-2 text-gray-400 font-bold transition hover:text-red-500"><i class="fas fa-sign-out-alt text-lg mb-0.5"></i><span class="text-[9px] md:text-xs">Sair</span></button>
     </nav>
 
     <!-- MODAL ZOOM IMAGEM -->
-    <div id="modal-zoom" class="hidden fixed inset-0 z-[100] bg-black bg-opacity-95 flex items-center justify-center p-2 backdrop-blur-md no-print" onclick="window.fecharZoom()">
+    <div id="modal-zoom" class="hidden fixed inset-0 z-[250] bg-black/95 flex items-center justify-center p-2 backdrop-blur-md no-print modal-custom" onclick="window.fecharZoom()">
         <button class="absolute top-4 right-4 text-white text-4xl">&times;</button>
         <img id="img-zoom" src="" class="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl">
     </div>
 
-    <!-- MODAL DE DETALHES GIGANTE (FICHA DO VEÍCULO) -->
-    <div id="modal-detalhes" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80 backdrop-blur-sm p-2 no-print">
-        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md h-[95vh] flex flex-col overflow-hidden relative pop-in">
+    <!-- MODAL DE DETALHES GIGANTE -->
+    <div id="modal-detalhes" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-blue-950/80 backdrop-blur-sm p-2 no-print modal-custom">
+        <div class="bg-white rounded-2xl shadow-2xl w-[95vw] max-w-[540px] h-[94vh] flex flex-col overflow-hidden relative pop-in">
             <div class="bg-blue-900 text-white p-4 flex justify-between items-center flex-shrink-0">
-                <h3 class="font-bold text-lg uppercase"><i class="fas fa-file-alt"></i> Ficha do Veículo</h3>
+                <h3 class="font-black text-base uppercase tracking-wider"><i class="fas fa-file-alt mr-2"></i> Ficha Completa do Veículo</h3>
                 <button onclick="window.fecharDetalhes()" class="text-white text-3xl leading-none">&times;</button>
             </div>
             <div class="flex-1 overflow-y-auto p-4 space-y-4" id="conteudo-detalhes"></div>
@@ -253,42 +454,108 @@
         </div>
     </div>
 
-    <!-- MODAL EDIÇÃO DE REGISTRO (ADMIN/GERENTE) -->
-    <div id="modal-edicao" class="hidden fixed inset-0 z-[60] bg-black bg-opacity-80 flex items-center justify-center p-2 no-print">
-        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md max-h-[90vh] flex flex-col overflow-hidden relative pop-in">
-            <div class="bg-yellow-500 text-white p-4 flex justify-between items-center flex-shrink-0">
-                <h3 class="font-bold text-lg uppercase"><i class="fas fa-pen"></i> Editar Registro</h3>
+    <!-- MODAL EDIÇÃO -->
+    <div id="modal-edicao" class="hidden fixed inset-0 z-[60] bg-blue-950/80 backdrop-blur-sm flex items-center justify-center p-2 no-print modal-custom">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-[500px] max-h-[90vh] flex flex-col overflow-hidden relative pop-in">
+            <div class="bg-amber-500 text-white p-4 flex justify-between items-center flex-shrink-0">
+                <h3 class="font-black text-base uppercase"><i class="fas fa-pen mr-2"></i> Editar Registro (Auditado)</h3>
                 <button onclick="window.fecharEdicao()" class="text-white text-3xl leading-none">&times;</button>
             </div>
             <div class="flex-1 overflow-y-auto p-4 space-y-3" id="formulario-edicao"></div>
             <div class="p-4 border-t bg-gray-50 flex-shrink-0">
-                <button onclick="window.salvarEdicao()" id="btn-salvar-edicao" class="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-3 rounded-lg shadow-md uppercase">Salvar Alterações</button>
+                <button onclick="window.salvarEdicao()" id="btn-salvar-edicao" class="w-full bg-amber-500 hover:bg-amber-600 text-white font-black py-3.5 rounded-xl shadow-md uppercase">Salvar Alterações</button>
             </div>
         </div>
     </div>
 
-    <!-- MODAL DE SAÍDA -->
-    <div id="modal-saida" class="hidden fixed inset-0 z-[60] bg-black bg-opacity-70 flex items-center justify-center p-4 no-print">
-        <div class="bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden pop-in">
-            <div class="bg-red-600 text-white p-4 font-bold text-lg text-center uppercase">Registrar Saída</div>
-            <div class="p-6">
-                <p class="text-sm text-gray-600 mb-6 text-center">Confirmar saída do veículo. O horário e o seu nome de usuário serão registrados agora.</p>
-                <div class="flex space-x-3">
-                    <button onclick="window.fecharModalSaida()" class="flex-1 bg-gray-200 text-gray-800 font-bold py-3 rounded-lg uppercase hover:bg-gray-300">Cancelar</button>
-                    <button onclick="window.confirmarSaida()" id="btn-confirmar-saida" class="flex-1 bg-red-600 text-white font-bold py-3 rounded-lg shadow-md uppercase hover:bg-red-700">Confirmar</button>
+    <!-- MODAL SAÍDA -->
+    <div id="modal-saida" class="hidden fixed inset-0 z-[70] bg-blue-950/85 backdrop-blur-sm flex items-center justify-center p-3 no-print modal-custom">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[94vh] overflow-y-auto pop-in border border-red-200">
+            <div class="bg-red-600 text-white p-4 flex justify-between items-center sticky top-0 z-10">
+                <div>
+                    <h3 class="font-black text-base uppercase tracking-wider"><i class="fas fa-sign-out-alt mr-1"></i> Registrar Saída</h3>
+                    <p id="saida-placa-alvo" class="text-xs text-red-100 font-black uppercase mt-0.5">PLACA: ---</p>
+                </div>
+                <button onclick="window.fecharModalSaida()" class="text-white text-3xl leading-none">&times;</button>
+            </div>
+
+            <div class="tutorial-box mx-3 mt-3 mb-0">
+                <h4 class="font-black text-blue-950 text-[11px] uppercase"><i class="fas fa-graduation-cap mr-1"></i> Saída (Plano A vs Plano B)</h4>
+                <p class="text-[10px] text-blue-900 font-bold mt-1 leading-snug">
+                    • <b>Plano A (Padrão):</b> Fotografe o veículo saindo. O sistema colhe a <b>Data/Hora EXIF da foto</b> e o <b>GPS de saída</b>.<br>
+                    • <b>Plano B (Contingência):</b> Se a câmera falhar, digite a placa exata para validar com o banco de dados.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-2 bg-gray-100 p-1.5 m-3 rounded-xl border border-gray-200">
+                <button type="button" id="tab-saida-plano-a" onclick="window.alternarModoSaida('A')" class="py-2 rounded-lg font-black text-xs uppercase bg-blue-600 text-white shadow transition">
+                    <i class="fas fa-camera mr-1"></i> Plano A: Foto+GPS
+                </button>
+                <button type="button" id="tab-saida-plano-b" onclick="window.alternarModoSaida('B')" class="py-2 rounded-lg font-black text-xs uppercase text-gray-600 hover:text-gray-900 transition">
+                    <i class="fas fa-keyboard mr-1"></i> Plano B: Manual
+                </button>
+            </div>
+
+            <div class="px-5 pb-5">
+                <!-- PLANO A -->
+                <div id="box-saida-plano-a" class="space-y-3">
+                    <p class="text-xs text-gray-600 font-bold uppercase text-center">Capture a foto na saída (Data/Hora e GPS serão extraídos):</p>
+                    <div class="grid grid-cols-2 gap-3">
+                        <label class="bg-blue-50 hover:bg-blue-100 text-blue-700 border-2 border-blue-300 rounded-xl p-4 flex flex-col items-center justify-center cursor-pointer shadow-sm transition">
+                            <i class="fas fa-camera text-3xl mb-1"></i><span class="text-[10px] font-black uppercase">Abrir Câmera</span>
+                            <input type="file" accept="image/*" capture="environment" class="hidden" onchange="window.processarFotoSaida(event)">
+                        </label>
+                        <label class="bg-purple-50 hover:bg-purple-100 text-purple-700 border-2 border-purple-300 rounded-xl p-4 flex flex-col items-center justify-center cursor-pointer shadow-sm transition">
+                            <i class="fas fa-image text-3xl mb-1"></i><span class="text-[10px] font-black uppercase">Abrir Galeria</span>
+                            <input type="file" accept="image/*" class="hidden" onchange="window.processarFotoSaida(event)">
+                        </label>
+                    </div>
+                    <div id="preview-saida-container" class="hidden p-3 border-2 border-emerald-300 rounded-xl bg-emerald-50/60 space-y-2">
+                        <div class="flex items-center space-x-3">
+                            <img id="preview-saida-img" class="h-16 w-16 object-cover rounded-lg border border-emerald-400 shadow-sm">
+                            <div class="flex-1 text-[9px] font-bold uppercase text-gray-700 space-y-1">
+                                <div><i class="fas fa-clock text-blue-600 w-3"></i> <span id="saida-meta-horario">Extraindo...</span></div>
+                                <div><i class="fas fa-map-marker-alt text-red-600 w-3"></i> <span id="saida-meta-gps">Capturando GPS...</span></div>
+                                <div><i class="fas fa-cloud text-emerald-600 w-3"></i> <span id="saida-meta-cloud">Aguardando...</span></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="status-foto-saida" class="text-xs font-bold text-orange-600 text-center hidden"></div>
+                </div>
+
+                <!-- PLANO B -->
+                <div id="box-saida-plano-b" class="hidden space-y-3">
+                    <div class="bg-amber-50 border-l-4 border-amber-500 p-3 rounded-r-xl text-[10px] text-amber-900 font-bold uppercase">
+                        <i class="fas fa-exclamation-triangle text-amber-600 mr-1"></i> Contingência: Digite a placa exata para liberar via sistema.
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-black text-gray-700 uppercase mb-1">Confirme a Placa:</label>
+                        <input type="text" id="input-placa-plano-b" placeholder="DIGITE A PLACA EXATA" class="w-full border-2 border-amber-400 p-3 rounded-xl text-center text-xl font-black uppercase focus:border-amber-600 focus:outline-none bg-white">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-black text-gray-700 uppercase mb-1">Motivo do Plano B:</label>
+                        <select id="motivo-plano-b" class="w-full border-2 border-gray-300 p-2.5 rounded-xl text-xs font-bold uppercase bg-gray-50">
+                            <option value="FALHA NA CÂMERA DO APARELHO">Falha na Câmera</option>
+                            <option value="OSCILAÇÃO DE INTERNET">Oscilação de Internet</option>
+                            <option value="PLACA ILEGÍVEL / CHUVA">Placa Ilegível / Chuva</option>
+                            <option value="LIBERAÇÃO RÁPIDA DE EMERGÊNCIA">Emergência</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="flex space-x-2 mt-5">
+                    <button type="button" onclick="window.fecharModalSaida()" class="w-1/3 bg-gray-200 text-gray-800 font-black py-3.5 rounded-xl uppercase text-xs">Cancelar</button>
+                    <button type="button" onclick="window.confirmarSaida()" id="btn-confirmar-saida" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-black py-3.5 rounded-xl shadow-lg uppercase text-sm">Confirmar Saída</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- ============================================== -->
-    <!-- SCRIPT TIPO MODULE: FIREBASE E LÓGICA          -->
-    <!-- ============================================== -->
+    <!-- SCRIPT FIREBASE E LÓGICA -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
         import { getFirestore, collection, addDoc, setDoc, updateDoc, doc, deleteDoc, onSnapshot, query, orderBy, limit, where, getDocs } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
-        // CONFIGURAÇÕES
         const firebaseConfig = {
             apiKey: "AIzaSyDYXFu-soolSOoCAxNYlVVgeJVwzJef_fk",
             authDomain: "patiopark-7984f.firebaseapp.com",
@@ -303,24 +570,20 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // VARIÁVEIS GLOBAIS DE ESTADO
-        let registrosPatioAtivo = [];
-        let registrosHistorico = [];
-        let usuarios = [];
-        let usuarioLogado = null;
-        let permissoesAtuais = {};
-        let isAdmin = false;
-
+        // ESTADO GLOBAL
+        let registrosPatioAtivo = []; let registrosHistorico = []; let logsAuditoria = []; let usuarios = [];
+        let usuarioLogado = null; let cargoLogado = 'OPERADOR'; let permissoesAtuais = {}; let isAdmin = false;
+        let tutorialAtivo = false;
+        
         let registroSelecionadoFirebaseId = null;
-        let fotoAtualUrl = null; 
-        let dataHoraMetadata = null; 
-        let gpsLocalizacao = null; 
-        let ultimoVeiculoEncontrado = null;
+        let fotoAtualUrl = null; let dataHoraMetadata = null; let gpsLocalizacao = null;
+        let modoSaidaAtual = 'A'; let fotoSaidaUrl = null; let dataHoraSaidaMetadata = null; let gpsSaidaLocalizacao = null;
 
-        let unsubscribePatio = null;
-        let unsubscribeSchema = null;
+        let unsubscribePatioAtivo = null; let unsubscribeSchema = null; let unsubscribeUsuarios = null;
+        let limitePaginacao = 50;
+        const permissoesAdminDev = { reg: true, pat: true, sai: true, pla: true, imp: true, edi: true, exc: true };
 
-        const camposPadrao = [
+        let schemaCampos = [
             { id: "placa", nome: "Placa", tipo: "placa", fixo: true },
             { id: "local", nome: "Local de Entrega", tipo: "text", fixo: false },
             { id: "motorista", nome: "Motorista Principal", tipo: "text", fixo: false },
@@ -331,443 +594,355 @@
             { id: "observacoes", nome: "Observações", tipo: "textarea", fixo: false }
         ];
 
-        let schemaCampos = [...camposPadrao];
-
         // ==========================================
-        // LOGIN E ACESSO
+        // SISTEMA DE TUTORIAL INTERATIVO
         // ==========================================
-        onSnapshot(collection(db, "usuarios"), (snapshot) => {
-            usuarios = [];
-            snapshot.forEach((doc) => usuarios.push({ id: doc.id, ...doc.data() }));
-            window.renderizarUsuarios();
-        }, (error) => {
-            document.getElementById('login-status').innerText = 'Falha ao conectar com banco de dados de usuários.';
-        });
+        window.alternarModoTutorial = function() {
+            tutorialAtivo = !tutorialAtivo;
+            const btn = document.getElementById('btn-toggle-tutorial');
+            const lbl = document.getElementById('lbl-tutorial');
 
-        window.fazerLogin = function() {
-            const status = document.getElementById('login-status');
-            const u = document.getElementById('login-usuario').value.trim().toUpperCase();
-            const s = document.getElementById('login-senha').value;
-
-            if(!u || !s) {
-                status.innerText = 'Preencha usuário e senha.';
-                return;
-            }
-
-            status.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Autenticando...';
-
-            if(u === 'ADMIN' && s === SENHA_ADMIN) {
-                usuarioLogado = 'ADMINISTRADOR';
-                isAdmin = true;
-                permissoesAtuais = { reg: true, pat: true, sai: true, pla: true, imp: true, edi: true, exc: true };
-                iniciarApp();
-                return;
-            }
-
-            const func = usuarios.find(user => user.nome === u && user.senha === s);
-            if(func) {
-                usuarioLogado = func.nome;
-                isAdmin = false;
-                permissoesAtuais = func.permissoes || { reg: true, pat: true, sai: true, pla: false, imp: false, edi: false, exc: false };
-                iniciarApp();
+            if(tutorialAtivo) {
+                document.body.classList.add('tutorial-ativo');
+                btn.className = "bg-amber-400 hover:bg-amber-300 text-blue-950 border border-amber-200 px-2.5 py-1.5 rounded-xl flex items-center space-x-1.5 transition shadow-md cursor-pointer pointer-events-auto";
+                lbl.innerText = "Tutorial: ON";
+                window.mostrarToast("Modo Tutorial Ativado!", "info");
             } else {
-                status.innerText = 'Usuário ou Senha incorretos.';
+                document.body.classList.remove('tutorial-ativo');
+                btn.className = "bg-blue-800 hover:bg-blue-700 text-blue-100 border border-blue-600 px-2.5 py-1.5 rounded-xl flex items-center space-x-1.5 transition shadow-sm cursor-pointer pointer-events-auto";
+                lbl.innerText = "Tutorial: OFF";
+                window.mostrarToast("Modo Tutorial Ocultado.", "info");
             }
         };
 
-        function iniciarApp() {
-            document.getElementById('view-login').classList.add('hidden');
-            document.getElementById('app-header').classList.remove('hidden');
-            document.getElementById('main-content').classList.remove('hidden');
-            document.getElementById('bottom-nav').classList.remove('hidden');
-            document.getElementById('nome-usuario-header').innerHTML = `<i class="fas fa-user-circle"></i> ${usuarioLogado}`;
-            
-            // Controle de Menu Baseado nas Permissões
-            document.getElementById('tab-registro').style.display = permissoesAtuais.reg ? 'flex' : 'none';
-            document.getElementById('tab-patio').style.display = permissoesAtuais.pat ? 'flex' : 'none';
-            document.getElementById('tab-planilha').style.display = permissoesAtuais.pla ? 'flex' : 'none';
-            document.getElementById('tab-config').style.display = isAdmin ? 'flex' : 'none';
-
-            // Ocultar botões da planilha se não tiver permissão
-            document.getElementById('btn-excluir-lote').style.display = permissoesAtuais.exc ? 'block' : 'none';
-
-            iniciarOuvintesBancoDeDados();
-            
-            // Redireciona para a primeira tela que o usuário tem acesso
-            if(permissoesAtuais.reg) window.mudarAba('registro');
-            else if(permissoesAtuais.pat) window.mudarAba('patio');
-            else if(permissoesAtuais.pla) window.mudarAba('planilha');
-        }
-
-        window.fazerLogoff = function() {
-            if(confirm("Deseja realmente sair do sistema?")) {
-                if(unsubscribePatio) unsubscribePatio();
-                if(unsubscribeSchema) unsubscribeSchema();
-                document.location.reload();
+        const TextosGuiaTutorial = {
+            DASHBOARD: {
+                titulo: "Painel de Controle (Dashboard)",
+                html: `<div class="bg-blue-50 p-3 rounded-xl border border-blue-200 mb-3"><b class="text-blue-900 uppercase block mb-1">1. Indicadores em Tempo Real</b>O card <b>No Pátio Agora</b> mostra exatamente quantos veículos entraram e ainda não registraram saída.</div><div class="bg-emerald-50 p-3 rounded-xl border border-emerald-200 mb-3"><b class="text-emerald-900 uppercase block mb-1">2. Sua Produtividade</b>O sistema contabiliza automaticamente todas as entradas e saídas carimbadas pelo seu usuário no dia de hoje.</div><div class="bg-amber-50 p-3 rounded-xl border border-amber-200"><b class="text-amber-900 uppercase block mb-1">3. Alerta de Permanência</b>O card <b>Mais Antigo no Pátio</b> destaca a placa e empresa do caminhão que está aguardando há mais tempo.</div>`
+            },
+            RADAR_DEV: {
+                titulo: "Radar Antifraude (Exclusivo DEV)",
+                html: `<div class="bg-red-50 p-3 rounded-xl border border-red-200 mb-3"><b class="text-red-900 uppercase block mb-1">1. Monitoramento do Plano B</b>Sempre que um porteiro libera um veículo sem tirar foto (Plano B manual), o contador amarelo sobe e grava o motivo no Log.</div><div class="bg-blue-50 p-3 rounded-xl border border-blue-200"><b class="text-blue-900 uppercase block mb-1">2. Restauração de Dados</b>Se algum registro for editado ou excluído por engano, clique no evento dentro do Log de Auditoria e acione o botão <b>Restaurar / Reverter</b>.</div>`
+            },
+            ENTRADA: {
+                titulo: "Registro de Entrada",
+                html: `<div class="bg-blue-50 p-3 rounded-xl border border-blue-200 mb-3"><b class="text-blue-900 uppercase block mb-1">Passo 1: Placa e Foto</b>Digite a placa e clique no botão azul (<i class="fas fa-camera"></i>) para abrir a câmera. O app comprime a foto em <b>WebP</b>, sobe para o ImgBB e extrai a <b>Data/Hora EXIF</b> e o <b>GPS</b>.</div><div class="bg-indigo-50 p-3 rounded-xl border border-indigo-200 mb-3"><b class="text-indigo-900 uppercase block mb-1">Passo 2: Autopreencher</b>Se o caminhão já veio antes, um aviso azul aparecerá. Toque em <b>Autopreencher</b>.</div><div class="bg-emerald-50 p-3 rounded-xl border border-emerald-200"><b class="text-emerald-900 uppercase block mb-1">Passo 3: Assinatura Automática</b>Ao clicar em <b>Salvar Entrada</b>, seu nome de usuário logado é gravado automaticamente.</div>`
+            },
+            PATIO: {
+                titulo: "Controle de Pátio e Saída",
+                html: `<div class="bg-blue-50 p-3 rounded-xl border border-blue-200 mb-3"><b class="text-blue-900 uppercase block mb-1">1. Ficha Completa</b>Toque sobre qualquer card para abrir a Ficha com fotos, zoom e links para o <b>GPS no Google Maps</b>.</div><div class="bg-emerald-50 p-3 rounded-xl border border-emerald-200 mb-3"><b class="text-emerald-900 uppercase block mb-1">2. Saída Plano A (Com Foto)</b>Ao clicar em <b>Dar Saída</b>, tire a foto. O sistema colhe a hora EXIF e a coordenada GPS da saída.</div><div class="bg-amber-50 p-3 rounded-xl border border-amber-200"><b class="text-amber-900 uppercase block mb-1">3. Saída Plano B (Manual)</b>Se a câmera falhar, alterne para a aba <b>Plano B</b>, digite a placa à mão e escolha o motivo.</div>`
+            },
+            PLANILHA: {
+                titulo: "Histórico e PDF",
+                html: `<div class="bg-blue-50 p-3 rounded-xl border border-blue-200 mb-3"><b class="text-blue-900 uppercase block mb-1">1. Economia de Dados</b>O histórico carrega por padrão apenas o movimento de <b>Hoje</b>. Altere os filtros para buscar outras datas.</div><div class="bg-gray-100 p-3 rounded-xl border border-gray-300"><b class="text-gray-900 uppercase block mb-1">2. Impressão PDF Paisagem</b>Clique em <b>PDF Paisagem</b> no topo. O sistema gera um relatório limpo em A4 com cabeçalho oficial.</div>`
+            },
+            DEV_CONFIG: {
+                titulo: "Administração e RBAC",
+                html: `<div class="bg-purple-50 p-3 rounded-xl border border-purple-200 mb-3"><b class="text-purple-900 uppercase block mb-1">1. Delegação de Funções</b>Marque as checkboxes em cada funcionário para liberar/bloquear telas em tempo real.</div><div class="bg-emerald-50 p-3 rounded-xl border border-emerald-200"><b class="text-emerald-900 uppercase block mb-1">2. Construtor de Campos</b>Use as setas para reordenar os campos. Todos os celulares da portaria recebem a nova estrutura instantaneamente.</div>`
             }
         };
 
-        function iniciarOuvintesBancoDeDados() {
-            // Ouvinte do Schema de Campos
-            unsubscribeSchema = onSnapshot(doc(db, "configuracoes", "schema"), (docSnap) => {
-                if (docSnap.exists() && Array.isArray(docSnap.data().campos)) {
-                    schemaCampos = docSnap.data().campos;
-                } else if (isAdmin) {
-                    setDoc(doc(db, "configuracoes", "schema"), { campos: camposPadrao }).catch(()=>{});
-                }
-                window.renderizarTudo();
-            });
+        window.abrirGuiaDetalhado = function(chave) {
+            const item = TextosGuiaTutorial[chave];
+            if(!item) return;
+            document.getElementById('tutorial-modal-titulo').innerText = item.titulo;
+            document.getElementById('tutorial-modal-corpo').innerHTML = item.html;
+            document.getElementById('modal-guia-tutorial').classList.remove('hidden');
+        };
 
-            // Ouvinte do Pátio (Apenas veículos sem saída)
-            const qPatio = query(collection(db, "registros"), where("saida", "==", ""));
-            unsubscribePatio = onSnapshot(qPatio, (snapshot) => {
-                registrosPatioAtivo = [];
-                snapshot.forEach((d) => registrosPatioAtivo.push({ firebase_id: d.id, ...d.data() }));
-                
-                // Ordenação em memória para não precisar de índice composto
-                registrosPatioAtivo.sort((a, b) => (b.id || 0) - (a.id || 0));
-                window.filtrarListas();
-                document.getElementById('status-conexao').innerHTML = '<i class="fas fa-wifi text-green-400"></i> Online';
-            }, (error) => {
-                document.getElementById('status-conexao').innerHTML = '<i class="fas fa-exclamation-triangle text-red-400"></i> Erro DB';
+        window.fecharModalGuiaTutorial = () => document.getElementById('modal-guia-tutorial').classList.add('hidden');
+
+        // ==========================================
+        // UTILIDADES EXIF / GPS / TOASTS
+        // ==========================================
+        function getDataHoraAtualNavegador() {
+            const now = new Date(); return `${now.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit', year:'numeric'})} ${now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
+        }
+        function obterDataString(tipo) {
+            const d = new Date(); if(tipo === 'ONTEM') d.setDate(d.getDate() - 1); return d.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit', year:'numeric'});
+        }
+        function converterDMSToDecimal(dmsArray, ref) {
+            if(!dmsArray || dmsArray.length < 3) return null;
+            const deg = Number(dmsArray[0]); const min = Number(dmsArray[1]); const sec = Number(dmsArray[2]);
+            if(isNaN(deg) || isNaN(min) || isNaN(sec)) return null;
+            let dec = deg + (min / 60) + (sec / 3600);
+            if(ref === 'S' || ref === 'W') dec = dec * -1;
+            return dec.toFixed(6);
+        }
+
+        function extrairMetadadosCompletosDaFoto(file) {
+            return new Promise((resolve) => {
+                let horarioExtraido = null; let gpsExifExtraido = null;
+                EXIF.getData(file, function() {
+                    const exifDate = EXIF.getTag(this, "DateTimeOriginal");
+                    if (exifDate) {
+                        const partes = exifDate.split(' '); const d = partes[0].split(':');
+                        horarioExtraido = `${d[2]}/${d[1]}/${d[0]} ${partes[1].substring(0,5)} (EXIF)`;
+                    } else {
+                        const fallback = new Date(file.lastModified);
+                        horarioExtraido = fallback.toLocaleDateString('pt-BR', {day:'2-digit',month:'2-digit',year:'numeric'}) + ' ' + fallback.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'}) + ' (Arq)';
+                    }
+                    const latDMS = EXIF.getTag(this, "GPSLatitude"); const latRef = EXIF.getTag(this, "GPSLatitudeRef");
+                    const lonDMS = EXIF.getTag(this, "GPSLongitude"); const lonRef = EXIF.getTag(this, "GPSLongitudeRef");
+                    if(latDMS && lonDMS) {
+                        const latDec = converterDMSToDecimal(latDMS, latRef || 'S'); const lonDec = converterDMSToDecimal(lonDMS, lonRef || 'W');
+                        if(latDec && lonDec) gpsExifExtraido = `${latDec}, ${lonDec}`;
+                    }
+
+                    if(gpsExifExtraido) resolve({ horario: horarioExtraido, gps: gpsExifExtraido + ' (EXIF)' });
+                    else if (navigator.geolocation) {
+                        navigator.geolocation.getCurrentPosition(
+                            (pos) => resolve({ horario: horarioExtraido, gps: `${pos.coords.latitude.toFixed(6)}, ${pos.coords.longitude.toFixed(6)}` }),
+                            () => resolve({ horario: horarioExtraido, gps: "Sem Permissão GPS" }),
+                            { enableHighAccuracy: true, timeout: 6000 }
+                        );
+                    } else resolve({ horario: horarioExtraido, gps: "GPS Indisponível" });
+                });
             });
         }
 
+        // AUDITORIA
+        async function registrarLog(acao, resumo, payload = {}) {
+            try { await addDoc(collection(db, "logs_auditoria"), { timestamp_id: Date.now(), data_hora: getDataHoraAtualNavegador(), dia: obterDataString('HOJE'), usuario: usuarioLogado || 'SISTEMA', cargo: cargoLogado || 'N/A', acao: acao, resumo: resumo.toUpperCase(), detalhes: payload }); } catch (e) {}
+        }
+        window.carregarLogsAuditoria = async function() {
+            const cont = document.getElementById('lista-logs-auditoria'); if(!cont) return; cont.innerHTML = '<div class="text-xs text-blue-700 font-bold text-center py-4"><i class="fas fa-spinner fa-spin mr-1"></i> Baixando trilha...</div>';
+            try {
+                const snap = await getDocs(query(collection(db, "logs_auditoria"), orderBy("timestamp_id", "desc"), limit(150)));
+                logsAuditoria = []; snap.forEach(d => logsAuditoria.push({ log_id: d.id, ...d.data() }));
+                window.filtrarLogsTela(); window.atualizarDashboard();
+            } catch (e) { cont.innerHTML = '<div class="text-xs text-red-600 font-bold text-center py-4">Erro DB Logs.</div>'; }
+        };
+        window.filtrarLogsTela = function() {
+            const cont = document.getElementById('lista-logs-auditoria'); if(!cont) return;
+            const tipo = document.getElementById('filtro-tipo-log')?.value || 'TODOS'; const busca = (document.getElementById('busca-log-input')?.value || '').trim().toUpperCase();
+            cont.innerHTML = '';
+            const filtrados = logsAuditoria.filter(l => { if(tipo !== 'TODOS' && l.acao !== tipo) return false; if(busca && !`${l.resumo} ${l.usuario} ${l.cargo} ${l.acao}`.toUpperCase().includes(busca)) return false; return true; });
+            if(filtrados.length === 0) return cont.innerHTML = '<div class="text-xs text-gray-400 italic text-center py-4">Nenhum evento.</div>';
+            const bc = { SAIDA_PLANO_B:'bg-amber-100 text-amber-800 border-amber-400', EXCLUSAO:'bg-red-100 text-red-800 border-red-400', EDICAO:'bg-blue-100 text-blue-800 border-blue-400', ENTRADA:'bg-emerald-100 text-emerald-800 border-emerald-400', SAIDA_PLANO_A:'bg-teal-100 text-teal-800 border-teal-400', LOGIN:'bg-purple-100 text-purple-800 border-purple-400', CONFIG:'bg-gray-200 text-gray-800 border-gray-400' };
+            filtrados.forEach(l => {
+                const item = document.createElement('div'); item.className = `p-2.5 rounded-xl border ${bc[l.acao] || bc.CONFIG} flex justify-between items-center cursor-pointer hover:opacity-90 transition`; item.onclick = () => window.abrirDetalheLog(l.log_id);
+                item.innerHTML = `<div class="pr-2"><div class="flex items-center space-x-2"><span class="text-[9px] font-black uppercase px-1.5 py-0.5 bg-white/80 rounded">${l.acao}</span><span class="text-[10px] font-bold">${l.data_hora}</span></div><div class="font-black text-xs mt-1 uppercase">${l.resumo}</div><div class="text-[10px] opacity-80 uppercase font-bold">Autor: ${l.usuario}</div></div><i class="fas fa-chevron-right text-sm opacity-60"></i>`;
+                cont.appendChild(item);
+            });
+        };
+        window.abrirDetalheLog = function(logId) {
+            const l = logsAuditoria.find(item => item.log_id === logId); if(!l) return;
+            const cont = document.getElementById('conteudo-detalhe-log'); const rodape = document.getElementById('rodape-detalhe-log');
+            cont.innerHTML = `<div class="bg-gray-100 p-3 rounded-xl border"><div class="font-black text-sm uppercase">${l.resumo}</div><div class="text-[11px] text-gray-600 font-bold mt-1 uppercase">Ação: <span class="text-red-700">${l.acao}</span> | Data: ${l.data_hora}</div><div class="text-[11px] text-gray-600 font-bold uppercase">Autor: ${l.usuario} (${l.cargo})</div></div><div><span class="block text-[10px] font-black uppercase text-gray-500 mb-1">Carga JSON (Sistema):</span><pre class="bg-gray-900 text-green-400 p-3 rounded-xl text-[10px] overflow-x-auto font-mono">${JSON.stringify(l.detalhes || {}, null, 2)}</pre></div>`;
+            rodape.innerHTML = `<button onclick="window.fecharDetalheLog()" class="flex-1 bg-gray-200 text-gray-800 font-black py-3 rounded-xl uppercase text-xs">Fechar</button>`;
+            if(l.acao === 'EXCLUSAO' && l.detalhes?.registro_apagado) rodape.innerHTML += `<button onclick="window.restaurarRegistroDoLog('${l.log_id}')" class="flex-1 bg-emerald-600 text-white font-black py-3 rounded-xl uppercase text-xs shadow"><i class="fas fa-undo mr-1"></i> Restaurar</button>`;
+            else if(l.acao === 'EDICAO' && l.detalhes?.antes && l.detalhes?.firebase_id) rodape.innerHTML += `<button onclick="window.reverterEdicaoDoLog('${l.log_id}')" class="flex-1 bg-amber-600 text-white font-black py-3 rounded-xl uppercase text-xs shadow"><i class="fas fa-history mr-1"></i> Reverter</button>`;
+            document.getElementById('modal-detalhe-log').classList.remove('hidden');
+        };
+        window.fecharDetalheLog = () => document.getElementById('modal-detalhe-log').classList.add('hidden');
+        window.restaurarRegistroDoLog = async function(logId) {
+            const l = logsAuditoria.find(item => item.log_id === logId); if(!l || !l.detalhes?.registro_apagado) return;
+            const ok = await window.appConfirm("Restaurar Veículo", `Deseja recriar o registro da placa ${l.detalhes.registro_apagado.placa}?`, "Sim, Restaurar"); if(!ok) return;
+            try { const copia = { ...l.detalhes.registro_apagado }; delete copia.firebase_id; await addDoc(collection(db, "registros"), copia); await registrarLog('CONFIG', `RESTAUROU REGISTRO DA PLACA ${copia.placa}`); window.fecharDetalheLog(); window.mostrarToast(`Veículo restaurado!`, 'sucesso'); } catch (e) {}
+        };
+        window.reverterEdicaoDoLog = async function(logId) {
+            const l = logsAuditoria.find(item => item.log_id === logId); if(!l || !l.detalhes?.antes || !l.detalhes?.firebase_id) return;
+            const ok = await window.appConfirm("Reverter Edição", `Deseja voltar os dados da placa ${l.detalhes.antes.placa} ao estado original?`, "Reverter"); if(!ok) return;
+            try { await updateDoc(doc(db, "registros", l.detalhes.firebase_id), { placa: l.detalhes.antes.placa, dados_dinamicos: l.detalhes.antes.dados_dinamicos }); await registrarLog('CONFIG', `REVERTEU EDIÇÃO DA PLACA ${l.detalhes.antes.placa}`); window.fecharDetalheLog(); window.mostrarToast("Edição revertida!", "sucesso"); } catch (e) {}
+        };
 
         // ==========================================
-        // GESTÃO DE USUÁRIOS E PERMISSÕES (ADMIN)
+        // LOGIN / CONEXÕES
         // ==========================================
+        window.fazerLogin = async function() {
+            const status = document.getElementById('login-status'); const btn = document.getElementById('btn-login');
+            const u = document.getElementById('login-usuario').value.trim().toUpperCase(); const s = document.getElementById('login-senha').value;
+            if(!u || !s) return status.innerHTML = 'Preencha usuário e senha.';
+            status.innerHTML = '<i class="fas fa-spinner fa-spin text-blue-600"></i> Autenticando...'; btn.disabled = true;
+            if(u === 'ADMIN' && s === SENHA_ADMIN) { usuarioLogado = 'DEV / ADMIN'; cargoLogado = 'DESENVOLVEDOR / SUPER ADMIN'; isAdmin = true; permissoesAtuais = permissoesAdminDev; btn.disabled = false; await registrarLog('LOGIN', `LOGIN COMO DEV / ADMIN`); iniciarAplicativo(); return; }
+            try {
+                const snap = await getDocs(query(collection(db, "usuarios"), where("nome", "==", u), where("senha", "==", s), limit(1)));
+                if(!snap.empty) { const func = snap.docs[0].data(); usuarioLogado = func.nome; cargoLogado = func.cargo || 'PORTEIRO / OPERADOR'; isAdmin = false; permissoesAtuais = func.permissoes || { reg: true, pat: true, sai: true, pla: false, imp: false, edi: false, exc: false }; await registrarLog('LOGIN', `LOGIN OPERADOR ${usuarioLogado}`); iniciarAplicativo(); } 
+                else { await registrarLog('LOGIN', `FALHA DE LOGIN USUÁRIO: ${u}`); status.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Usuário/Senha incorretos.'; }
+            } catch (error) { status.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Erro DB.'; } finally { btn.disabled = false; }
+        };
+
+        function iniciarConexoesPosLogin() {
+            if(!unsubscribeSchema) unsubscribeSchema = onSnapshot(doc(db, "configuracoes", "schema"), (docSnap) => { if (docSnap.exists() && Array.isArray(docSnap.data().campos)) schemaCampos = docSnap.data().campos; else if (isAdmin) setDoc(doc(db, "configuracoes", "schema"), { campos: camposPadrao }).catch(() => {}); window.renderizarTudo(); });
+            if(!unsubscribePatioAtivo) unsubscribePatioAtivo = onSnapshot(query(collection(db, "registros"), where("saida", "==", "")), (snapshot) => { registrosPatioAtivo = []; snapshot.forEach((d) => registrosPatioAtivo.push({ firebase_id: d.id, ...d.data() })); registrosPatioAtivo.sort((a, b) => (b.id || 0) - (a.id || 0)); window.filtrarListas(); window.atualizarDashboard(); document.getElementById('status-conexao').innerHTML = '<i class="fas fa-wifi text-green-400"></i>'; }, () => document.getElementById('status-conexao').innerHTML = '<i class="fas fa-exclamation-triangle text-red-400"></i>');
+            if(isAdmin && !unsubscribeUsuarios) { unsubscribeUsuarios = onSnapshot(collection(db, "usuarios"), (snapshot) => { usuarios = []; snapshot.forEach((d) => usuarios.push({ id: d.id, ...d.data() })); window.renderizarUsuarios(); }); window.carregarLogsAuditoria(); }
+        }
+
+        function encerrarConexoes() {
+            if(unsubscribePatioAtivo) { unsubscribePatioAtivo(); unsubscribePatioAtivo = null; }
+            if(unsubscribeSchema) { unsubscribeSchema(); unsubscribeSchema = null; }
+            if(unsubscribeUsuarios) { unsubscribeUsuarios(); unsubscribeUsuarios = null; }
+            registrosPatioAtivo = []; registrosHistorico = []; logsAuditoria = [];
+        }
+
+        function iniciarAplicativo() {
+            document.getElementById('view-login').classList.add('hidden'); document.getElementById('app-header').classList.remove('hidden'); document.getElementById('main-content').classList.remove('hidden'); document.getElementById('bottom-nav').classList.remove('hidden');
+            document.getElementById('nome-usuario-header').innerHTML = `<i class="fas fa-user-shield mr-1"></i>${usuarioLogado}`; document.getElementById('cargo-usuario-header').innerText = cargoLogado;
+            document.getElementById('tab-registro').style.display = permissoesAtuais.reg ? 'flex' : 'none'; document.getElementById('tab-patio').style.display = permissoesAtuais.pat ? 'flex' : 'none'; document.getElementById('tab-planilha').style.display = permissoesAtuais.pla ? 'flex' : 'none'; document.getElementById('tab-config').style.display = isAdmin ? 'flex' : 'none';
+            document.getElementById('btn-imprimir').style.display = permissoesAtuais.imp ? 'block' : 'none'; document.getElementById('btn-excluir-lote').style.display = permissoesAtuais.exc ? 'block' : 'none';
+            iniciarConexoesPosLogin(); window.renderizarTudo(); window.mudarAba('dashboard'); window.mostrarToast(`Bem-vindo, ${usuarioLogado}!`, 'info');
+        }
+
+        window.solicitarLogoff = async function() {
+            const sair = await window.appConfirm("Sair do Sistema", `Deseja encerrar a sessão de ${usuarioLogado}?`, "Sair Agora"); if(!sair) return;
+            await registrarLog('LOGIN', `LOGOFF REALIZADO: ${usuarioLogado}`); encerrarConexoes(); usuarioLogado = null; isAdmin = false; permissoesAtuais = {};
+            document.getElementById('login-usuario').value = ''; document.getElementById('login-senha').value = ''; document.getElementById('login-status').innerHTML = '';
+            document.getElementById('view-login').classList.remove('hidden'); document.getElementById('app-header').classList.add('hidden'); document.getElementById('main-content').classList.add('hidden'); document.getElementById('bottom-nav').classList.add('hidden');
+            if(tutorialAtivo) window.alternarModoTutorial(); // Desativa o tutorial ao sair
+        };
+
+        // ==========================================
+        // GESTÃO DASHBOARD, CONFIG, ADMIN E CAMPOS
+        // ==========================================
+        window.mudarAba = function(aba) {
+            ['dashboard', 'registro', 'patio', 'planilha', 'config'].forEach(a => { document.getElementById('view-' + a)?.classList.add('hidden'); document.getElementById('tab-' + a)?.classList.replace('text-blue-600', 'text-gray-400'); document.getElementById('tab-' + a)?.classList.replace('text-red-600', 'text-gray-400'); });
+            document.getElementById(`view-${aba}`)?.classList.remove('hidden'); const tb = document.getElementById(`tab-${aba}`); if(tb) { tb.classList.remove('text-gray-400'); tb.classList.add(aba === 'config' ? 'text-red-600' : 'text-blue-600'); }
+            if(aba === 'dashboard') window.atualizarDashboard();
+            if(aba === 'planilha' && registrosHistorico.length === 0) window.carregarHistoricoSobDemanda(true);
+        };
+
+        window.atualizarDashboard = async function() {
+            const hojeStr = obterDataString('HOJE');
+            document.getElementById('dash-saudacao').innerText = `Olá, ${usuarioLogado}`; document.getElementById('dash-cargo-badge').innerText = cargoLogado; document.getElementById('dash-data-hoje').innerText = `Data: ${hojeStr}`;
+            try { const snapHoje = await getDocs(query(collection(db, "registros"), where("dia_particao", "==", hojeStr))); snapHoje.forEach(d => { const item = { firebase_id: d.id, ...d.data() }; const idx = registrosHistorico.findIndex(r => r.firebase_id === item.firebase_id); if(idx === -1) registrosHistorico.push(item); else registrosHistorico[idx] = item; }); } catch (e) {}
+
+            const todos = obterListaUnificada(); const entH = todos.filter(r => (r.dia_particao || r.entrada.substring(0, 10)) === hojeStr); const saiH = todos.filter(r => r.saida && r.saida.startsWith(hojeStr));
+            document.getElementById('kpi-no-patio').innerText = registrosPatioAtivo.length; document.getElementById('kpi-entradas-hoje').innerText = entH.length; document.getElementById('kpi-saidas-hoje').innerText = saiH.length; document.getElementById('kpi-minhas-ent').innerText = entH.filter(r => r.visto_entrada === usuarioLogado).length; document.getElementById('kpi-minhas-sai').innerText = saiH.filter(r => r.visto_saida === usuarioLogado).length;
+
+            if(registrosPatioAtivo.length > 0) { const mA = [...registrosPatioAtivo].sort((a, b) => (a.id || 0) - (b.id || 0))[0]; document.getElementById('kpi-mais-antigo').innerText = `${mA.placa} (${mA.dados_dinamicos?.empresa || 'S/ EMP'})`; document.getElementById('kpi-mais-antigo-hora').innerText = `Desde ${mA.entrada}`; } 
+            else { document.getElementById('kpi-mais-antigo').innerText = 'NENHUM'; document.getElementById('kpi-mais-antigo-hora').innerText = 'Pátio livre'; }
+
+            const contA = document.getElementById('dash-atalhos-cargo'); contA.innerHTML = '';
+            if(permissoesAtuais.reg) contA.innerHTML += `<button onclick="window.mudarAba('registro')" class="bg-blue-50 text-blue-800 border p-3 rounded-xl font-black text-xs uppercase"><i class="fas fa-plus-circle"></i> Entrada</button>`;
+            if(permissoesAtuais.pat) contA.innerHTML += `<button onclick="window.mudarAba('patio')" class="bg-emerald-50 text-emerald-800 border p-3 rounded-xl font-black text-xs uppercase"><i class="fas fa-truck"></i> Pátio (${registrosPatioAtivo.length})</button>`;
+            if(permissoesAtuais.pla) contA.innerHTML += `<button onclick="window.mudarAba('planilha')" class="bg-indigo-50 text-indigo-800 border p-3 rounded-xl font-black text-xs uppercase"><i class="fas fa-table"></i> Histórico</button>`;
+            if(isAdmin) contA.innerHTML += `<button onclick="window.mudarAba('config'); window.carregarLogsAuditoria()" class="bg-red-50 text-red-800 border p-3 rounded-xl font-black text-xs uppercase"><i class="fas fa-shield-alt"></i> Auditoria</button>`;
+
+            const secDev = document.getElementById('dash-secao-dev');
+            if(isAdmin) {
+                secDev.classList.remove('hidden');
+                document.getElementById('kpi-dev-planob').innerText = todos.filter(r => r.metodo_saida === 'PLANO_B').length; document.getElementById('kpi-dev-semfoto-ent').innerText = todos.filter(r => !r.foto).length; document.getElementById('kpi-dev-logs').innerText = logsAuditoria.length;
+                const mMod = {}; todos.forEach(r => { const m = r.dados_dinamicos?.modelo || 'S/ INFO'; mMod[m] = (mMod[m] || 0) + 1; }); document.getElementById('dash-lista-modelos').innerHTML = Object.entries(mMod).map(([mod, qtd]) => `<div class="flex justify-between items-center bg-gray-50 px-3 py-1.5 rounded border"><span class="font-bold uppercase">${mod}</span><span class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded">${qtd}</span></div>`).join('') || 'Sem dados';
+                const mOp = {}; entH.forEach(r => { const op = r.visto_entrada || 'N/A'; mOp[op] = (mOp[op] || 0) + 1; }); saiH.forEach(r => { const op = r.visto_saida || 'N/A'; mOp[op] = (mOp[op] || 0) + 1; }); document.getElementById('dash-lista-operadores').innerHTML = Object.entries(mOp).map(([op, qtd]) => `<div class="flex justify-between items-center bg-gray-50 px-3 py-1.5 rounded border"><span class="font-bold uppercase"><i class="fas fa-user text-purple-500 mr-1"></i> ${op}</span><span class="bg-purple-100 text-purple-800 px-2 py-0.5 rounded">${qtd} ações</span></div>`).join('') || 'Nenhuma movimentação hoje.';
+                document.getElementById('dash-ultimos-logs').innerHTML = logsAuditoria.slice(0, 5).map(l => `<div onclick="window.abrirDetalheLog('${l.log_id}')" class="flex justify-between items-center bg-gray-50 p-2 rounded border cursor-pointer hover:bg-gray-100"><div class="truncate pr-2"><span class="font-black text-[10px] text-red-700">[${l.acao}]</span> <span class="font-bold uppercase">${l.resumo}</span></div><span class="text-[10px] text-gray-500 font-bold">${l.usuario}</span></div>`).join('');
+            } else secDev.classList.add('hidden');
+        };
+
         window.criarUsuario = async function() {
-            const nome = document.getElementById('novo-user-nome').value.trim().toUpperCase();
-            const senha = document.getElementById('novo-user-senha').value.trim();
-            if(!nome || !senha) return alert("Preencha Nome e Senha.");
-            if(usuarios.find(u => u.nome === nome)) return alert("Já existe um usuário com esse nome.");
-            
-            // Permissões padrão para porteiro
-            const permissoesIniciais = { reg: true, pat: true, sai: true, pla: false, imp: false, edi: false, exc: false };
-
-            try {
-                await addDoc(collection(db, "usuarios"), { nome, senha, permissoes: permissoesIniciais });
-                document.getElementById('novo-user-nome').value = '';
-                document.getElementById('novo-user-senha').value = '';
-            } catch(e) { alert("Erro ao criar usuário."); }
+            const nome = document.getElementById('novo-user-nome').value.trim().toUpperCase(); const senha = document.getElementById('novo-user-senha').value.trim(); const cargo = document.getElementById('novo-user-cargo').value;
+            if(!nome || !senha) return window.appAlert("Obrigatório", "Nome e Senha são obrigatórios.", "aviso");
+            if(usuarios.find(u => u.nome === nome) || nome === 'ADMIN') return window.appAlert("Erro", "Usuário já existe.", "erro");
+            let pI = { reg: true, pat: true, sai: true, pla: false, imp: false, edi: false, exc: false };
+            if(cargo.includes('CONFERENTE')) pI = { reg: false, pat: true, sai: true, pla: true, imp: false, edi: false, exc: false };
+            if(cargo.includes('SUPERVISOR')) pI = { reg: true, pat: true, sai: true, pla: true, imp: true, edi: true, exc: false };
+            if(cargo.includes('GERENTE')) pI = { reg: true, pat: true, sai: true, pla: true, imp: true, edi: true, exc: true };
+            try { await addDoc(collection(db, "usuarios"), { nome, senha, cargo, permissoes: pI, data: getDataHoraAtualNavegador() }); await registrarLog('CONFIG', `CRIOU USUÁRIO ${nome}`); document.getElementById('novo-user-nome').value = ''; document.getElementById('novo-user-senha').value = ''; window.mostrarToast("Usuário criado", "sucesso"); } catch(e) {}
         };
+        window.excluirUsuario = async function(id, nome) { if(await window.appConfirm("Excluir", `Remover acesso de ${nome}?`, "Sim", true)) { await deleteDoc(doc(db, "usuarios", id)); await registrarLog('CONFIG', `EXCLUIU O USUÁRIO ${nome}`); window.mostrarToast("Removido.", "aviso"); } };
+        window.atualizarPermissao = async function(userId, nomeUser, pKey, val) { await updateDoc(doc(db, "usuarios", userId), { [`permissoes.${pKey}`]: val }); await registrarLog('CONFIG', `ALTEROU PERMISSÃO DE ${nomeUser}`); };
+        window.atualizarCargoUsuario = async function(userId, nomeUser, cargo) { await updateDoc(doc(db, "usuarios", userId), { cargo }); await registrarLog('CONFIG', `ALTEROU CARGO DE ${nomeUser} P/ ${cargo}`); };
 
-        window.excluirUsuario = async function(id, nome) {
-            if(confirm(`Tem certeza que deseja excluir o acesso de ${nome}?`)) {
-                try { await deleteDoc(doc(db, "usuarios", id)); } catch(e) {}
-            }
-        };
-
-        window.atualizarPermissao = async function(userId, permissaoKey, value) {
+        window.adicionarCampo = async function() { const nome = document.getElementById('novo-campo-nome').value.trim().toUpperCase(); const tipo = document.getElementById('novo-campo-tipo').value; if(!nome) return; schemaCampos.push({ id: "custom_" + Date.now(), nome, tipo, fixo: false }); document.getElementById('novo-campo-nome').value = ''; await setDoc(doc(db, "configuracoes", "schema"), { campos: schemaCampos }); await registrarLog('CONFIG', `ADICIONOU CAMPO ${nome}`); };
+        window.excluirCampo = async function(index) { if(await window.appConfirm("Excluir Campo", `Remover campo ${schemaCampos[index].nome}?`, "Remover", true)) { schemaCampos.splice(index, 1); await setDoc(doc(db, "configuracoes", "schema"), { campos: schemaCampos }); } };
+        window.moverCampo = async function(index, dir) { const n = index + dir; if(n >= 0 && n < schemaCampos.length) { const t = schemaCampos[index]; schemaCampos[index] = schemaCampos[n]; schemaCampos[n] = t; await setDoc(doc(db, "configuracoes", "schema"), { campos: schemaCampos }); } };
+        window.gerarBackupNuvem = async function() {
+            const btn = document.getElementById('btn-backup-nuvem'); btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Baixando...'; btn.disabled = true;
             try {
-                await updateDoc(doc(db, "usuarios", userId), { [`permissoes.${permissaoKey}`]: value });
-            } catch(e) { alert("Falha ao atualizar permissão."); }
+                const snap = await getDocs(query(collection(db, "registros"), orderBy("id", "desc"))); const tds = []; snap.forEach(d => tds.push({ firebase_id: d.id, ...d.data() }));
+                if(tds.length === 0) return window.appAlert("Vazio", "Banco sem registros.", "aviso");
+                const a = document.createElement('a'); a.href = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(tds, null, 2)); a.download = `patiopark_bkp_${Date.now()}.json`; a.click();
+                await registrarLog('CONFIG', `EXPORTOU BACKUP (${tds.length} REG)`); window.mostrarToast("Backup OK", "sucesso");
+            } catch (e) {} finally { btn.innerHTML = 'Baixar Backup Completo'; btn.disabled = false; }
         };
 
         window.renderizarUsuarios = function() {
-            const container = document.getElementById('lista-usuarios-admin');
-            if(!container) return;
-            container.innerHTML = '';
-            
+            const c = document.getElementById('lista-usuarios-admin'); if(!c) return; c.innerHTML = '';
             usuarios.forEach(u => {
-                const p = u.permissoes || {};
-                container.innerHTML += `
-                    <div class="bg-gray-50 border p-3 rounded-lg shadow-sm">
-                        <div class="flex justify-between items-center border-b border-gray-200 pb-2 mb-2">
-                            <div>
-                                <div class="font-bold text-sm uppercase text-blue-900"><i class="fas fa-user-tie"></i> ${u.nome}</div>
-                                <div class="text-[10px] text-gray-500 font-bold">SENHA: ${u.senha}</div>
-                            </div>
-                            <button onclick="window.excluirUsuario('${u.id}', '${u.nome}')" class="text-red-500 hover:text-red-700 bg-red-100 p-2 rounded"><i class="fas fa-trash"></i></button>
-                        </div>
-                        <div class="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1">Permissões de Acesso</div>
-                        <div class="grid grid-cols-2 gap-2 text-xs">
-                            <label class="flex items-center space-x-1"><input type="checkbox" onchange="window.atualizarPermissao('${u.id}', 'reg', this.checked)" ${p.reg ? 'checked' : ''} class="w-4 h-4 text-purple-600 rounded"><span>Nova Entrada</span></label>
-                            <label class="flex items-center space-x-1"><input type="checkbox" onchange="window.atualizarPermissao('${u.id}', 'pat', this.checked)" ${p.pat ? 'checked' : ''} class="w-4 h-4 text-purple-600 rounded"><span>Ver Pátio</span></label>
-                            <label class="flex items-center space-x-1"><input type="checkbox" onchange="window.atualizarPermissao('${u.id}', 'sai', this.checked)" ${p.sai ? 'checked' : ''} class="w-4 h-4 text-purple-600 rounded"><span class="text-red-600 font-bold">Dar Saída</span></label>
-                            <label class="flex items-center space-x-1"><input type="checkbox" onchange="window.atualizarPermissao('${u.id}', 'pla', this.checked)" ${p.pla ? 'checked' : ''} class="w-4 h-4 text-purple-600 rounded"><span>Ver Histórico</span></label>
-                            <label class="flex items-center space-x-1"><input type="checkbox" onchange="window.atualizarPermissao('${u.id}', 'imp', this.checked)" ${p.imp ? 'checked' : ''} class="w-4 h-4 text-purple-600 rounded"><span>Imprimir PDF</span></label>
-                            <label class="flex items-center space-x-1"><input type="checkbox" onchange="window.atualizarPermissao('${u.id}', 'edi', this.checked)" ${p.edi ? 'checked' : ''} class="w-4 h-4 text-purple-600 rounded"><span class="text-blue-600 font-bold">Editar Ficha</span></label>
-                            <label class="flex items-center space-x-1"><input type="checkbox" onchange="window.atualizarPermissao('${u.id}', 'exc', this.checked)" ${p.exc ? 'checked' : ''} class="w-4 h-4 text-purple-600 rounded"><span class="text-red-600 font-bold">Excluir Ficha</span></label>
-                        </div>
-                    </div>
-                `;
+                const p = u.permissoes || {}; const ca = u.cargo || 'PORTEIRO / OPERADOR';
+                c.innerHTML += `<div class="bg-gray-50 border p-3 rounded-xl shadow-sm mb-3">
+                    <div class="flex justify-between items-start border-b pb-2 mb-2"><div><div class="font-black text-sm uppercase text-blue-900"><i class="fas fa-user-tie mr-1"></i> ${u.nome}</div><div class="text-[10px] text-gray-500 font-bold">SENHA: ${u.senha}</div></div><button onclick="window.excluirUsuario('${u.id}', '${u.nome}')" class="text-red-500 hover:text-red-700 bg-red-100 p-2 rounded-lg"><i class="fas fa-trash"></i></button></div>
+                    <div class="mb-2"><select onchange="window.atualizarCargoUsuario('${u.id}', '${u.nome}', this.value)" class="w-full border p-1.5 rounded-lg text-xs font-bold uppercase bg-white"><option value="PORTEIRO / OPERADOR" ${ca==='PORTEIRO / OPERADOR'?'selected':''}>Porteiro / Operador</option><option value="CONFERENTE DE PÁTIO" ${ca==='CONFERENTE DE PÁTIO'?'selected':''}>Conferente de Pátio</option><option value="SUPERVISOR LOGÍSTICO" ${ca==='SUPERVISOR LOGÍSTICO'?'selected':''}>Supervisor Logístico</option><option value="GERENTE OPERACIONAL" ${ca==='GERENTE OPERACIONAL'?'selected':''}>Gerente Operacional</option></select></div>
+                    <div class="grid grid-cols-2 gap-2 text-xs pt-1">
+                        <label class="flex items-center space-x-2"><input type="checkbox" onchange="window.atualizarPermissao('${u.id}', '${u.nome}', 'reg', this.checked)" ${p.reg ? 'checked' : ''} class="w-4 h-4 rounded"><span class="font-bold">Criar Entradas</span></label>
+                        <label class="flex items-center space-x-2"><input type="checkbox" onchange="window.atualizarPermissao('${u.id}', '${u.nome}', 'pat', this.checked)" ${p.pat ? 'checked' : ''} class="w-4 h-4 rounded"><span class="font-bold">Ver Pátio</span></label>
+                        <label class="flex items-center space-x-2"><input type="checkbox" onchange="window.atualizarPermissao('${u.id}', '${u.nome}', 'sai', this.checked)" ${p.sai ? 'checked' : ''} class="w-4 h-4 rounded"><span class="font-bold text-red-600">Dar Saídas</span></label>
+                        <label class="flex items-center space-x-2"><input type="checkbox" onchange="window.atualizarPermissao('${u.id}', '${u.nome}', 'pla', this.checked)" ${p.pla ? 'checked' : ''} class="w-4 h-4 rounded"><span class="font-bold">Ver Histórico</span></label>
+                        <label class="flex items-center space-x-2"><input type="checkbox" onchange="window.atualizarPermissao('${u.id}', '${u.nome}', 'imp', this.checked)" ${p.imp ? 'checked' : ''} class="w-4 h-4 rounded"><span class="font-bold">Imprimir PDF</span></label>
+                        <label class="flex items-center space-x-2"><input type="checkbox" onchange="window.atualizarPermissao('${u.id}', '${u.nome}', 'edi', this.checked)" ${p.edi ? 'checked' : ''} class="w-4 h-4 rounded"><span class="font-bold text-blue-600">Editar Dados</span></label>
+                        <label class="flex items-center space-x-2"><input type="checkbox" onchange="window.atualizarPermissao('${u.id}', '${u.nome}', 'exc', this.checked)" ${p.exc ? 'checked' : ''} class="w-4 h-4 rounded"><span class="font-bold text-red-600">Excluir Dados</span></label>
+                    </div></div>`;
             });
-        };
-
-
-        // ==========================================
-        // GESTÃO DE CAMPOS DINÂMICOS DA NUVEM
-        // ==========================================
-        window.adicionarCampo = async function() {
-            const nome = document.getElementById('novo-campo-nome').value.trim().toUpperCase();
-            const tipo = document.getElementById('novo-campo-tipo').value;
-            if(!nome) return alert("Digite um nome para o campo.");
-            
-            schemaCampos.push({ id: "custom_" + Date.now(), nome, tipo, fixo: false });
-            document.getElementById('novo-campo-nome').value = '';
-            
-            try {
-                await setDoc(doc(db, "configuracoes", "schema"), { campos: schemaCampos });
-            } catch(e) { alert("Erro ao sincronizar campos: " + e.message); }
-        };
-
-        window.excluirCampo = async function(index) {
-            if(confirm("Excluir este campo para todos os usuários? (Os dados antigos continuam no banco)")) {
-                schemaCampos.splice(index, 1);
-                await setDoc(doc(db, "configuracoes", "schema"), { campos: schemaCampos });
-            }
-        };
-
-        window.moverCampo = async function(index, dir) {
-            const novoIndex = index + dir;
-            if(novoIndex >= 0 && novoIndex < schemaCampos.length) {
-                const temp = schemaCampos[index];
-                schemaCampos[index] = schemaCampos[novoIndex];
-                schemaCampos[novoIndex] = temp;
-                await setDoc(doc(db, "configuracoes", "schema"), { campos: schemaCampos });
-            }
-        };
-
-
-        // ==========================================
-        // RENDERIZAÇÃO PRINCIPAL DO APLICATIVO
-        // ==========================================
-        window.mudarAba = function(aba) {
-            ['registro', 'patio', 'planilha', 'config'].forEach(a => {
-                const v = document.getElementById('view-' + a);
-                if(v) v.classList.add('hidden');
-                
-                const t = document.getElementById('tab-' + a);
-                if(t) {
-                    t.classList.remove('text-blue-600', 'text-red-600');
-                    t.classList.add('text-gray-500');
-                }
-            });
-            
-            const vA = document.getElementById(`view-${aba}`);
-            if(vA) vA.classList.remove('hidden');
-            
-            const tA = document.getElementById(`tab-${aba}`);
-            if(tA) {
-                tA.classList.remove('text-gray-500');
-                tA.classList.add(aba === 'config' ? 'text-red-600' : 'text-blue-600');
-            }
-
-            if(aba === 'planilha' && registrosHistorico.length === 0) {
-                window.carregarHistoricoSobDemanda();
-            }
-        };
-
-        window.limparCampo = function(id) {
-            const input = document.getElementById(id);
-            if(input) { input.value = ''; input.focus(); }
-        };
-
-        window.verificarModeloOutros = function(valor, id) {
-            const obsInput = document.getElementById('campo_' + id + '_obs');
-            if(obsInput) {
-                if(valor === 'OUTROS') {
-                    obsInput.classList.remove('hidden');
-                    obsInput.focus();
-                } else {
-                    obsInput.classList.add('hidden');
-                    obsInput.value = '';
-                }
-            }
         };
 
         window.renderizarTudo = function() {
-            // 1. Constrói o Formulário de Entrada
             const formContainer = document.getElementById('formulario-dinamico');
             if(formContainer) {
-                // Guarda valores digitados temporariamente
-                const valoresAtuais = {};
-                schemaCampos.forEach(c => {
-                    const el = document.getElementById('campo_' + c.id);
-                    if(el) valoresAtuais[c.id] = el.value;
-                });
-
+                const valoresAtuais = {}; schemaCampos.forEach(c => { const el = document.getElementById('campo_' + c.id); if(el) valoresAtuais[c.id] = el.value; });
                 formContainer.innerHTML = '';
-                
                 schemaCampos.forEach((campo, index) => {
                     let html = '';
-                    if(campo.tipo === 'placa') {
-                        html = `
-                            <div class="mb-4">
-                                <label class="block text-sm font-bold text-gray-700 uppercase">${index+1}. ${campo.nome} (Foto de Entrada)</label>
-                                <div class="relative flex items-center mt-1 no-print">
-                                    <input type="text" id="campo_${campo.id}" class="w-full border-2 border-gray-300 p-3 pr-24 rounded-lg focus:border-blue-500 focus:outline-none uppercase font-bold" onblur="window.verificarHistorico(this.value)" placeholder="ABC-1234">
-                                    <div class="absolute right-2 top-1/2 -translate-y-1/2 flex space-x-1">
-                                        <label class="bg-blue-100 hover:bg-blue-200 text-blue-600 rounded w-10 h-10 flex items-center justify-center cursor-pointer border border-blue-300 shadow-sm transition">
-                                            <i class="fas fa-camera text-lg"></i>
-                                            <input type="file" accept="image/*" capture="environment" class="hidden" onchange="window.processarFotoPlaca(event)">
-                                        </label>
-                                        <label class="bg-purple-100 hover:bg-purple-200 text-purple-600 rounded w-10 h-10 flex items-center justify-center cursor-pointer border border-purple-300 shadow-sm transition">
-                                            <i class="fas fa-image text-lg"></i>
-                                            <input type="file" accept="image/*" class="hidden" onchange="window.processarFotoPlaca(event)">
-                                        </label>
-                                    </div>
-                                </div>
-                                <div id="preview-container" class="hidden mt-2 p-2 border rounded-lg bg-gray-50 flex items-center justify-between shadow-inner">
-                                    <img id="preview-img" src="" class="h-16 w-16 object-cover rounded border border-gray-300">
-                                    <div class="text-[10px] text-gray-500 font-bold text-right ml-2 leading-tight uppercase" id="preview-info"></div>
-                                </div>
-                                <div id="status_foto_completo" class="text-xs font-bold text-orange-600 mt-1 hidden">
-                                    <i class="fas fa-spinner fa-spin"></i> Processando Imagem...
-                                </div>
-                                <div id="alerta_historico_completo" class="hidden bg-blue-50 border-l-4 border-blue-500 p-3 mt-2 rounded-r-lg shadow-sm">
-                                    <div class="flex justify-between items-center">
-                                        <div>
-                                            <h3 class="font-bold text-blue-800 text-xs uppercase"><i class="fas fa-history"></i> Conhecido</h3>
-                                            <p id="texto_historico_completo" class="text-[10px] text-blue-600 uppercase"></p>
-                                        </div>
-                                        <button type="button" onclick="window.aplicarAutopreenchimento()" class="bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-bold px-3 py-2 rounded shadow uppercase transition">
-                                            Autopreencher
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>`;
-                    } else if(campo.tipo === 'select_modelo') {
-                        html = `
-                            <div class="mb-4">
-                                <label class="block text-sm font-bold text-gray-700 uppercase">${index+1}. ${campo.nome}</label>
-                                <select id="campo_${campo.id}" onchange="window.verificarModeloOutros(this.value, '${campo.id}')" class="w-full border-2 border-gray-300 p-3 rounded-lg mt-1 bg-white uppercase font-bold focus:border-blue-500 focus:outline-none">
-                                    <option value="" disabled selected>SELECIONE O TIPO</option>
-                                    <option value="CAMINHÃO">CAMINHÃO</option>
-                                    <option value="PICAPE">PICAPE</option>
-                                    <option value="MOTO">MOTO</option>
-                                    <option value="CARRO DE PASSEIO">CARRO DE PASSEIO</option>
-                                    <option value="OUTROS">OUTROS</option>
-                                </select>
-                                <input type="text" id="campo_${campo.id}_obs" class="hidden w-full border-2 border-blue-300 p-3 rounded-lg mt-2 uppercase font-bold focus:border-blue-500 focus:outline-none" placeholder="DIGITE O MODELO EXATO">
-                            </div>`;
-                    } else if(campo.tipo === 'textarea') {
-                        html = `
-                            <div class="mb-4">
-                                <label class="block text-sm font-bold text-gray-700 uppercase">${index+1}. ${campo.nome}</label>
-                                <textarea id="campo_${campo.id}" rows="3" class="w-full border-2 border-gray-300 p-3 rounded-lg mt-1 uppercase font-bold focus:border-blue-500 focus:outline-none"></textarea>
-                                <button tabindex="-1" onclick="window.limparCampo('campo_${campo.id}')" class="text-red-400 text-xs mt-1 uppercase font-bold"><i class="fas fa-eraser"></i> Limpar</button>
-                            </div>`;
-                    } else {
-                        html = `
-                            <div class="mb-4">
-                                <label class="block text-sm font-bold text-gray-700 uppercase">${index+1}. ${campo.nome}</label>
-                                <div class="relative flex items-center mt-1">
-                                    <input type="text" id="campo_${campo.id}" class="w-full border-2 border-gray-300 p-3 pr-10 rounded-lg focus:border-blue-500 focus:outline-none uppercase font-bold">
-                                    <button tabindex="-1" onclick="window.limparCampo('campo_${campo.id}')" class="absolute right-3 text-red-400 hover:text-red-600 text-xl transition"><i class="fas fa-times-circle"></i></button>
-                                </div>
-                            </div>`;
-                    }
+                    if(campo.tipo === 'placa') html = `<div class="mb-4"><label class="block text-sm font-bold text-gray-700 uppercase">${index+1}. ${campo.nome} (Foto de Entrada)</label><div class="relative flex items-center mt-1 no-print"><input type="text" id="campo_${campo.id}" class="w-full border-2 border-gray-300 p-3 pr-24 rounded-xl focus:border-blue-500 uppercase" onblur="window.verificarHistorico(this.value)" placeholder="ABC-1234"><div class="absolute right-2 top-1/2 -translate-y-1/2 flex space-x-1"><label class="bg-blue-100 text-blue-600 rounded-lg w-10 h-10 flex items-center justify-center cursor-pointer shadow-sm"><i class="fas fa-camera"></i><input type="file" accept="image/*" capture="environment" class="hidden" onchange="window.processarFotoPlaca(event)"></label><label class="bg-purple-100 text-purple-600 rounded-lg w-10 h-10 flex items-center justify-center cursor-pointer shadow-sm"><i class="fas fa-image"></i><input type="file" accept="image/*" class="hidden" onchange="window.processarFotoPlaca(event)"></label></div></div><div id="preview-container" class="hidden mt-2 p-2.5 border-2 border-blue-200 rounded-xl bg-blue-50/50 flex items-center justify-between shadow-inner"><img id="preview-img" class="h-16 w-16 object-cover rounded-lg border border-blue-300"><div class="text-[10px] text-gray-700 font-bold text-right ml-2 leading-tight uppercase" id="preview-info"></div></div><div id="status_foto_completo" class="text-xs font-bold text-orange-600 mt-1 hidden"><i class="fas fa-spinner fa-spin"></i> Processando...</div><div id="alerta_historico_completo" class="hidden bg-blue-50 border-l-4 border-blue-500 p-3 mt-2 rounded-r-xl shadow-sm"><div class="flex justify-between items-center"><div><h3 class="font-bold text-blue-800 text-xs uppercase"><i class="fas fa-history"></i> Veículo Conhecido</h3><p id="texto_historico_completo" class="text-[10px] text-blue-600 uppercase"></p></div><button type="button" onclick="window.aplicarAutopreenchimento()" class="bg-blue-600 text-white text-[10px] font-bold px-3 py-2 rounded-lg shadow uppercase">Autopreencher</button></div></div></div>`;
+                    else if(campo.tipo === 'select_modelo') html = `<div class="mb-4"><label class="block text-sm font-bold text-gray-700 uppercase">${index+1}. ${campo.nome}</label><select id="campo_${campo.id}" onchange="window.verificarModeloOutros(this.value, '${campo.id}')" class="w-full border-2 border-gray-300 p-3 rounded-xl mt-1 bg-white uppercase focus:border-blue-500"><option value="" disabled selected>SELECIONE...</option><option value="CAMINHÃO">CAMINHÃO</option><option value="PICAPE">PICAPE</option><option value="FIORINO">FIORINO</option><option value="SAVEIRO">SAVEIRO</option><option value="MOTO">MOTO</option><option value="CARRO DE PASSEIO">CARRO DE PASSEIO</option><option value="OUTROS">OUTROS</option></select><input type="text" id="campo_${campo.id}_obs" class="w-full border-2 border-blue-300 p-3 mt-2 rounded-xl hidden uppercase focus:border-blue-500" placeholder="DIGITE O MODELO"></div>`;
+                    else if(campo.tipo === 'textarea') html = `<div class="mb-4"><label class="block text-sm font-bold text-gray-700 uppercase">${index+1}. ${campo.nome}</label><textarea id="campo_${campo.id}" rows="3" class="w-full border-2 border-gray-300 p-3 rounded-xl mt-1 uppercase focus:border-blue-500"></textarea><button tabindex="-1" onclick="window.limparCampo('campo_${campo.id}')" class="text-red-400 text-xs mt-1 uppercase font-bold"><i class="fas fa-eraser"></i> Limpar</button></div>`;
+                    else html = `<div class="mb-4"><label class="block text-sm font-bold text-gray-700 uppercase">${index+1}. ${campo.nome}</label><div class="relative flex items-center mt-1"><input type="text" id="campo_${campo.id}" class="w-full border-2 border-gray-300 p-3 pr-10 rounded-xl focus:border-blue-500 uppercase"><button tabindex="-1" onclick="window.limparCampo('campo_${campo.id}')" class="absolute right-3 text-red-400"><i class="fas fa-times-circle text-xl"></i></button></div></div>`;
                     formContainer.insertAdjacentHTML('beforeend', html);
                 });
-
-                // Devolve os dados
-                schemaCampos.forEach(c => {
-                    const el = document.getElementById('campo_' + c.id);
-                    if(el && valoresAtuais[c.id]) el.value = valoresAtuais[c.id];
-                });
+                schemaCampos.forEach(c => { const el = document.getElementById('campo_' + c.id); if(el && valoresAtuais[c.id]) el.value = valoresAtuais[c.id]; });
             }
 
-            // 2. Constrói Cabeçalho da Tabela
             const cabecalho = document.getElementById('cabecalho-planilha');
             if(cabecalho) {
-                let ths = `<th class="px-3 py-2 border-r w-10 no-print ${permissoesAtuais.exc ? '' : 'hidden'}"><i class="fas fa-check-square"></i></th>`;
-                ths += `<th class="px-3 py-2 border-r no-print ${permissoesAtuais.edi || permissoesAtuais.exc || permissoesAtuais.sai ? '' : 'hidden'}">Ações</th>`;
-                ths += `<th class="px-3 py-2 border-r no-print">Foto</th>`;
-                ths += `<th class="px-3 py-2 border-r">Entrada</th>`;
-                ths += `<th class="px-3 py-2 border-r">Saída</th>`;
-                
-                schemaCampos.forEach(c => {
-                    ths += `<th class="px-3 py-2 border-r">${c.tipo === 'placa' ? 'PLACA' : c.nome}</th>`;
-                });
-                
-                ths += `<th class="px-3 py-2 border-r no-print">GPS Entrada</th>`;
-                ths += `<th class="px-3 py-2">Assinatura (E/S)</th>`;
-                
-                cabecalho.innerHTML = ths;
+                cabecalho.innerHTML = `<th class="px-3 py-2 border-r border-blue-700 w-10 no-print ${permissoesAtuais.exc ? '' : 'hidden'}"><i class="fas fa-check-square"></i></th><th class="px-3 py-2 border-r border-blue-700 no-print ${permissoesAtuais.edi || permissoesAtuais.exc || permissoesAtuais.sai ? '' : 'hidden'}">Ações</th><th class="px-3 py-2 border-r border-blue-700 no-print">Fotos (E/S)</th><th class="px-3 py-2 border-r border-blue-700">Entrada</th><th class="px-3 py-2 border-r border-blue-700">Saída</th><th class="px-3 py-2 border-r border-blue-700">Operadores</th>`;
+                schemaCampos.forEach(c => { if(c.tipo !== 'placa') cabecalho.innerHTML += `<th class="px-3 py-2 border-r border-blue-700">${c.nome}</th>`; else cabecalho.innerHTML += `<th class="px-3 py-2 border-r border-blue-700">PLACA</th>`; });
+                cabecalho.innerHTML += `<th class="px-3 py-2 border-r border-blue-700 no-print">GPS (Ent/Saí)</th><th class="px-3 py-2 no-print">Auditoria Saída</th>`;
             }
 
-            // 3. Constrói Painel Admin de Campos
             const painelCampos = document.getElementById('lista-campos-admin');
             if(painelCampos && isAdmin) {
                 painelCampos.innerHTML = '';
                 schemaCampos.forEach((c, index) => {
-                    painelCampos.innerHTML += `
-                        <div class="flex items-center justify-between bg-gray-50 border p-2 rounded-lg">
-                            <div class="flex flex-col text-xs space-y-1">
-                                <button onclick="window.moverCampo(${index}, -1)" ${index === 0 ? 'disabled' : ''} class="text-gray-400 hover:text-blue-600 disabled:opacity-30"><i class="fas fa-chevron-up"></i></button>
-                                <button onclick="window.moverCampo(${index}, 1)" ${index === schemaCampos.length - 1 ? 'disabled' : ''} class="text-gray-400 hover:text-blue-600 disabled:opacity-30"><i class="fas fa-chevron-down"></i></button>
-                            </div>
-                            <div class="flex-1 px-3">
-                                <div class="font-bold text-sm uppercase">${c.nome}</div>
-                                <div class="text-[10px] text-gray-500 uppercase">${c.tipo}</div>
-                            </div>
-                            ${!c.fixo ? `<button onclick="window.excluirCampo(${index})" class="text-red-500 hover:text-red-700 p-2"><i class="fas fa-trash"></i></button>` : '<span class="text-gray-400 text-xs px-2"><i class="fas fa-lock"></i> Fixo</span>'}
-                        </div>`;
+                    painelCampos.innerHTML += `<div class="flex items-center justify-between bg-gray-50 border p-2 rounded-lg mb-2"><div class="flex flex-col text-xs space-y-1"><button onclick="window.moverCampo(${index}, -1)" ${index===0?'disabled':''} class="text-gray-400 hover:text-blue-600 disabled:opacity-30"><i class="fas fa-chevron-up"></i></button><button onclick="window.moverCampo(${index}, 1)" ${index===schemaCampos.length-1?'disabled':''} class="text-gray-400 hover:text-blue-600 disabled:opacity-30"><i class="fas fa-chevron-down"></i></button></div><div class="flex-1 px-3"><div class="font-bold text-sm uppercase">${c.nome}</div><div class="text-[10px] text-gray-500 uppercase">${c.tipo}</div></div>${!c.fixo ? `<button onclick="window.excluirCampo(${index})" class="text-red-500 p-2"><i class="fas fa-trash"></i></button>` : '<span class="text-gray-400 text-xs px-2"><i class="fas fa-lock"></i> Fixo</span>'}</div>`;
                 });
             }
-
             window.filtrarListas();
         };
 
-
         // ==========================================
-        // CAPTURA DE FOTO E EXIF
+        // FLUXO DE ENTRADA (FOTO + EXIF + GPS)
         // ==========================================
         window.processarFotoPlaca = async function(event) {
-            const file = event.target.files[0];
-            if(!file) return;
+            const file = event.target.files[0]; if(!file) return;
+            const statusLabel = document.getElementById('status_foto_completo'); const previewCont = document.getElementById('preview-container'); const previewImg = document.getElementById('preview-img'); const previewInfo = document.getElementById('preview-info');
 
-            const statusLabel = document.getElementById('status_foto_completo');
-            const previewCont = document.getElementById('preview-container');
-            const previewImg = document.getElementById('preview-img');
-            const previewInfo = document.getElementById('preview-info');
-
-            statusLabel.classList.remove('hidden');
-            statusLabel.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Lendo Foto e GPS...';
-
-            const meta = await extrairMetadadosFoto(file);
-            dataHoraMetadata = meta.horario;
-            gpsLocalizacao = meta.gps;
+            statusLabel.classList.remove('hidden'); statusLabel.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Lendo metadados (EXIF/GPS)...';
+            const meta = await extrairMetadadosCompletosDaFoto(file);
+            dataHoraMetadata = meta.horario; gpsLocalizacao = meta.gps;
 
             const reader = new FileReader();
             reader.onload = function(e) {
                 const img = new Image();
                 img.onload = async function() {
-                    statusLabel.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Comprimindo WebP e Enviando...';
-                    
-                    const canvas = document.createElement('canvas');
-                    const MAX_WIDTH = 800;
-                    const scaleSize = MAX_WIDTH / img.width;
-                    canvas.width = MAX_WIDTH;
-                    canvas.height = img.height * scaleSize;
-                    canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+                    statusLabel.innerHTML = '<i class="fas fa-cloud-upload-alt fa-bounce"></i> Nuvem...';
+                    const canvas = document.createElement('canvas'); const MAX = 800; const scale = MAX / img.width;
+                    canvas.width = MAX; canvas.height = img.height * scale; canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
                     
                     const webpDataStr = canvas.toDataURL('image/webp', 0.8);
-                    previewImg.src = webpDataStr;
-                    previewCont.classList.remove('hidden');
-                    previewInfo.innerHTML = `HORA: ${dataHoraMetadata}<br>GPS: ${gpsLocalizacao}<br><span class="text-blue-500">Enviando Nuvem...</span>`;
+                    previewImg.src = webpDataStr; previewCont.classList.remove('hidden');
+                    previewInfo.innerHTML = `HORA: ${dataHoraMetadata}<br>GPS: ${gpsLocalizacao}<br><span class="text-blue-600">Subindo...</span>`;
                     
                     try {
-                        const formData = new FormData();
-                        formData.append("image", webpDataStr.split(',')[1]);
-                        
+                        const formData = new FormData(); formData.append("image", webpDataStr.split(',')[1]);
                         const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, { method: "POST", body: formData });
                         const json = await res.json();
-                        
                         if(json.success) {
-                            fotoAtualUrl = json.data.url;
-                            statusLabel.innerHTML = `<i class="fas fa-check-circle text-green-600"></i> Sucesso!`;
-                            previewInfo.innerHTML = `HORA: ${dataHoraMetadata}<br>GPS: ${gpsLocalizacao}<br><span class="text-green-600 font-black">IMGBB OK</span>`;
-                        } else {
-                            throw new Error("Erro na API");
-                        }
-                    } catch (err) {
-                        fotoAtualUrl = null;
-                        statusLabel.innerHTML = `<i class="fas fa-exclamation-triangle text-red-600"></i> Falha de Conexão. A foto não será salva.`;
-                        previewInfo.innerHTML = `<span class="text-red-600 font-black">ERRO DE UPLOAD</span>`;
+                            fotoAtualUrl = json.data.url; 
+                            statusLabel.innerHTML = `<i class="fas fa-check-circle text-green-600"></i> Autenticado.`;
+                            previewInfo.innerHTML = `HORA: ${dataHoraMetadata}<br>GPS: ${gpsLocalizacao}<br><span class='text-emerald-700 font-black'>IMGBB OK</span>`;
+                        } else throw new Error();
+                    } catch (err) { 
+                        fotoAtualUrl = null; statusLabel.innerHTML = `<i class="fas fa-times-circle text-red-600"></i> Erro Rede.`; 
+                        previewInfo.innerHTML = `HORA: ${dataHoraMetadata}<br><span class="text-red-600">FALHA UPLOAD</span>`;
                     }
                 };
                 img.src = e.target.result;
@@ -775,556 +950,293 @@
             reader.readAsDataURL(file);
         };
 
-        // ==========================================
-        // FLUXO DE ENTRADA NO BANCO DE DADOS
-        // ==========================================
         window.verificarHistorico = async function(placaStr) {
             const placa = placaStr.trim().toUpperCase();
-            const alertaBox = document.getElementById('alerta_historico_completo');
-            const textoBox = document.getElementById('texto_historico_completo');
-            if(!alertaBox || !textoBox) return;
-
-            if(placa.length < 7) {
-                alertaBox.classList.add('hidden');
-                window._veiculo_temp = null;
-                return;
-            }
-
+            if(placa.length < 7) return document.getElementById('alerta_historico_completo')?.classList.add('hidden');
             try {
                 const snap = await getDocs(query(collection(db, "registros"), where("placa", "==", placa)));
-                const historico = [];
-                snap.forEach(d => historico.push({ firebase_id: d.id, ...d.data() }));
-                historico.sort((a, b) => (b.id || 0) - (a.id || 0));
-
-                if(historico.length > 0) {
-                    ultimoVeiculoEncontrado = historico[0];
-                    const empresa = ultimoVeiculoEncontrado.dados_dinamicos?.empresa || 'S/ EMPRESA';
-                    const texto = `Visitas Registradas: ${historico.length} <br> Última Visita: ${ultimoVeiculoEncontrado.entrada.split(' ')[0]} <br> Transportadora: ${empresa}`;
-                    alertaBox.classList.remove('hidden');
-                    textoBox.innerHTML = texto;
-                    window._veiculo_temp = ultimoVeiculoEncontrado;
-                } else {
-                    alertaBox.classList.add('hidden');
-                    window._veiculo_temp = null;
-                }
-            } catch(e) { console.error("Erro ao verificar histórico: ", e); }
+                const hist = []; snap.forEach(d => hist.push({ firebase_id: d.id, ...d.data() })); hist.sort((a, b) => (b.id || 0) - (a.id || 0));
+                if(hist.length > 0) {
+                    window._veiculo_temp = hist[0]; document.getElementById('alerta_historico_completo').classList.remove('hidden');
+                    document.getElementById('texto_historico_completo').innerHTML = `Visitas: ${hist.length} | Última: ${window._veiculo_temp.entrada.split(' ')[0]} | Emp: ${window._veiculo_temp.dados_dinamicos?.empresa || 'S/ EMPRESA'}`;
+                } else document.getElementById('alerta_historico_completo')?.classList.add('hidden');
+            } catch(e) {}
         };
 
         window.aplicarAutopreenchimento = function() {
             if(!window._veiculo_temp) return;
-            
             schemaCampos.forEach(c => {
                 const input = document.getElementById('campo_' + c.id);
                 if(input && c.id !== 'placa') {
-                    const valorSalvo = window._veiculo_temp.dados_dinamicos?.[c.id] || '';
+                    const vs = window._veiculo_temp.dados_dinamicos?.[c.id] || '';
                     if(c.tipo === 'select_modelo') {
-                        const options = Array.from(input.options).map(opt => opt.value);
-                        if(options.includes(valorSalvo)) {
-                            input.value = valorSalvo;
-                            window.verificarModeloOutros(valorSalvo, c.id);
-                        } else {
-                            input.value = 'OUTROS';
-                            window.verificarModeloOutros('OUTROS', c.id);
-                            const obsInput = document.getElementById('campo_' + c.id + '_obs');
-                            if(obsInput) obsInput.value = valorSalvo;
-                        }
-                    } else {
-                        input.value = valorSalvo;
-                    }
+                        const opts = Array.from(input.options).map(opt => opt.value);
+                        if(opts.includes(vs)) { input.value = vs; window.verificarModeloOutros(vs, c.id); } 
+                        else { input.value = 'OUTROS'; window.verificarModeloOutros('OUTROS', c.id); const obs = document.getElementById('campo_' + c.id + '_obs'); if(obs) obs.value = vs; }
+                    } else input.value = vs;
                 }
             });
             document.getElementById('alerta_historico_completo').classList.add('hidden');
+            window.mostrarToast("Dados autopreenchidos!", "info");
         };
 
         window.salvarRegistro = async function() {
             const btn = document.getElementById('btn-salvar-entrada');
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> SALVANDO...';
-            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> SALVANDO...'; btn.disabled = true;
 
-            const dados = {};
-            let placaDefinitiva = '';
-
+            const dados = {}; let placaDefinitiva = '';
             schemaCampos.forEach(c => {
                 const input = document.getElementById('campo_' + c.id);
                 if(input) {
                     let val = input.value.trim().toUpperCase();
-                    if(c.tipo === 'select_modelo' && val === 'OUTROS') {
-                        const obs = document.getElementById('campo_' + c.id + '_obs');
-                        val = obs ? obs.value.trim().toUpperCase() || 'OUTROS' : 'OUTROS';
-                    }
+                    if(c.tipo === 'select_modelo' && val === 'OUTROS') { const obs = document.getElementById('campo_' + c.id + '_obs'); val = obs ? obs.value.trim().toUpperCase() || 'OUTROS' : 'OUTROS'; }
                     if(c.id === 'placa') placaDefinitiva = val;
                     dados[c.id] = val;
                 }
             });
 
-            if(!placaDefinitiva) {
-                btn.innerHTML = '<i class="fas fa-save mr-1"></i> SALVAR ENTRADA';
-                btn.disabled = false;
-                return alert("A placa do veículo é obrigatória para registrar a entrada.");
-            }
+            if(!placaDefinitiva) { btn.innerHTML = 'SALVAR ENTRADA'; btn.disabled = false; return window.appAlert("Erro", "Placa Obrigatória", "aviso"); }
 
-            const entrada = dataHoraMetadata || getDataHoraNavegador() + " (Sistema)";
-            const diaParticao = entrada.substring(0, 10);
-
-            const novo = {
-                id: Date.now(),
-                placa: placaDefinitiva,
-                entrada: entrada,
-                dia_particao: diaParticao,
-                saida: '',
-                visto_entrada: usuarioLogado,
-                visto_saida: '',
-                foto: fotoAtualUrl || '', 
-                gps: gpsLocalizacao || 'Sem registro',
-                dados_dinamicos: dados
-            };
+            const entrada = dataHoraMetadata || getDataHoraAtualNavegador() + " (Sist)";
+            const novo = { id: Date.now(), placa: placaDefinitiva, entrada: entrada, dia_particao: entrada.substring(0, 10), saida: '', visto_entrada: usuarioLogado, visto_saida: '', foto: fotoAtualUrl || '', foto_saida: '', metodo_saida: '', motivo_plano_b: '', gps: gpsLocalizacao || 'Sem registro', gps_saida: '', dados_dinamicos: dados };
 
             try {
-                await addDoc(collection(db, "registros"), novo);
-                
-                // Limpa formulário
-                schemaCampos.forEach(c => {
-                    const inp = document.getElementById('campo_' + c.id);
-                    if(inp) inp.value = '';
-                    if(c.tipo === 'select_modelo') {
-                        const obs = document.getElementById('campo_' + c.id + '_obs');
-                        if(obs) { obs.value = ''; obs.classList.add('hidden'); }
-                    }
-                });
+                const docRef = await addDoc(collection(db, "registros"), novo);
+                await registrarLog('ENTRADA', `ENTRADA: PLACA ${placaDefinitiva}`, { firebase_id: docRef.id, registro: novo });
+                schemaCampos.forEach(c => { const inp = document.getElementById('campo_' + c.id); if(inp) inp.value = ''; if(c.tipo === 'select_modelo') { const obs = document.getElementById('campo_' + c.id + '_obs'); if(obs) { obs.value = ''; obs.classList.add('hidden'); } } });
+                fotoAtualUrl = null; dataHoraMetadata = null; gpsLocalizacao = null; document.getElementById('preview-container').classList.add('hidden'); document.getElementById('status_foto_completo').classList.add('hidden'); document.getElementById('alerta_historico_completo').classList.add('hidden');
+                window.mostrarToast(`Entrada ${placaDefinitiva} OK!`, 'sucesso'); window.mudarAba('patio');
+            } catch (e) { window.appAlert("Erro", e.message, "erro"); } 
+            finally { btn.innerHTML = 'SALVAR ENTRADA'; btn.disabled = false; }
+        };
 
-                fotoAtualUrl = null; 
-                dataHoraMetadata = null; 
-                gpsLocalizacao = null;
-                
-                document.getElementById('status_foto_completo').classList.add('hidden');
-                document.getElementById('preview-container').classList.add('hidden');
-                document.getElementById('alerta_historico_completo').classList.add('hidden');
-                
-                window.mudarAba('patio');
-            } catch (e) {
-                alert("Erro grave ao salvar: " + e.message);
-            } finally {
-                btn.innerHTML = '<i class="fas fa-save mr-1"></i> SALVAR ENTRADA';
-                btn.disabled = false;
+        // ==========================================
+        // FLUXO DE SAÍDA (PLANO A E PLANO B)
+        // ==========================================
+        window.abrirModalSaida = function(id) { 
+            document.getElementById('modal-detalhes').classList.add('hidden'); 
+            if(!permissoesAtuais.sai) return; const v = obterListaUnificada().find(r => r.firebase_id === id); if(!v) return;
+            registroSelecionadoFirebaseId = id; fotoSaidaUrl = null; dataHoraSaidaMetadata = null; gpsSaidaLocalizacao = null;
+            document.getElementById('saida-placa-alvo').innerText = `VEÍCULO: ${v.placa} • ${v.dados_dinamicos?.empresa || ''}`;
+            document.getElementById('input-placa-plano-b').value = ''; document.getElementById('preview-saida-container').classList.add('hidden'); document.getElementById('status-foto-saida').classList.add('hidden');
+            window.alternarModoSaida('A'); document.getElementById('modal-saida').classList.remove('hidden'); 
+        };
+
+        window.fecharModalSaida = () => document.getElementById('modal-saida').classList.add('hidden');
+
+        window.alternarModoSaida = function(modo) {
+            modoSaidaAtual = modo;
+            const btnA = document.getElementById('tab-saida-plano-a'); const btnB = document.getElementById('tab-saida-plano-b');
+            const boxA = document.getElementById('box-saida-plano-a'); const boxB = document.getElementById('box-saida-plano-b');
+            if(modo === 'A') {
+                btnA.className = "py-2 rounded-lg font-black text-xs uppercase bg-blue-600 text-white shadow transition"; btnB.className = "py-2 rounded-lg font-black text-xs uppercase text-gray-600 hover:text-gray-900 transition";
+                boxA.classList.remove('hidden'); boxB.classList.add('hidden');
+            } else {
+                btnB.className = "py-2 rounded-lg font-black text-xs uppercase bg-amber-500 text-white shadow transition"; btnA.className = "py-2 rounded-lg font-black text-xs uppercase text-gray-600 hover:text-gray-900 transition";
+                boxB.classList.remove('hidden'); boxA.classList.add('hidden'); setTimeout(() => document.getElementById('input-placa-plano-b').focus(), 100);
             }
         };
 
-        // ==========================================
-        // FLUXO DE SAÍDA (RÁPIDA)
-        // ==========================================
-        window.abrirModalSaida = function(id) {
-            document.getElementById('modal-detalhes').classList.add('hidden');
-            if(!permissoesAtuais.sai) return;
-            
-            registroSelecionadoFirebaseId = id;
-            document.getElementById('modal-saida').classList.remove('hidden');
-        };
+        window.processarFotoSaida = async function(event) {
+            const file = event.target.files[0]; if(!file) return;
+            const statusLabel = document.getElementById('status-foto-saida'); const previewCont = document.getElementById('preview-saida-container'); const previewImg = document.getElementById('preview-saida-img'); const lblHorario = document.getElementById('saida-meta-horario'); const lblGps = document.getElementById('saida-meta-gps'); const lblCloud = document.getElementById('saida-meta-cloud');
 
-        window.fecharModalSaida = function() {
-            document.getElementById('modal-saida').classList.add('hidden');
-            registroSelecionadoFirebaseId = null;
+            statusLabel.classList.remove('hidden'); statusLabel.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Lendo EXIF...'; previewCont.classList.remove('hidden');
+            lblHorario.innerText = "Lendo EXIF..."; lblGps.innerText = "Obtendo GPS..."; lblCloud.innerText = "Aguardando...";
+
+            const meta = await extrairMetadadosCompletosDaFoto(file);
+            dataHoraSaidaMetadata = meta.horario; gpsSaidaLocalizacao = meta.gps;
+            lblHorario.innerText = `HORA: ${dataHoraSaidaMetadata}`; lblGps.innerText = `GPS: ${gpsSaidaLocalizacao}`;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = async function() {
+                    statusLabel.innerHTML = '<i class="fas fa-cloud-upload-alt fa-bounce"></i> Subindo p/ Nuvem...'; lblCloud.innerText = "Enviando...";
+                    const canvas = document.createElement('canvas'); const MAX_WIDTH = 800; const scaleSize = MAX_WIDTH / img.width; canvas.width = MAX_WIDTH; canvas.height = img.height * scaleSize; canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+                    const webpDataStr = canvas.toDataURL('image/webp', 0.8); previewImg.src = webpDataStr;
+                    
+                    try {
+                        const formData = new FormData(); formData.append("image", webpDataStr.split(',')[1]);
+                        const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, { method: "POST", body: formData });
+                        const json = await res.json();
+                        if(json.success) {
+                            fotoSaidaUrl = json.data.url; lblCloud.innerHTML = `<span class="text-emerald-700 font-black">IMGBB OK</span>`; statusLabel.innerHTML = `<i class="fas fa-check-circle text-green-600"></i> Pronto!`;
+                        } else throw new Error();
+                    } catch (err) { fotoSaidaUrl = null; lblCloud.innerHTML = `<span class="text-red-600 font-black">ERRO</span>`; statusLabel.innerHTML = `<i class="fas fa-exclamation-triangle text-red-600"></i> Falha Upload.`; }
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
         };
 
         window.confirmarSaida = async function() {
-            const btn = document.getElementById('btn-confirmar-saida');
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Confirmando...';
-            btn.disabled = true;
+            const itemSaindo = obterListaUnificada().find(r => r.firebase_id === registroSelecionadoFirebaseId);
+            if(!itemSaindo) return;
 
-            try {
-                const horarioSaida = getDataHoraNavegador();
-                await updateDoc(doc(db, "registros", registroSelecionadoFirebaseId), {
-                    saida: horarioSaida,
-                    visto_saida: usuarioLogado
-                });
-                
-                // Atualiza na memória local
-                const idx = registrosHistorico.findIndex(r => r.firebase_id === registroSelecionadoFirebaseId);
-                if(idx !== -1) {
-                    registrosHistorico[idx].saida = horarioSaida;
-                    registrosHistorico[idx].visto_saida = usuarioLogado;
-                }
-                
-                window.fecharModalSaida();
-                window.filtrarListas();
-            } catch (e) {
-                alert("Erro ao registrar saída na nuvem: " + e.message);
-            } finally {
-                btn.innerHTML = 'Confirmar';
-                btn.disabled = false;
-            }
-        };
+            let hS = ''; let mS = ''; let mP = ''; let gS = '';
 
-        // ==========================================
-        // LISTAGEM E HISTÓRICO SOB DEMANDA
-        // ==========================================
-        function obterUnificada() {
-            const mapa = new Map();
-            registrosPatioAtivo.forEach(r => mapa.set(r.firebase_id, r));
-            registrosHistorico.forEach(r => {
-                if(!mapa.has(r.firebase_id)) mapa.set(r.firebase_id, r);
-                else mapa.set(r.firebase_id, { ...r, ...mapa.get(r.firebase_id) });
-            });
-            return Array.from(mapa.values()).sort((a, b) => (b.id || 0) - (a.id || 0));
-        }
-
-        window.carregarHistoricoSobDemanda = async function() {
-            const dataSel = document.getElementById('filtro-data-planilha')?.value || 'HOJE';
-            const dataEsp = document.getElementById('data-especifica-planilha')?.value || '';
-            const statusLabel = document.getElementById('status-leitura-banco');
-
-            if(statusLabel) statusLabel.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Lendo banco de dados...';
-
-            try {
-                let qHist = null;
-                if(dataSel === 'HOJE') {
-                    qHist = query(collection(db, "registros"), where("dia_particao", "==", obterDataString('HOJE')));
-                } else if(dataSel === 'ONTEM') {
-                    qHist = query(collection(db, "registros"), where("dia_particao", "==", obterDataString('ONTEM')));
-                } else if(dataSel === 'ESPECIFICA') {
-                    if(!dataEsp) {
-                        if(statusLabel) statusLabel.innerHTML = 'Selecione uma data acima.';
-                        return;
-                    }
-                    const e = dataEsp.split('-');
-                    qHist = query(collection(db, "registros"), where("dia_particao", "==", `${e[2]}/${e[1]}/${e[0]}`));
-                } else {
-                    qHist = query(collection(db, "registros"), orderBy("id", "desc"), limit(100));
-                }
-
-                const snap = await getDocs(qHist);
-                registrosHistorico = [];
-                snap.forEach(d => registrosHistorico.push({ firebase_id: d.id, ...d.data() }));
-                registrosHistorico.sort((a, b) => (b.id || 0) - (a.id || 0));
-
-                if(statusLabel) statusLabel.innerHTML = `<i class="fas fa-check-circle text-green-600"></i> ${registrosHistorico.length} registros lidos.`;
-                window.filtrarListas();
-            } catch (err) {
-                if(statusLabel) statusLabel.innerHTML = `<i class="fas fa-exclamation-circle text-red-600"></i> Erro ao consultar servidor.`;
-            }
-        };
-
-        window.buscarPlacaServidor = async function(origem) {
-            const inputId = origem === 'patio' ? 'busca-patio' : 'busca-planilha';
-            const termo = document.getElementById(inputId).value.trim().toUpperCase();
-            
-            if(termo.length < 3) return alert("Digite a placa correta para buscar no Banco de Dados.");
-
-            try {
-                const snap = await getDocs(query(collection(db, "registros"), where("placa", "==", termo)));
-                const encontrados = [];
-                snap.forEach(d => encontrados.push({ firebase_id: d.id, ...d.data() }));
-
-                encontrados.forEach(item => {
-                    if(!registrosHistorico.some(r => r.firebase_id === item.firebase_id)) {
-                        registrosHistorico.push(item);
-                    }
-                });
-                
-                if(origem === 'patio' && encontrados.length > 0) {
-                    document.getElementById('filtro-status-patio').value = 'TODOS';
-                }
-                
-                alert(`Busca concluída. ${encontrados.length} registro(s) encontrado(s) e adicionado(s) à tela.`);
-                window.filtrarListas();
-            } catch (e) {
-                alert("Erro ao buscar placa no servidor.");
-            }
-        };
-
-        window.verificarFiltroData = function(origem) {
-            const select = document.getElementById(`filtro-data-${origem}`);
-            const inputDate = document.getElementById(`data-especifica-${origem}`);
-            
-            if(select.value === 'ESPECIFICA') {
-                inputDate.classList.remove('hidden');
+            if(modoSaidaAtual === 'A') {
+                if(!fotoSaidaUrl) return window.appAlert("Foto Obrigatória", "Obrigatório tirar foto (Plano A) ou usar o Plano B.", "aviso");
+                hS = dataHoraSaidaMetadata || (getDataHoraAtualNavegador() + " (Foto)"); gS = gpsSaidaLocalizacao || 'Sem GPS'; mS = 'PLANO_A';
             } else {
-                inputDate.classList.add('hidden');
+                const pd = document.getElementById('input-placa-plano-b').value.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+                const ps = (itemSaindo.placa || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+                if(!pd || pd !== ps) return window.appAlert("Placa Incorreta", `Digite ${itemSaindo.placa} corretamente.`, "erro");
+                hS = getDataHoraAtualNavegador() + " (Plano B)"; gS = gpsSaidaLocalizacao || 'Plano B'; mS = 'PLANO_B'; mP = document.getElementById('motivo-plano-b').value;
             }
-            
-            if(origem === 'planilha') window.carregarHistoricoSobDemanda();
-            else window.mudarFiltroPatio();
-        };
 
-        window.mudarFiltroPatio = async function() {
-            const statusPatio = document.getElementById('filtro-status-patio').value;
-            const dataPatioSel = document.getElementById('filtro-data-patio').value;
-            const dataPatioEsp = document.getElementById('data-especifica-patio').value;
+            const btn = document.getElementById('btn-confirmar-saida'); btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>'; btn.disabled = true;
 
-            if(statusPatio !== 'NO_PATIO') {
-                let q = null;
-                if(dataPatioSel === 'HOJE') q = query(collection(db, "registros"), where("dia_particao", "==", obterDataString('HOJE')));
-                else if(dataPatioSel === 'ONTEM') q = query(collection(db, "registros"), where("dia_particao", "==", obterDataString('ONTEM')));
-                else if(dataPatioSel === 'ESPECIFICA' && dataPatioEsp) {
-                    const e = dataPatioEsp.split('-');
-                    q = query(collection(db, "registros"), where("dia_particao", "==", `${e[2]}/${e[1]}/${e[0]}`));
-                } else {
-                    q = query(collection(db, "registros"), orderBy("id", "desc"), limit(50));
-                }
-                const snap = await getDocs(q);
-                registrosHistorico = [];
-                snap.forEach(d => registrosHistorico.push({ firebase_id: d.id, ...d.data() }));
-            }
-            window.filtrarListas();
-        };
-
-        window.filtrarListas = function() {
-            const termoPatio = document.getElementById('busca-patio')?.value.toUpperCase() || '';
-            const statusPatio = document.getElementById('filtro-status-patio')?.value || 'NO_PATIO';
-            const dataPatioSel = document.getElementById('filtro-data-patio')?.value || 'TODAS';
-            const dataPatioEsp = document.getElementById('data-especifica-patio')?.value || '';
-
-            const termoPlanilha = document.getElementById('busca-planilha')?.value.toUpperCase() || '';
-            const statusPlanilha = document.getElementById('filtro-status-planilha')?.value || 'TODOS';
-            const dataPlanilhaSel = document.getElementById('filtro-data-planilha')?.value || 'HOJE';
-            const dataPlanilhaEsp = document.getElementById('data-especifica-planilha')?.value || '';
-
-            const listaPatio = document.getElementById('lista-patio');
-            const listaPlanilha = document.getElementById('lista-planilha');
-            
-            if(!listaPatio || !listaPlanilha) return;
-            
-            listaPatio.innerHTML = '';
-            listaPlanilha.innerHTML = '';
-            
-            let countPatio = 0, countPlanilha = 0;
-
-            const hoje = obterDataString('HOJE');
-            const ontem = obterDataString('ONTEM');
-            const todos = obterUnificada();
-
-            todos.forEach(r => {
-                const pendente = !r.saida;
-                let textoBusca = Object.values(r.dados_dinamicos || {}).join(" ").toUpperCase() + " " + r.placa;
-                const rData = r.dia_particao || r.entrada.substring(0, 10);
-
-                // FILTRO PÁTIO
-                let showPatio = true;
-                if(statusPatio === 'NO_PATIO' && !pendente) showPatio = false;
-                if(statusPatio === 'SAIRAM' && pendente) showPatio = false;
-                if(dataPatioSel === 'HOJE' && rData !== hoje) showPatio = false;
-                if(dataPatioSel === 'ONTEM' && rData !== ontem) showPatio = false;
-                if(dataPatioSel === 'ESPECIFICA' && dataPatioEsp) {
-                    const e = dataPatioEsp.split('-');
-                    if(rData !== `${e[2]}/${e[1]}/${e[0]}`) showPatio = false;
-                }
-                if(termoPatio && !textoBusca.includes(termoPatio)) showPatio = false;
-
-                // FILTRO PLANILHA
-                let showPlanilha = true;
-                if(statusPlanilha === 'NO_PATIO' && !pendente) showPlanilha = false;
-                if(statusPlanilha === 'SAIRAM' && pendente) showPlanilha = false;
-                if(dataPlanilhaSel === 'HOJE' && rData !== hoje) showPlanilha = false;
-                if(dataPlanilhaSel === 'ONTEM' && rData !== ontem) showPlanilha = false;
-                if(dataPlanilhaSel === 'ESPECIFICA' && dataPlanilhaEsp) {
-                    const e = dataPlanilhaEsp.split('-');
-                    if(rData !== `${e[2]}/${e[1]}/${e[0]}`) showPlanilha = false;
-                }
-                if(termoPlanilha && !textoBusca.includes(termoPlanilha)) showPlanilha = false;
-
-                const imgThumb = r.foto ? `<img src="${r.foto}" onclick="event.stopPropagation(); window.abrirZoom('${r.foto}')" class="w-12 h-12 object-cover rounded-lg border shadow-sm cursor-zoom-in no-print">` : `<div class="w-12 h-12 bg-gray-100 rounded flex flex-col items-center justify-center text-gray-400 text-[10px] no-print"><i class="fas fa-camera"></i></div>`;
+            try {
+                const py = { saida: hS, visto_saida: usuarioLogado, foto_saida: fotoSaidaUrl || '', gps_saida: gS, metodo_saida: mS, motivo_plano_b: mP };
+                await updateDoc(doc(db, "registros", registroSelecionadoFirebaseId), py);
+                await registrarLog(mS === 'PLANO_A' ? 'SAIDA_PLANO_A' : 'SAIDA_PLANO_B', `SAÍDA (${mS}) DA PLACA ${itemSaindo.placa}`, { firebase_id: registroSelecionadoFirebaseId, placa: itemSaindo.placa, dados_saida: py });
                 
-                const btnEdit = permissoesAtuais.edi ? `<button onclick="event.stopPropagation(); window.abrirEdicao('${r.firebase_id}')" class="text-blue-500 hover:text-blue-700 bg-blue-50 p-2 rounded mr-1 no-print"><i class="fas fa-pen"></i></button>` : '';
-                const btnDel = permissoesAtuais.exc ? `<button onclick="event.stopPropagation(); window.excluirIndiv('${r.firebase_id}')" class="text-red-500 hover:text-red-700 bg-red-50 p-2 rounded no-print"><i class="fas fa-trash"></i></button>` : '';
+                const at = { ...itemSaindo, ...py }; const idx = registrosHistorico.findIndex(r => r.firebase_id === registroSelecionadoFirebaseId);
+                if(idx !== -1) registrosHistorico[idx] = at; else registrosHistorico.unshift(at);
 
-                if(showPatio) {
-                    countPatio++;
-                    const card = document.createElement('div');
-                    card.className = `bg-white rounded-xl shadow-sm border-l-8 ${pendente ? 'border-blue-500' : 'border-green-500'} p-4 flex flex-col relative cursor-pointer hover:bg-gray-50 transition`;
-                    card.setAttribute('onclick', `window.abrirDetalhes('${r.firebase_id}')`);
-
-                    let btnSaida = '';
-                    if(pendente && permissoesAtuais.sai) {
-                        btnSaida = `<button onclick="event.stopPropagation(); window.abrirModalSaida('${r.firebase_id}')" class="mt-3 w-full bg-red-100 hover:bg-red-200 text-red-700 font-bold py-3 rounded-lg border border-red-300 text-sm shadow-sm uppercase transition"><i class="fas fa-sign-out-alt"></i> Registrar Saída</button>`;
-                    } else if (!pendente) {
-                        btnSaida = `<div class="mt-3 text-green-700 font-bold text-center bg-green-50 py-3 rounded-lg border border-green-200 shadow-sm uppercase">✅ SAIU: ${r.saida.substring(0,16)}</div>`;
-                    }
-                    
-                    card.innerHTML = `
-                        <div class="flex justify-between items-start border-b pb-3 mb-3">
-                            <div class="flex items-center gap-3">
-                                ${imgThumb}
-                                <div><div class="font-black text-xl text-gray-800 leading-none mb-1">${r.placa}</div><div class="text-[10px] font-bold text-gray-500 uppercase">${r.dados_dinamicos?.modelo || 'VEÍCULO'} • ${r.dados_dinamicos?.empresa || 'S/ EMPRESA'}</div></div>
-                            </div>
-                            <div class="text-right">
-                                <div class="text-[10px] text-gray-500 uppercase font-bold tracking-wider">ENTRADA</div>
-                                <div class="text-xs font-black text-blue-700 leading-tight">${r.entrada.split(' ')[0]}<br>${r.entrada.split(' ')[1]}</div>
-                            </div>
-                        </div>
-                        <div class="flex justify-between items-center">
-                            <div class="text-xs text-gray-600 uppercase font-bold"><i class="fas fa-user text-gray-400"></i> ${r.dados_dinamicos?.motorista || 'N/A'}</div>
-                            <div class="no-print">${btnEdit}${btnDel}</div>
-                        </div>
-                        ${btnSaida}
-                    `;
-                    listaPatio.appendChild(card);
-                }
-
-                if(showPlanilha) {
-                    countPlanilha++;
-                    const tr = document.createElement('tr');
-                    tr.className = "hover:bg-gray-50 transition cursor-pointer";
-                    tr.setAttribute('onclick', `window.abrirDetalhes('${r.firebase_id}')`);
-
-                    let acao = '';
-                    if(pendente && permissoesAtuais.sai) acao = `<button onclick="event.stopPropagation(); window.abrirModalSaida('${r.firebase_id}')" class="bg-red-500 text-white px-2 py-1 rounded text-[10px] font-bold shadow-sm uppercase no-print">SAÍDA</button>`;
-                    else if (!pendente) acao = `<span class="text-green-600 font-bold text-[10px] uppercase"><i class="fas fa-check"></i> OK</span>`;
-                    
-                    let rowHtml = `<td class="px-2 py-2 border-r text-center no-print ${permissoesAtuais.exc ? '' : 'hidden'}" onclick="event.stopPropagation()"><input type="checkbox" class="cb-planilha w-4 h-4" value="${r.firebase_id}"></td>`;
-                    rowHtml += `<td class="px-2 py-2 border-r text-center no-print whitespace-nowrap ${permissoesAtuais.edi || permissoesAtuais.exc || permissoesAtuais.sai ? '' : 'hidden'}">${btnEdit}${btnDel} ${acao}</td>`;
-                    rowHtml += `<td class="px-2 py-2 border-r text-center no-print">${imgThumb}</td>`;
-                    rowHtml += `<td class="px-2 py-2 border-r font-bold text-blue-700 whitespace-nowrap">${r.entrada}</td>`;
-                    rowHtml += `<td class="px-2 py-2 border-r font-bold ${pendente ? 'text-gray-400' : 'text-green-600'} whitespace-nowrap">${r.saida || 'NO PÁTIO'}</td>`;
-                    
-                    schemaCampos.forEach(c => {
-                        if(c.tipo === 'placa') rowHtml += `<td class="px-3 py-2 border-r font-black text-base">${r.placa}</td>`;
-                        else rowHtml += `<td class="px-3 py-2 border-r uppercase max-w-[150px] truncate" title="${r.dados_dinamicos?.[c.id] || ''}">${r.dados_dinamicos?.[c.id] || ''}</td>`;
-                    });
-                    
-                    rowHtml += `<td class="px-2 py-2 border-r text-[9px] whitespace-nowrap no-print">${r.gps || '---'}</td>`;
-                    rowHtml += `<td class="px-2 py-2 border-r uppercase text-[10px] whitespace-nowrap text-gray-500 font-bold">E: ${r.visto_entrada}<br>S: ${r.visto_saida || '...'}</td>`;
-                    
-                    tr.innerHTML = rowHtml;
-                    listaPlanilha.appendChild(tr);
-                }
-            });
-
-            const badgePatio = document.getElementById('contador-patio-topo');
-            if(badgePatio) badgePatio.innerText = `${registrosPatioAtivo.length} No Pátio`;
-
-            if(countPatio === 0) listaPatio.innerHTML = '<p class="text-center text-gray-400 py-10 font-bold uppercase">Nenhum veículo no pátio para este filtro.</p>';
-            if(countPlanilha === 0) listaPlanilha.innerHTML = '<tr><td colspan="15" class="text-center py-6 font-bold text-gray-400 uppercase">Nenhum registro encontrado no histórico.</td></tr>';
+                window.fecharModalSaida(); window.filtrarListas(); window.atualizarDashboard(); window.mostrarToast(`Saída Registrada!`, mS === 'PLANO_A' ? 'sucesso' : 'aviso');
+            } catch (e) { window.appAlert("Erro", e.message, "erro"); } finally { btn.innerHTML = 'Confirmar Saída'; btn.disabled = false; }
         };
 
         // ==========================================
-        // EXCLUSÃO, EDIÇÃO E FICHA
+        // EDIÇÃO, EXCLUSÃO E FILTROS DE LISTA
         // ==========================================
-        window.abrirZoom = function(url) {
-            document.getElementById('img-zoom').src = url;
-            document.getElementById('modal-zoom').classList.remove('hidden');
-        };
-        window.fecharZoom = () => document.getElementById('modal-zoom').classList.add('hidden');
-
-        window.abrirDetalhes = function(firebase_id) {
-            const r = obterUnificada().find(reg => reg.firebase_id === firebase_id);
-            if(!r) return;
-            const pendente = !r.saida;
-            
-            const imgHtml = r.foto ? `<img src="${r.foto}" onclick="window.abrirZoom('${r.foto}')" class="w-full max-h-64 object-contain bg-gray-100 rounded border mt-2 cursor-zoom-in shadow no-print">` : `<div class="w-full h-32 bg-gray-100 flex items-center justify-center text-gray-400 font-bold rounded border mt-2 uppercase no-print">Sem foto disponível</div>`;
-            const gpsLink = r.gps && !r.gps.includes('Sem') ? `<a href="https://maps.google.com/?q=${encodeURIComponent(r.gps.replace(' (EXIF)','').trim())}" target="_blank" class="inline-block bg-blue-600 text-white text-[9px] font-black px-2 py-0.5 rounded ml-1 uppercase"><i class="fas fa-map-marked-alt mr-0.5"></i> Mapa</a>` : '';
-
-            let infos = '';
-            schemaCampos.forEach(c => {
-                if(c.tipo !== 'placa') {
-                    infos += `<div class="border-b py-2"><span class="block text-[10px] text-gray-400 font-black uppercase tracking-widest">${c.nome}</span><span class="font-bold text-gray-800 uppercase block whitespace-pre-wrap">${r.dados_dinamicos?.[c.id] || '---'}</span></div>`;
-                }
-            });
-
-            document.getElementById('conteudo-detalhes').innerHTML = `
-                <div class="text-center mb-2">
-                    <div class="text-4xl font-black text-blue-950 tracking-wider">${r.placa}</div>
-                </div>
-                ${imgHtml}
-                <div class="grid grid-cols-2 gap-2 mt-4 text-sm">
-                    <div class="bg-blue-50 p-2 rounded-xl border border-blue-200">
-                        <span class="block text-[10px] text-blue-700 font-black uppercase">Entrada</span>
-                        <span class="font-black text-sm block">${r.entrada}</span>
-                        <span class="block text-[10px] text-gray-600 mt-1 uppercase font-bold">Op: ${r.visto_entrada}</span>
-                    </div>
-                    <div class="bg-${pendente ? 'amber' : 'green'}-50 p-2 rounded-xl border border-${pendente ? 'amber' : 'green'}-200">
-                        <span class="block text-[10px] text-${pendente ? 'amber' : 'green'}-700 font-black uppercase">Saída</span>
-                        <span class="font-black text-sm block">${r.saida || 'Aguardando no Pátio...'}</span>
-                        ${r.visto_saida ? `<span class="block text-[10px] text-gray-600 mt-1 uppercase font-bold">Op: ${r.visto_saida}</span>` : ''}
-                    </div>
-                </div>
-                <div class="mt-4 bg-white p-3 border rounded-xl shadow-sm">${infos}</div>
-                <div class="mt-2 text-xs text-gray-500 text-center font-bold no-print"><i class="fas fa-map-marker-alt"></i> GPS Entrada: ${r.gps} ${gpsLink}</div>
-            `;
-            
-            if(pendente && permissoesAtuais.sai) {
-                document.getElementById('rodape-detalhes').innerHTML = `<button onclick="window.fecharDetalhes(); window.abrirModalSaida('${r.firebase_id}')" class="w-full bg-red-600 hover:bg-red-700 text-white font-black py-4 rounded-xl shadow-md uppercase transition">Registrar Saída</button>`;
-            } else {
-                document.getElementById('rodape-detalhes').innerHTML = `<button onclick="window.fecharDetalhes()" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 font-black py-4 rounded-xl uppercase transition">Fechar Ficha</button>`;
-            }
-            
-            document.getElementById('modal-detalhes').classList.remove('hidden');
-        };
-
-        window.excluirIndiv = async function(id) {
-            if(!permissoesAtuais.exc) return;
-            const r = obterUnificada().find(reg => reg.firebase_id === id);
-            if(!r) return;
-            
-            if(confirm(`Tem certeza que deseja apagar a placa ${r.placa} permanentemente?`)) {
-                try {
-                    await deleteDoc(doc(db, "registros", id));
-                    registrosHistorico = registrosHistorico.filter(reg => reg.firebase_id !== id);
-                    window.filtrarListas();
-                } catch (e) { alert("Erro ao excluir."); }
-            }
-        };
-
         window.abrirEdicao = function(id) {
             if(!permissoesAtuais.edi) return;
-            const r = obterUnificada().find(reg => reg.firebase_id === id);
-            if(!r) return;
-            
+            const r = obterListaUnificada().find(reg => reg.firebase_id === id); if(!r) return;
             registroSelecionadoFirebaseId = id;
             const cont = document.getElementById('formulario-edicao');
-            cont.innerHTML = `<div class="mb-3"><label class="text-xs font-bold text-gray-500">PLACA</label><input type="text" id="edit_placa" value="${r.placa}" class="w-full border-2 border-blue-400 p-2.5 rounded-xl uppercase font-black text-blue-900 shadow-sm"></div>`;
-            
+            cont.innerHTML = `<div class="mb-3"><label class="text-xs font-bold text-gray-500">PLACA</label><input type="text" id="edit_placa" value="${r.placa}" class="w-full border-2 border-blue-400 p-2.5 rounded-xl uppercase font-black text-blue-900"></div>`;
             schemaCampos.forEach(c => {
                 if(c.tipo !== 'placa') {
-                    if(c.tipo === 'textarea') {
-                        cont.innerHTML += `<div class="mb-3"><label class="text-xs font-bold text-gray-500">${c.nome.toUpperCase()}</label><textarea id="edit_${c.id}" class="w-full border p-2.5 rounded-xl uppercase shadow-sm">${r.dados_dinamicos?.[c.id] || ''}</textarea></div>`;
-                    } else {
-                        cont.innerHTML += `<div class="mb-3"><label class="text-xs font-bold text-gray-500">${c.nome.toUpperCase()}</label><input type="text" id="edit_${c.id}" value="${r.dados_dinamicos?.[c.id] || ''}" class="w-full border p-2.5 rounded-xl uppercase shadow-sm"></div>`;
-                    }
+                    if(c.tipo === 'textarea') cont.innerHTML += `<div class="mb-3"><label class="text-xs font-bold text-gray-500">${c.nome.toUpperCase()}</label><textarea id="edit_${c.id}" class="w-full border p-2.5 rounded-xl uppercase">${r.dados_dinamicos?.[c.id] || ''}</textarea></div>`;
+                    else cont.innerHTML += `<div class="mb-3"><label class="text-xs font-bold text-gray-500">${c.nome.toUpperCase()}</label><input type="text" id="edit_${c.id}" value="${r.dados_dinamicos?.[c.id] || ''}" class="w-full border p-2.5 rounded-xl uppercase"></div>`;
                 }
             });
             document.getElementById('modal-edicao').classList.remove('hidden');
         };
-
         window.fecharEdicao = () => { document.getElementById('modal-edicao').classList.add('hidden'); registroSelecionadoFirebaseId = null; };
-
         window.salvarEdicao = async function() {
-            const btn = document.getElementById('btn-salvar-edicao');
-            btn.innerHTML = 'Salvando...'; 
-            btn.disabled = true;
-
-            const r = obterUnificada().find(reg => reg.firebase_id === registroSelecionadoFirebaseId);
-            const dadosNovos = { ...r.dados_dinamicos };
-            
-            schemaCampos.forEach(c => {
-                if(c.tipo !== 'placa') dadosNovos[c.id] = document.getElementById('edit_' + c.id).value.trim().toUpperCase();
-            });
-            const novaPlaca = document.getElementById('edit_placa').value.trim().toUpperCase();
+            const btn = document.getElementById('btn-salvar-edicao'); btn.innerHTML = 'Salvando...'; btn.disabled = true;
+            const r = obterListaUnificada().find(reg => reg.firebase_id === registroSelecionadoFirebaseId);
+            const antes = { placa: r.placa, dados_dinamicos: { ...(r.dados_dinamicos || {}) } };
+            const novos = { ...r.dados_dinamicos }; schemaCampos.forEach(c => { if(c.tipo !== 'placa') novos[c.id] = document.getElementById('edit_' + c.id).value.trim().toUpperCase(); });
+            const novaP = document.getElementById('edit_placa').value.trim().toUpperCase();
 
             try {
-                await updateDoc(doc(db, "registros", registroSelecionadoFirebaseId), { placa: novaPlaca, dados_dinamicos: dadosNovos });
-                
+                await updateDoc(doc(db, "registros", registroSelecionadoFirebaseId), { placa: novaP, dados_dinamicos: novos });
+                await registrarLog('EDICAO', `EDITOU A PLACA ${antes.placa} -> ${novaP}`, { firebase_id: registroSelecionadoFirebaseId, antes: antes, depois: { placa: novaP, dados_dinamicos: novos } });
                 const idx = registrosHistorico.findIndex(item => item.firebase_id === registroSelecionadoFirebaseId);
-                if(idx !== -1) {
-                    registrosHistorico[idx].placa = novaPlaca;
-                    registrosHistorico[idx].dados_dinamicos = dadosNovos;
-                }
-                
-                window.filtrarListas();
-                window.fecharEdicao();
-            } catch (e) {
-                alert("Erro ao editar.");
-            } finally {
-                btn.innerHTML = 'Salvar Alterações';
-                btn.disabled = false;
+                if(idx !== -1) { registrosHistorico[idx].placa = novaP; registrosHistorico[idx].dados_dinamicos = novos; }
+                window.filtrarListas(); window.fecharEdicao(); window.mostrarToast("Edição salva e auditada!", "sucesso");
+            } catch (e) { window.appAlert("Erro", e.message, "erro"); } finally { btn.innerHTML = 'Salvar Alterações'; btn.disabled = false; }
+        };
+
+        window.excluirIndiv = async function(id) {
+            if(!permissoesAtuais.exc) return; const alvo = obterListaUnificada().find(r => r.firebase_id === id); if(!alvo) return;
+            const ok = await window.appConfirm("Excluir", `Apagar ${alvo.placa}? Isso vai pro Log do DEV.`, "Excluir", true); if(!ok) return;
+            try { await deleteDoc(doc(db, "registros", id)); await registrarLog('EXCLUSAO', `EXCLUIU O REGISTRO ${alvo.placa}`, { registro_apagado: alvo }); registrosHistorico = registrosHistorico.filter(r => r.firebase_id !== id); window.filtrarListas(); window.mostrarToast(`Registro excluído.`, 'aviso'); } catch (e) { window.appAlert("Erro", e.message, "erro"); }
+        };
+
+        window.excluirEmLote = async function() {
+            if(!permissoesAtuais.exc) return; const m = document.querySelectorAll('.cb-planilha:checked'); if(m.length === 0) return window.appAlert("Aviso", "Selecione algo.", "aviso");
+            const ok = await window.appConfirm("Excluir Lote", `Apagar ${m.length} registros?`, "Excluir Lote", true); if(!ok) return;
+            for(let cb of m) { try { const alvo = obterListaUnificada().find(r => r.firebase_id === cb.value); await deleteDoc(doc(db, "registros", cb.value)); if(alvo) await registrarLog('EXCLUSAO', `LOTE: EXCLUIU PLACA ${alvo.placa}`, { registro_apagado: alvo }); registrosHistorico = registrosHistorico.filter(r => r.firebase_id !== cb.value); } catch(e) {} }
+            window.filtrarListas(); window.mostrarToast("Lote apagado.", "aviso");
+        };
+
+        window.verificarFiltroData = function(origem) { const s = document.getElementById(`filtro-data-${origem}`); const i = document.getElementById(`data-especifica-${origem}`); if(s.value === 'ESPECIFICA') i.classList.remove('hidden'); else i.classList.add('hidden'); if(origem === 'planilha') window.carregarHistoricoSobDemanda(true); else window.mudarFiltroPatio(); };
+
+        window.mudarFiltroPatio = async function() {
+            const st = document.getElementById('filtro-status-patio').value; const ds = document.getElementById('filtro-data-patio').value; const de = document.getElementById('data-especifica-patio').value;
+            if(st !== 'NO_PATIO') {
+                let q = null;
+                if(ds === 'HOJE') q = query(collection(db, "registros"), where("dia_particao", "==", obterDataString('HOJE')));
+                else if(ds === 'ONTEM') q = query(collection(db, "registros"), where("dia_particao", "==", obterDataString('ONTEM')));
+                else if(ds === 'ESPECIFICA' && de) { const e = de.split('-'); q = query(collection(db, "registros"), where("dia_particao", "==", `${e[2]}/${e[1]}/${e[0]}`)); }
+                else q = query(collection(db, "registros"), orderBy("id", "desc"), limit(50));
+                const sn = await getDocs(q); registrosHistorico = []; sn.forEach(d => registrosHistorico.push({ firebase_id: d.id, ...d.data() }));
             }
+            window.filtrarListas();
         };
 
-        window.imprimirRelatorio = function() {
-            document.getElementById('data-impressao').innerText = `Gerado em: ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')} por ${usuarioLogado}`;
-            window.print();
+        window.buscarPlacaServidor = async function(origem) {
+            const inp = origem === 'patio' ? 'busca-patio' : 'busca-planilha'; const t = document.getElementById(inp).value.trim().toUpperCase();
+            if(t.length < 3) return window.appAlert("Aviso", "Digite a placa completa.", "aviso");
+            try {
+                const sn = await getDocs(query(collection(db, "registros"), where("placa", "==", t))); const enc = []; sn.forEach(d => enc.push({ firebase_id: d.id, ...d.data() }));
+                enc.forEach(item => { if(!registrosHistorico.some(r => r.firebase_id === item.firebase_id)) registrosHistorico.push(item); });
+                if(origem === 'patio' && enc.length > 0) document.getElementById('filtro-status-patio').value = 'TODOS';
+                window.mostrarToast(`${enc.length} encontrados p/ ${t}`, enc.length > 0 ? 'sucesso' : 'aviso'); window.filtrarListas();
+            } catch (e) { window.appAlert("Erro", "Falha na busca", "erro"); }
         };
 
-        // GATILHO INICIAL PARA RENDERIZAR A TELA
-        window.renderizarTudo();
+        window.carregarHistoricoSobDemanda = async function(rp = true) {
+            if(rp) limitePaginacao = 50; const ds = document.getElementById('filtro-data-planilha')?.value || 'HOJE'; const de = document.getElementById('data-especifica-planilha')?.value || ''; const sl = document.getElementById('status-leitura-banco'); const bm = document.getElementById('btn-carregar-mais');
+            if(sl) sl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Lendo banco...';
+            try {
+                let qH = null;
+                if(ds === 'HOJE') { qH = query(collection(db, "registros"), where("dia_particao", "==", obterDataString('HOJE'))); if(bm) bm.classList.add('hidden'); }
+                else if(ds === 'ONTEM') { qH = query(collection(db, "registros"), where("dia_particao", "==", obterDataString('ONTEM'))); if(bm) bm.classList.add('hidden'); }
+                else if(ds === 'ESPECIFICA') { if(!de) return; const e = de.split('-'); qH = query(collection(db, "registros"), where("dia_particao", "==", `${e[2]}/${e[1]}/${e[0]}`)); if(bm) bm.classList.add('hidden'); }
+                else { qH = query(collection(db, "registros"), orderBy("id", "desc"), limit(limitePaginacao)); if(bm) bm.classList.remove('hidden'); }
+                const sn = await getDocs(qH); registrosHistorico = []; sn.forEach(d => registrosHistorico.push({ firebase_id: d.id, ...d.data() })); registrosHistorico.sort((a, b) => (b.id || 0) - (a.id || 0));
+                if(sl) sl.innerHTML = `<i class="fas fa-check-circle text-green-600"></i> ${registrosHistorico.length} sincronizados.`; window.filtrarListas();
+            } catch (err) { if(sl) sl.innerHTML = `<i class="fas fa-exclamation-circle text-red-600"></i> Erro DB.`; }
+        };
+        window.carregarMaisHistorico = function() { limitePaginacao += 50; window.carregarHistoricoSobDemanda(false); };
+
+        function obterListaUnificada() {
+            const mapa = new Map(); registrosPatioAtivo.forEach(r => mapa.set(r.firebase_id, r)); registrosHistorico.forEach(r => { if(!mapa.has(r.firebase_id)) mapa.set(r.firebase_id, r); else mapa.set(r.firebase_id, { ...r, ...mapa.get(r.firebase_id) }); });
+            return Array.from(mapa.values()).sort((a, b) => (b.id || 0) - (a.id || 0));
+        }
+
+        window.filtrarListas = function() {
+            const tp = document.getElementById('busca-patio')?.value.toUpperCase() || ''; const sp = document.getElementById('filtro-status-patio')?.value || 'NO_PATIO'; const dpS = document.getElementById('filtro-data-patio')?.value || 'TODAS'; const dpE = document.getElementById('data-especifica-patio')?.value || '';
+            const tl = document.getElementById('busca-planilha')?.value.toUpperCase() || ''; const sl = document.getElementById('filtro-status-planilha')?.value || 'TODOS'; const dlS = document.getElementById('filtro-data-planilha')?.value || 'HOJE'; const dlE = document.getElementById('data-especifica-planilha')?.value || '';
+            const lP = document.getElementById('lista-patio'); const lL = document.getElementById('lista-planilha'); if(!lP || !lL) return;
+            lP.innerHTML = ''; lL.innerHTML = ''; let cP = 0, cL = 0;
+
+            const hj = obterDataString('HOJE'); const on = obterDataString('ONTEM'); const un = obterListaUnificada();
+
+            un.forEach(r => {
+                const pend = !r.saida; const tb = Object.values(r.dados_dinamicos || {}).join(" ").toUpperCase() + " " + r.placa; const dt = r.dia_particao || r.entrada.substring(0, 10);
+                
+                let sPatio = true;
+                if(sp === 'NO_PATIO' && !pend) sPatio = false; if(sp === 'SAIRAM' && pend) sPatio = false; if(dpS === 'HOJE' && dt !== hj) sPatio = false; if(dpS === 'ONTEM' && dt !== on) sPatio = false; if(dpS === 'ESPECIFICA' && dpE) { const e = dpE.split('-'); if(dt !== `${e[2]}/${e[1]}/${e[0]}`) sPatio = false; } if(tp && !tb.includes(tp)) sPatio = false;
+
+                let sPlanilha = true;
+                if(sl === 'NO_PATIO' && !pend) sPlanilha = false; if(sl === 'SAIRAM' && pend) sPlanilha = false; if(dlS === 'HOJE' && dt !== hj) sPlanilha = false; if(dlS === 'ONTEM' && dt !== on) sPlanilha = false; if(dlS === 'ESPECIFICA' && dlE) { const e = dlE.split('-'); if(dt !== `${e[2]}/${e[1]}/${e[0]}`) sPlanilha = false; } if(tl && !tb.includes(tl)) sPlanilha = false;
+
+                const iE = r.foto ? `<img src="${r.foto}" onclick="event.stopPropagation(); window.abrirZoom('${r.foto}')" class="w-11 h-11 object-cover rounded-lg border shadow-sm cursor-zoom-in no-print">` : `<div class="w-11 h-11 bg-gray-100 rounded-lg flex items-center justify-center text-gray-400 no-print"><i class="fas fa-camera"></i></div>`;
+                const iS = r.foto_saida ? `<img src="${r.foto_saida}" onclick="event.stopPropagation(); window.abrirZoom('${r.foto_saida}')" class="w-11 h-11 object-cover rounded-lg border border-emerald-400 shadow-sm cursor-zoom-in no-print">` : '';
+                const bE = permissoesAtuais.edi ? `<button onclick="event.stopPropagation(); window.abrirEdicao('${r.firebase_id}')" class="text-blue-600 bg-blue-50 p-2 rounded-lg mr-1 no-print"><i class="fas fa-pen"></i></button>` : '';
+                const bD = permissoesAtuais.exc ? `<button onclick="event.stopPropagation(); window.excluirIndiv('${r.firebase_id}')" class="text-red-600 bg-red-50 p-2 rounded-lg no-print"><i class="fas fa-trash"></i></button>` : '';
+                const bgM = r.metodo_saida === 'PLANO_B' ? `<span class="bg-amber-100 text-amber-800 border border-amber-300 px-1.5 py-0.5 rounded text-[9px] font-black uppercase">Plano B</span>` : r.metodo_saida === 'PLANO_A' ? `<span class="bg-emerald-100 text-emerald-800 border border-emerald-300 px-1.5 py-0.5 rounded text-[9px] font-black uppercase">Plano A</span>` : '';
+
+                if(sPatio) {
+                    cP++; const cd = document.createElement('div'); cd.className = `bg-white rounded-2xl shadow-sm border-l-8 ${pend ? 'border-blue-600' : 'border-emerald-500'} p-4 flex flex-col relative cursor-pointer hover:bg-gray-50 transition`; cd.setAttribute('onclick', `window.abrirDetalhes('${r.firebase_id}')`);
+                    let bS = ''; if(pend && permissoesAtuais.sai) bS = `<button onclick="event.stopPropagation(); window.abrirModalSaida('${r.firebase_id}')" class="mt-3 w-full bg-red-600 text-white font-black py-3 rounded-xl text-sm shadow uppercase transition"><i class="fas fa-sign-out-alt mr-1"></i> Registrar Saída</button>`; else if(!pend) bS = `<div class="mt-3 text-emerald-800 font-black text-center bg-emerald-50 py-2.5 px-3 rounded-xl border border-emerald-200 text-xs uppercase flex justify-between items-center"><span>✅ SAIU: ${r.saida.substring(0,16)}</span>${bgM}</div>`;
+                    cd.innerHTML = `<div class="flex justify-between items-start border-b pb-3 mb-3"><div class="flex items-center gap-2.5">${iE}${iS}<div><div class="font-black text-xl text-gray-800">${r.placa}</div><div class="text-[10px] font-bold text-gray-500 uppercase">${r.dados_dinamicos?.modelo || 'VEÍCULO'} • ${r.dados_dinamicos?.empresa || 'S/ EMPRESA'}</div></div></div><div class="text-right"><div class="text-[10px] text-gray-400 uppercase font-black">ENTRADA</div><div class="text-xs font-black text-blue-700">${r.entrada.split(' ')[0]}<br>${r.entrada.split(' ')[1]}</div></div></div><div class="flex justify-between items-center text-xs font-bold text-gray-600 uppercase"><div><i class="fas fa-user text-gray-400 mr-1"></i> ${r.dados_dinamicos?.motorista || 'N/A'}</div><div class="no-print">${bE}${bD}</div></div>${bS}`;
+                    lP.appendChild(cd);
+                }
+
+                if(sPlanilha) {
+                    cL++; const tr = document.createElement('tr'); tr.className = "hover:bg-gray-50 transition cursor-pointer"; tr.setAttribute('onclick', `window.abrirDetalhes('${r.firebase_id}')`);
+                    let ac = ''; if(pend && permissoesAtuais.sai) ac = `<button onclick="event.stopPropagation(); window.abrirModalSaida('${r.firebase_id}')" class="bg-red-600 text-white px-2 py-1 rounded text-[9px] font-bold shadow-sm uppercase no-print">SAÍDA</button>`; else if(!pend) ac = `<span class="text-emerald-600 font-bold text-[9px] uppercase"><i class="fas fa-check"></i> OK</span>`;
+                    let rh = `<td class="px-2 py-2 border-r text-center no-print ${permissoesAtuais.exc?'':'hidden'}" onclick="event.stopPropagation()"><input type="checkbox" class="cb-planilha w-4 h-4" value="${r.firebase_id}"></td><td class="px-2 py-2 border-r text-center no-print whitespace-nowrap ${permissoesAtuais.edi||permissoesAtuais.exc||permissoesAtuais.sai?'':'hidden'}">${bE}${bD} ${ac}</td><td class="px-2 py-2 border-r text-center no-print"><div class="flex space-x-1 justify-center">${iE}${iS}</div></td><td class="px-2 py-2 border-r font-bold text-blue-700 whitespace-nowrap">${r.entrada}</td><td class="px-2 py-2 border-r font-bold ${pend?'text-gray-400':'text-emerald-700'} whitespace-nowrap">${r.saida || 'NO PÁTIO'}</td><td class="px-2 py-2 border-r uppercase text-[10px] whitespace-nowrap text-gray-600 font-bold">E: ${r.visto_entrada}<br>S: ${r.visto_saida || '...'}</td>`;
+                    schemaCampos.forEach(c => { if(c.tipo === 'placa') rh += `<td class="px-3 py-2 border-r font-black text-base">${r.placa}</td>`; else rh += `<td class="px-3 py-2 border-r uppercase max-w-[150px] truncate" title="${r.dados_dinamicos?.[c.id] || ''}">${r.dados_dinamicos?.[c.id] || ''}</td>`; });
+                    rh += `<td class="px-2 py-2 border-r text-[9px] whitespace-nowrap no-print"><b>E:</b> ${r.gps || '---'}<br><b>S:</b> ${r.gps_saida || '---'}</td><td class="px-2 py-2 text-xs whitespace-nowrap no-print">${bgM} ${r.motivo_plano_b ? `<span class="text-[9px] text-gray-500 block">${r.motivo_plano_b}</span>` : ''}</td>`;
+                    tr.innerHTML = rh; lL.appendChild(tr);
+                }
+            });
+
+            const bP = document.getElementById('contador-patio-topo'); if(bP) bP.innerText = `${registrosPatioAtivo.length} No Pátio`;
+            if(cP === 0) lP.innerHTML = '<p class="text-center text-gray-400 py-10 font-bold uppercase">Nenhum veículo no pátio.</p>';
+            if(cL === 0) lL.innerHTML = '<tr><td colspan="17" class="text-center py-6 font-bold text-gray-400 uppercase">Nenhum registro.</td></tr>';
+        };
 
     </script>
 </body>
