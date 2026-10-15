@@ -3,40 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PátioPark - Gestão & Auditoria</title>
+    <title>PátioPark - Versão Estável</title>
     
+    <!-- Bibliotecas Externas -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/exif-js"></script>
 
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f3f4f6; }
-        input:not([type="password"]), select, textarea { text-transform: uppercase; font-weight: bold; color: #000; font-size: 1.05rem; }
-        input[type="password"] { font-weight: bold; color: #000; font-size: 1.05rem; }
+        input, select, textarea { text-transform: uppercase; font-weight: bold; color: #000; font-size: 1.1rem; }
         input::placeholder, select::placeholder, textarea::placeholder { font-weight: normal; color: #6b7280; text-transform: none; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        .fade-in { animation: fadeIn 0.25s ease-out; }
-        .pop-in { animation: popIn 0.2s cubic-bezier(0.16, 1, 0.3, 1); }
-        
+        .fade-in { animation: fadeIn 0.3s ease-in-out; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes popIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
 
-        /* MODO TUTORIAL */
-        .tutorial-box { display: none; background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border: 2px solid #3b82f6; border-left: 6px solid #1d4ed8; border-radius: 0.85rem; padding: 0.75rem; margin-bottom: 0.85rem; box-shadow: 0 4px 12px rgba(29, 78, 216, 0.12); animation: popIn 0.25s ease-out; }
-        body.tutorial-ativo .tutorial-box { display: block; }
-
-        /* IMPRESSÃO PDF PAISAGEM */
+        /* REGRAS DE IMPRESSÃO (PDF / PAISAGEM) */
         @media print {
             @page { size: A4 landscape; margin: 10mm; }
             body, main { height: auto !important; overflow: visible !important; background-color: white !important; }
-            header, nav, #view-dashboard, #view-registro, #view-patio, #view-config, #view-login, .no-print, .modal-custom, .tutorial-box, #toast-container { display: none !important; }
+            header, nav, #view-registro, #view-patio, #view-config, #view-login, .no-print, .modal { display: none !important; }
             #view-planilha { display: block !important; position: absolute; left: 0; top: 0; width: 100%; height: auto !important; }
             #cabecalho-impressao { display: block !important; text-align: center; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #000; }
             .bg-white { box-shadow: none !important; border: none !important; }
             .overflow-x-auto { overflow: visible !important; }
             table { width: 100% !important; border-collapse: collapse !important; }
-            th, td { border: 1px solid #000 !important; padding: 6px !important; font-size: 9px !important; white-space: normal !important; color: black !important; background: white !important; }
+            th, td { border: 1px solid #000 !important; padding: 4px !important; font-size: 10px !important; white-space: normal !important; color: black !important; background: white !important; }
             th { background-color: #e5e7eb !important; font-weight: bold !important; -webkit-print-color-adjust: exact; }
             td img, td button, td input[type="checkbox"] { display: none !important; }
         }
@@ -44,375 +37,215 @@
 </head>
 <body class="h-[100dvh] flex flex-col overflow-hidden text-gray-800">
 
-    <!-- TOASTS E MODAIS GLOBAIS -->
-    <div id="toast-container" class="fixed top-4 left-1/2 -translate-x-1/2 z-[350] w-[92vw] max-w-md space-y-2 pointer-events-none no-print"></div>
-
-    <div id="modal-dialogo-app" class="hidden fixed inset-0 z-[300] bg-blue-950/80 backdrop-blur-sm flex items-center justify-center p-4 no-print modal-custom">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden border border-blue-100 pop-in">
-            <div id="dialogo-header" class="bg-blue-900 text-white p-4 flex items-center space-x-3">
-                <i id="dialogo-icone" class="fas fa-info-circle text-2xl"></i>
-                <h3 id="dialogo-titulo" class="font-black text-base uppercase tracking-wider">Aviso</h3>
-            </div>
-            <div class="p-5">
-                <p id="dialogo-mensagem" class="text-sm text-gray-700 font-bold leading-relaxed whitespace-pre-line"></p>
-                <div id="dialogo-botoes" class="flex space-x-3 mt-6"></div>
-            </div>
-        </div>
-    </div>
-
-    <!-- TUTORIAL MODAL -->
-    <div id="modal-guia-tutorial" class="hidden fixed inset-0 z-[290] bg-blue-950/85 backdrop-blur-sm flex items-center justify-center p-4 no-print modal-custom">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border-2 border-amber-400 pop-in">
-            <div class="bg-gradient-to-r from-blue-900 to-blue-800 text-white p-4 flex justify-between items-center">
-                <div class="flex items-center space-x-2">
-                    <span class="bg-amber-400 text-blue-950 w-8 h-8 rounded-lg flex items-center justify-center font-black"><i class="fas fa-graduation-cap"></i></span>
-                    <div>
-                        <span class="text-[9px] text-amber-300 font-black uppercase tracking-widest block">Tutorial Interativo</span>
-                        <h3 id="tutorial-modal-titulo" class="font-black text-sm uppercase">Como Funciona</h3>
-                    </div>
-                </div>
-                <button onclick="window.fecharModalGuiaTutorial()" class="text-white text-2xl leading-none">&times;</button>
-            </div>
-            <div id="tutorial-modal-corpo" class="p-5 space-y-3 text-xs text-gray-700 font-medium leading-relaxed max-h-[70vh] overflow-y-auto"></div>
-            <div class="p-3 bg-gray-50 border-t flex justify-end">
-                <button onclick="window.fecharModalGuiaTutorial()" class="bg-blue-700 hover:bg-blue-800 text-white font-black px-5 py-2.5 rounded-xl text-xs uppercase shadow">Entendi</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="modal-zoom" class="hidden fixed inset-0 z-[250] bg-black/95 flex items-center justify-center p-2 backdrop-blur-md no-print modal-custom" onclick="window.fecharZoom()">
-        <button class="absolute top-4 right-4 text-white text-4xl">&times;</button>
-        <img id="img-zoom" src="" class="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl">
-    </div>
-
     <!-- TELA DE LOGIN -->
-    <div id="view-login" class="fixed inset-0 z-[200] bg-gradient-to-b from-blue-900 to-blue-950 flex items-center justify-center p-4 fade-in no-print">
-        <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-sm text-center border-t-8 border-blue-500">
-            <div class="w-16 h-16 bg-blue-50 text-blue-700 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-inner">
-                <i class="fas fa-truck text-3xl"></i>
-            </div>
+    <div id="view-login" class="fixed inset-0 z-[200] bg-blue-900 flex items-center justify-center p-4 fade-in">
+        <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-sm text-center">
+            <i class="fas fa-truck text-5xl text-blue-600 mb-2"></i>
             <h1 class="text-3xl font-black text-gray-800 tracking-tight mb-1 uppercase">PátioPark</h1>
-            <p class="text-xs text-gray-400 mb-6 uppercase font-black tracking-widest">Controle & Auditoria</p>
+            <p class="text-sm text-gray-500 mb-8 uppercase font-bold">Controle de Acesso</p>
             
             <div class="space-y-4">
-                <input type="text" id="login-usuario" placeholder="USUÁRIO" class="w-full border-2 border-gray-300 p-3.5 rounded-xl focus:border-blue-600 focus:outline-none uppercase bg-gray-50 text-center font-bold">
-                <input type="password" id="login-senha" placeholder="SENHA" class="w-full border-2 border-gray-300 p-3.5 rounded-xl focus:border-blue-600 focus:outline-none bg-gray-50 text-center font-bold" onkeypress="if(event.key === 'Enter') window.fazerLogin()">
-                <button onclick="window.fazerLogin()" id="btn-login" class="w-full bg-blue-700 active:bg-blue-800 text-white font-black p-4 rounded-xl mt-2 text-lg shadow-lg uppercase transition">Entrar no Sistema</button>
+                <input type="text" id="login-usuario" placeholder="NOME DO USUÁRIO" class="w-full border-2 border-gray-300 p-3 rounded-lg focus:border-blue-500 focus:outline-none uppercase bg-gray-50 text-center font-bold">
+                <input type="password" id="login-senha" placeholder="SENHA" class="w-full border-2 border-gray-300 p-3 rounded-lg focus:border-blue-500 focus:outline-none uppercase bg-gray-50 text-center font-bold" onkeypress="if(event.key === 'Enter') window.fazerLogin()">
+                <button onclick="window.fazerLogin()" id="btn-login" class="w-full bg-blue-600 active:bg-blue-700 text-white font-bold p-4 rounded-lg mt-2 text-lg shadow-md uppercase transition">Entrar no Sistema</button>
             </div>
-            <div id="login-status" class="mt-4 text-xs font-bold text-red-600 min-h-[16px]"></div>
+            <div id="login-status" class="mt-4 text-xs font-bold text-red-600 h-4"></div>
         </div>
     </div>
 
-    <!-- CABEÇALHO SUPERIOR -->
-    <header id="app-header" class="hidden bg-blue-900 text-white px-3 py-2.5 shadow-md flex-shrink-0 z-10 flex justify-between items-center no-print">
-        <div class="flex items-center space-x-2">
-            <i class="fas fa-truck text-blue-300 text-lg"></i>
-            <div>
-                <h1 class="text-sm md:text-base font-black uppercase leading-none tracking-wide">PÁTIOPARK</h1>
-                <span id="cargo-usuario-header" class="text-[8px] text-blue-300 font-bold uppercase tracking-widest block">OPERACIONAL</span>
-            </div>
+    <!-- CABEÇALHO -->
+    <header id="app-header" class="hidden bg-blue-900 text-white p-4 shadow-md flex-shrink-0 z-10 flex justify-between items-center no-print">
+        <div class="flex items-center">
+            <h1 class="text-xl font-bold uppercase"><i class="fas fa-truck mr-2"></i>PÁTIOPARK</h1>
         </div>
-        <div class="flex items-center space-x-1.5 text-xs font-bold">
-            <button id="btn-toggle-tutorial" onclick="window.alternarModoTutorial()" class="bg-blue-800 hover:bg-blue-700 text-blue-100 border border-blue-600 px-2.5 py-1.5 rounded-xl flex items-center space-x-1.5 transition shadow-sm cursor-pointer" title="Tutorial">
-                <i class="fas fa-graduation-cap text-amber-300"></i><span id="lbl-tutorial" class="text-[10px] font-black uppercase">Tutorial: OFF</span>
-            </button>
-            <span id="nome-usuario-header" class="text-white bg-blue-800 px-2 py-1.5 rounded-xl border border-blue-700 text-[10px] truncate max-w-[95px]"><i class="fas fa-user-circle mr-1"></i>...</span>
-            <div id="status-conexao" class="text-yellow-300 pl-1"><i class="fas fa-spinner fa-spin"></i></div>
+        <div class="flex items-center space-x-3 text-xs font-bold">
+            <span id="nome-usuario-header" class="text-blue-200 border-r border-blue-700 pr-3"><i class="fas fa-user-circle"></i> ...</span>
+            <div id="status-conexao" class="text-yellow-300"><i class="fas fa-spinner fa-spin"></i> Conectando...</div>
         </div>
     </header>
 
     <main class="hidden flex-1 overflow-y-auto p-4 relative" id="main-content">
 
-        <!-- ABA: DASHBOARD -->
-        <div id="view-dashboard" class="hidden pb-24 fade-in no-print">
-            <div class="tutorial-box">
-                <div class="flex justify-between items-start">
-                    <div class="flex items-center space-x-2">
-                        <span class="bg-blue-700 text-white text-xs w-6 h-6 rounded-full flex items-center justify-center font-black"><i class="fas fa-info"></i></span>
-                        <h4 class="font-black text-blue-950 text-xs uppercase">Guia: Dashboard</h4>
-                    </div>
-                    <button onclick="window.abrirGuiaDetalhado('DASHBOARD')" class="bg-blue-700 text-white text-[9px] font-black px-2.5 py-1 rounded-lg uppercase shadow">Passo a Passo</button>
-                </div>
-                <p class="text-[11px] text-blue-900 font-bold mt-1.5 leading-snug">Visão geral do pátio e da sua produtividade diária.</p>
+        <!-- ABA 1: REGISTRAR (Gerado Dinamicamente) -->
+        <div id="view-registro" class="block pb-20 fade-in no-print">
+            <h2 class="text-xl font-bold mb-4 flex items-center uppercase"><i class="fas fa-edit mr-2"></i> Novo Registro</h2>
+            
+            <div class="space-y-4 bg-white p-4 rounded-lg shadow" id="formulario-dinamico">
+                <!-- O Formulário será injetado aqui pelo JS -->
             </div>
-
-            <div class="bg-gradient-to-r from-blue-900 to-blue-800 text-white p-4 rounded-2xl shadow-md mb-4 flex justify-between items-center">
-                <div>
-                    <span id="dash-cargo-badge" class="bg-blue-700 text-blue-200 text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-widest">CARGO</span>
-                    <h2 id="dash-saudacao" class="text-xl font-black uppercase mt-1">Olá, Operador</h2>
-                    <p id="dash-data-hoje" class="text-xs text-blue-200 font-bold uppercase"></p>
-                </div>
-                <button onclick="window.atualizarDashboard()" class="bg-blue-800 hover:bg-blue-700 text-white p-3 rounded-xl border border-blue-600 shadow-sm" title="Atualizar Indicadores">
-                    <i class="fas fa-sync-alt"></i>
-                </button>
-            </div>
-
-            <div class="grid grid-cols-2 gap-3 mb-4">
-                <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-blue-600">
-                    <div class="text-[10px] font-black text-gray-400 uppercase">No Pátio Agora</div>
-                    <div class="text-3xl font-black text-blue-700 mt-1" id="kpi-no-patio">0</div>
-                </div>
-                <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-emerald-500">
-                    <div class="text-[10px] font-black text-gray-400 uppercase">Movimento Hoje</div>
-                    <div class="text-xl font-black text-emerald-700 mt-1"><span id="kpi-entradas-hoje">0</span> E / <span id="kpi-saidas-hoje">0</span> S</div>
-                </div>
-                <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-indigo-500">
-                    <div class="text-[10px] font-black text-gray-400 uppercase">Sua Produtividade</div>
-                    <div class="text-xl font-black text-indigo-700 mt-1"><span id="kpi-minhas-ent">0</span> E / <span id="kpi-minhas-sai">0</span> S</div>
-                </div>
-                <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-amber-500">
-                    <div class="text-[10px] font-black text-gray-400 uppercase">Mais Antigo</div>
-                    <div class="text-sm font-black text-amber-700 mt-1 truncate" id="kpi-mais-antigo">---</div>
-                    <div class="text-[10px] text-gray-500 font-bold uppercase mt-1" id="kpi-mais-antigo-hora">Pátio livre</div>
-                </div>
-            </div>
-
-            <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 mb-4">
-                <h3 class="text-xs font-black text-gray-500 uppercase tracking-widest mb-3"><i class="fas fa-bolt text-yellow-500 mr-1"></i> Ações Rápidas</h3>
-                <div id="dash-atalhos-cargo" class="grid grid-cols-2 gap-2"></div>
-            </div>
-
-            <div id="dash-secao-dev" class="hidden space-y-4">
-                <div class="tutorial-box">
-                    <div class="flex justify-between items-center">
-                        <h4 class="font-black text-blue-950 text-xs uppercase"><i class="fas fa-shield-alt text-red-600 mr-1"></i> Guia DEV</h4>
-                        <button onclick="window.abrirGuiaDetalhado('RADAR_DEV')" class="bg-blue-700 text-white text-[9px] font-black px-2.5 py-1 rounded-lg uppercase">Ler mais</button>
-                    </div>
-                </div>
-                <div class="bg-red-950 text-white p-4 rounded-2xl shadow-lg border border-red-800">
-                    <div class="flex justify-between items-center border-b border-red-800 pb-2 mb-3">
-                        <h3 class="font-black text-sm uppercase tracking-wider text-red-200"><i class="fas fa-shield-alt mr-1"></i> Radar Antifraudes</h3>
-                    </div>
-                    <div class="grid grid-cols-3 gap-2 text-center">
-                        <div class="bg-red-900/60 p-2.5 rounded-xl border border-red-800">
-                            <div class="text-2xl font-black text-amber-300" id="kpi-dev-planob">0</div>
-                            <div class="text-[9px] font-bold uppercase text-red-200">Saídas Plano B</div>
-                        </div>
-                        <div class="bg-red-900/60 p-2.5 rounded-xl border border-red-800">
-                            <div class="text-2xl font-black text-orange-300" id="kpi-dev-semfoto-ent">0</div>
-                            <div class="text-[9px] font-bold uppercase text-red-200">Ent. S/ Foto</div>
-                        </div>
-                        <div class="bg-red-900/60 p-2.5 rounded-xl border border-red-800">
-                            <div class="text-2xl font-black text-white" id="kpi-dev-logs">0</div>
-                            <div class="text-[9px] font-bold uppercase text-red-200">Total Logs</div>
-                        </div>
-                    </div>
-                </div>
-                <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
-                    <h4 class="text-xs font-black text-gray-700 uppercase mb-3"><i class="fas fa-terminal text-red-600 mr-1"></i> Últimas Auditorias</h4>
-                    <div id="dash-ultimos-logs" class="space-y-2 text-xs"></div>
-                </div>
-            </div>
-        </div>
-
-        <!-- ABA: REGISTRAR ENTRADA -->
-        <div id="view-registro" class="hidden pb-24 fade-in no-print">
-            <h2 class="text-xl font-bold mb-3 flex items-center uppercase"><i class="fas fa-edit mr-2 text-blue-700"></i> Entrada</h2>
-            <div class="tutorial-box">
-                <div class="flex justify-between items-start">
-                    <div class="flex items-center space-x-2">
-                        <span class="bg-blue-700 text-white text-xs w-6 h-6 rounded-full flex items-center justify-center font-black">1</span>
-                        <h4 class="font-black text-blue-950 text-xs uppercase">Como Registrar</h4>
-                    </div>
-                    <button onclick="window.abrirGuiaDetalhado('ENTRADA')" class="bg-blue-700 text-white text-[9px] font-black px-2.5 py-1 rounded-lg uppercase shadow">Ver Detalhes</button>
-                </div>
-            </div>
-            <div class="space-y-4 bg-white p-4 rounded-xl shadow" id="formulario-dinamico"></div>
-            <button onclick="window.salvarRegistro()" id="btn-salvar-entrada" class="w-full bg-green-600 active:bg-green-700 text-white font-black p-4 rounded-xl mt-4 text-xl shadow-lg flex justify-center items-center uppercase transition">
+            
+            <button onclick="window.salvarRegistro()" id="btn-salvar-entrada" class="w-full bg-green-600 active:bg-green-700 text-white font-bold p-4 rounded-lg mt-4 text-xl shadow flex justify-center items-center uppercase transition">
                 <i class="fas fa-save mr-2"></i> SALVAR ENTRADA
             </button>
         </div>
 
-        <!-- ABA: PÁTIO -->
-        <div id="view-patio" class="hidden pb-24 fade-in no-print">
-            <div class="flex justify-between items-center mb-3">
-                <h2 class="text-xl font-bold flex items-center uppercase"><i class="fas fa-truck-loading mr-2 text-blue-700"></i> Pátio Atual</h2>
-                <span id="contador-patio-topo" class="bg-blue-100 text-blue-800 text-xs font-black px-3 py-1 rounded-full uppercase">0 No Pátio</span>
-            </div>
-            <div class="tutorial-box">
-                <div class="flex justify-between items-start">
-                    <div class="flex items-center space-x-2">
-                        <span class="bg-blue-700 text-white text-xs w-6 h-6 rounded-full flex items-center justify-center font-black">2</span>
-                        <h4 class="font-black text-blue-950 text-xs uppercase">Saída e Detalhes</h4>
-                    </div>
-                    <button onclick="window.abrirGuiaDetalhado('PATIO')" class="bg-blue-700 text-white text-[9px] font-black px-2.5 py-1 rounded-lg uppercase shadow">Ver Detalhes</button>
-                </div>
-            </div>
-            <div class="bg-white p-3 rounded-xl shadow-sm mb-4 border border-gray-200">
+        <!-- ABA 2: PÁTIO -->
+        <div id="view-patio" class="hidden pb-20 fade-in no-print">
+            <h2 class="text-xl font-bold mb-4 flex items-center uppercase"><i class="fas fa-truck-loading mr-2"></i> Pátio Atual</h2>
+            
+            <div class="bg-white p-3 rounded-lg shadow-sm mb-4 border border-gray-200">
                 <div class="grid grid-cols-2 gap-2 mb-2">
-                    <select id="filtro-status-patio" onchange="window.mudarFiltroPatio()" class="w-full p-2 border border-gray-300 rounded-lg text-sm uppercase bg-gray-50 font-bold">
-                        <option value="NO_PATIO">No Pátio</option>
-                        <option value="TODOS">Todos Status</option>
+                    <select id="filtro-status-patio" onchange="window.mudarFiltroPatio()" class="w-full p-2 border border-gray-300 rounded text-sm uppercase bg-gray-50 font-bold">
+                        <option value="NO_PATIO">No Pátio (Aguardando)</option>
+                        <option value="TODOS">Todos os Status</option>
                         <option value="SAIRAM">Já Saíram</option>
                     </select>
-                    <select id="filtro-data-patio" onchange="window.verificarFiltroData('patio')" class="w-full p-2 border border-gray-300 rounded-lg text-sm uppercase bg-gray-50 font-bold">
+                    <select id="filtro-data-patio" onchange="window.verificarFiltroData('patio')" class="w-full p-2 border border-gray-300 rounded text-sm uppercase bg-gray-50 font-bold">
                         <option value="TODAS">Qualquer Data</option>
-                        <option value="HOJE">Hoje</option>
-                        <option value="ONTEM">Ontem</option>
-                        <option value="ESPECIFICA">Especificar...</option>
+                        <option value="HOJE">Somente Hoje</option>
+                        <option value="ONTEM">Somente Ontem</option>
+                        <option value="ESPECIFICA">Escolher Dia...</option>
                     </select>
                 </div>
-                <input type="date" id="data-especifica-patio" onchange="window.mudarFiltroPatio()" class="w-full p-2 border border-gray-300 rounded-lg text-sm uppercase bg-gray-50 font-bold hidden mb-2">
-                <div class="relative">
-                    <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
-                    <input type="text" id="busca-patio" onkeyup="window.filtrarListas()" placeholder="Buscar Placa..." class="w-full pl-10 pr-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 uppercase font-bold">
-                </div>
-            </div>
-            <div id="lista-patio" class="space-y-4"></div>
-        </div>
-
-        <!-- ABA: PLANILHA -->
-        <div id="view-planilha" class="hidden pb-24 fade-in">
-            <div class="flex justify-between items-center mb-3 no-print">
-                <h2 class="text-xl font-bold flex items-center uppercase"><i class="fas fa-table mr-2 text-blue-700"></i> Histórico</h2>
-                <div class="flex space-x-2">
-                    <button id="btn-imprimir" onclick="window.imprimirRelatorio()" class="bg-gray-700 text-white font-bold px-3 py-2 rounded-lg text-xs shadow hover:bg-gray-800"><i class="fas fa-print"></i> PDF</button>
-                    <button id="btn-excluir-lote" onclick="window.excluirEmLote()" class="hidden bg-red-600 text-white font-bold px-3 py-2 rounded-lg text-xs shadow hover:bg-red-700"><i class="fas fa-trash-alt"></i> Excluir</button>
-                </div>
-            </div>
-            <div class="tutorial-box no-print">
-                <div class="flex justify-between items-start">
-                    <div class="flex items-center space-x-2">
-                        <span class="bg-blue-700 text-white text-xs w-6 h-6 rounded-full flex items-center justify-center font-black">3</span>
-                        <h4 class="font-black text-blue-950 text-xs uppercase">Consultas e PDF</h4>
-                    </div>
-                    <button onclick="window.abrirGuiaDetalhado('PLANILHA')" class="bg-blue-700 text-white text-[9px] font-black px-2.5 py-1 rounded-lg uppercase shadow">Ver Detalhes</button>
-                </div>
-            </div>
-            <div class="bg-white p-3 rounded-xl shadow-sm mb-4 border border-gray-200 no-print">
-                <div class="grid grid-cols-2 gap-2 mb-2">
-                    <select id="filtro-status-planilha" onchange="window.filtrarListas()" class="w-full p-2 border border-gray-300 rounded-lg text-sm uppercase bg-gray-50 font-bold">
-                        <option value="TODOS">Todos Status</option>
-                        <option value="NO_PATIO">No Pátio</option>
-                        <option value="SAIRAM">Já Saíram</option>
-                    </select>
-                    <select id="filtro-data-planilha" onchange="window.verificarFiltroData('planilha')" class="w-full p-2 border border-gray-300 rounded-lg text-sm uppercase bg-gray-50 font-bold">
-                        <option value="HOJE" selected>Hoje</option>
-                        <option value="ONTEM">Ontem</option>
-                        <option value="ESPECIFICA">Especificar...</option>
-                        <option value="TODAS">Paginado (Antigos)</option>
-                    </select>
-                </div>
-                <input type="date" id="data-especifica-planilha" onchange="window.carregarHistoricoSobDemanda(true)" class="w-full p-2 border border-gray-300 rounded-lg text-sm uppercase bg-gray-50 font-bold hidden mb-2">
+                <input type="date" id="data-especifica-patio" onchange="window.mudarFiltroPatio()" class="w-full p-2 border border-gray-300 rounded text-sm uppercase bg-gray-50 font-bold hidden mb-2">
+                
                 <div class="relative flex space-x-2">
                     <div class="relative flex-1">
                         <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
-                        <input type="text" id="busca-planilha" onkeyup="window.filtrarListas()" placeholder="Buscar..." class="w-full pl-10 pr-4 py-2 border-2 border-gray-300 rounded-lg font-bold uppercase">
+                        <input type="text" id="busca-patio" onkeyup="window.filtrarListas()" placeholder="Pesquisar Placa, Motorista..." class="w-full pl-10 pr-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none font-bold uppercase">
                     </div>
-                    <button onclick="window.buscarPlacaServidor('planilha')" class="bg-blue-600 text-white px-3 rounded-lg font-bold text-xs uppercase shadow"><i class="fas fa-cloud-download-alt mr-1"></i> BD</button>
+                    <button onclick="window.buscarPlacaServidor('patio')" class="bg-blue-600 text-white px-4 rounded-lg font-bold text-xs uppercase shadow">Buscar DB</button>
+                </div>
+            </div>
+
+            <div id="lista-patio" class="space-y-4"></div>
+        </div>
+
+        <!-- ABA 3: PLANILHA -->
+        <div id="view-planilha" class="hidden pb-20 fade-in">
+            <div class="flex justify-between items-center mb-4 no-print">
+                <h2 class="text-xl font-bold flex items-center uppercase"><i class="fas fa-table mr-2"></i> Histórico</h2>
+                <div class="flex space-x-2">
+                    <button onclick="window.print()" class="bg-gray-700 text-white font-bold px-3 py-2 rounded text-xs shadow hover:bg-gray-800 transition"><i class="fas fa-print"></i> PDF</button>
+                    <button id="btn-excluir-lote" onclick="window.excluirEmLote()" class="hidden bg-red-600 text-white font-bold px-3 py-2 rounded text-xs shadow hover:bg-red-700 transition"><i class="fas fa-trash-alt"></i> Lote</button>
+                </div>
+            </div>
+
+            <div class="bg-white p-3 rounded-lg shadow-sm mb-4 border border-gray-200 no-print">
+                <div class="grid grid-cols-2 gap-2 mb-2">
+                    <select id="filtro-status-planilha" onchange="window.filtrarListas()" class="w-full p-2 border border-gray-300 rounded text-sm uppercase bg-gray-50 font-bold">
+                        <option value="TODOS">Todos os Status</option>
+                        <option value="NO_PATIO">No Pátio (Aguardando)</option>
+                        <option value="SAIRAM">Já Saíram</option>
+                    </select>
+                    <select id="filtro-data-planilha" onchange="window.verificarFiltroData('planilha')" class="w-full p-2 border border-gray-300 rounded text-sm uppercase bg-gray-50 font-bold">
+                        <option value="HOJE" selected>Somente Hoje</option>
+                        <option value="ONTEM">Somente Ontem</option>
+                        <option value="ESPECIFICA">Escolher Dia...</option>
+                        <option value="TODAS">Últimos 100 (Paginado)</option>
+                    </select>
+                </div>
+                <input type="date" id="data-especifica-planilha" onchange="window.carregarHistoricoSobDemanda()" class="w-full p-2 border border-gray-300 rounded text-sm uppercase bg-gray-50 font-bold hidden mb-2">
+                
+                <div class="relative flex space-x-2">
+                    <div class="relative flex-1">
+                        <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                        <input type="text" id="busca-planilha" onkeyup="window.filtrarListas()" placeholder="Pesquisar Placa, Motorista..." class="w-full pl-10 pr-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none font-bold uppercase">
+                    </div>
+                    <button onclick="window.buscarPlacaServidor('planilha')" class="bg-blue-600 text-white px-4 rounded-lg font-bold text-xs uppercase shadow">Buscar DB</button>
                 </div>
                 <div id="status-leitura-banco" class="text-[10px] font-bold text-blue-700 mt-2 uppercase"></div>
             </div>
 
+            <!-- Cabeçalho oficial de impressão -->
             <div id="cabecalho-impressao" class="hidden">
-                <h1 class="text-2xl font-black uppercase tracking-widest text-gray-900">Relatório Oficial PátioPark</h1>
-                <p class="text-sm font-bold text-gray-600 uppercase" id="data-impressao"></p>
+                <h1 class="text-2xl font-black uppercase tracking-widest text-gray-900">Relatório PátioPark</h1>
             </div>
 
-            <div class="bg-white rounded-xl shadow overflow-hidden" id="tabela-impressao">
+            <div class="bg-white rounded-lg shadow overflow-hidden" id="tabela-impressao">
                 <div class="overflow-x-auto no-scrollbar">
                     <table class="min-w-full text-sm text-left">
-                        <thead class="bg-blue-800 text-white text-xs uppercase font-bold whitespace-nowrap"><tr id="cabecalho-planilha"></tr></thead>
-                        <tbody id="lista-planilha" class="divide-y divide-gray-200 whitespace-nowrap text-xs"></tbody>
+                        <thead class="bg-blue-800 text-white text-xs uppercase font-bold whitespace-nowrap">
+                            <tr id="cabecalho-planilha">
+                                <!-- Gerado Dinamicamente -->
+                            </tr>
+                        </thead>
+                        <tbody id="lista-planilha" class="divide-y divide-gray-200 whitespace-nowrap text-xs">
+                        </tbody>
                     </table>
                 </div>
             </div>
-            <button id="btn-carregar-mais" onclick="window.carregarMaisHistorico()" class="hidden w-full bg-blue-100 text-blue-800 font-bold py-3 rounded-xl mt-3 text-xs uppercase shadow-sm no-print">Carregar +50 Antigos</button>
         </div>
 
-        <!-- ABA 5: DEV CONFIG -->
-        <div id="view-config" class="hidden pb-24 fade-in no-print">
-            <h2 class="text-xl font-bold mb-3 flex items-center uppercase text-red-600"><i class="fas fa-user-shield mr-2"></i> Central DEV</h2>
-            <div class="tutorial-box">
-                <div class="flex justify-between items-start">
-                    <div class="flex items-center space-x-2">
-                        <span class="bg-red-700 text-white text-xs w-6 h-6 rounded-full flex items-center justify-center font-black"><i class="fas fa-lock"></i></span>
-                        <h4 class="font-black text-blue-950 text-xs uppercase">Guia do Administrador</h4>
-                    </div>
-                    <button onclick="window.abrirGuiaDetalhado('DEV_CONFIG')" class="bg-blue-700 text-white text-[9px] font-black px-2.5 py-1 rounded-lg uppercase shadow">Ver Detalhes</button>
-                </div>
-            </div>
+        <!-- ABA 4: CONFIGURAÇÕES / ADMIN -->
+        <div id="view-config" class="hidden pb-20 fade-in no-print">
+            <h2 class="text-xl font-bold mb-4 flex items-center uppercase text-red-600"><i class="fas fa-cogs mr-2"></i> Painel de Administração</h2>
+            
             <div class="space-y-6">
-                <div class="bg-white p-4 rounded-xl shadow border border-l-4 border-l-red-600">
-                    <div class="flex justify-between items-center border-b pb-2 mb-3">
-                        <h3 class="font-black text-gray-800 uppercase text-sm"><i class="fas fa-fingerprint text-red-600 mr-1"></i> Log de Auditoria</h3>
-                        <button onclick="window.carregarLogsAuditoria()" class="bg-red-600 text-white px-3 py-1.5 rounded-lg text-xs font-black uppercase"><i class="fas fa-sync-alt mr-1"></i> Carregar</button>
-                    </div>
-                    <div class="grid grid-cols-2 gap-2 mb-3">
-                        <select id="filtro-tipo-log" onchange="window.filtrarLogsTela()" class="border p-2 rounded-lg text-xs uppercase bg-gray-50 font-bold">
-                            <option value="TODOS">Todas as Ações</option>
-                            <option value="SAIDA_PLANO_B">Saídas Plano B</option>
-                            <option value="EXCLUSAO">Exclusões</option>
-                            <option value="EDICAO">Edições</option>
-                            <option value="ENTRADA">Entradas</option>
-                            <option value="SAIDA_PLANO_A">Saídas Plano A</option>
-                            <option value="LOGIN">Acessos</option>
-                        </select>
-                        <input type="text" id="busca-log-input" onkeyup="window.filtrarLogsTela()" placeholder="Buscar..." class="border p-2 rounded-lg text-xs uppercase font-bold">
-                    </div>
-                    <div id="lista-logs-auditoria" class="space-y-2 max-h-80 overflow-y-auto pr-1"></div>
-                </div>
-                
-                <div class="bg-white p-4 rounded-xl shadow border border-l-4 border-l-purple-500">
-                    <h3 class="font-bold text-gray-800 uppercase border-b pb-2 mb-3"><i class="fas fa-users-cog text-purple-600"></i> Cargos e Delegação</h3>
-                    <div id="lista-usuarios-admin" class="space-y-3 mb-4 max-h-[50vh] overflow-y-auto pr-1"></div>
-                    <div class="border-t pt-4 mt-2 space-y-2">
-                        <label class="block text-xs font-bold text-gray-700 uppercase">Novo Funcionário</label>
-                        <div class="grid grid-cols-2 gap-2">
-                            <input type="text" id="novo-user-nome" placeholder="NOME" class="border-2 p-2 rounded-lg text-sm uppercase">
-                            <input type="password" id="novo-user-senha" placeholder="SENHA" class="border-2 p-2 rounded-lg text-sm">
-                        </div>
-                        <div class="flex space-x-2">
-                            <select id="novo-user-cargo" class="flex-1 border-2 p-2 rounded-lg text-xs uppercase font-bold">
-                                <option value="PORTEIRO / OPERADOR">Operador</option>
-                                <option value="CONFERENTE DE PÁTIO">Conferente</option>
-                                <option value="SUPERVISOR LOGÍSTICO">Supervisor</option>
-                                <option value="GERENTE OPERACIONAL">Gerente</option>
-                            </select>
-                            <button onclick="window.criarUsuario()" class="bg-purple-600 text-white px-5 rounded-lg font-black uppercase"><i class="fas fa-plus"></i></button>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="bg-white p-4 rounded-xl shadow border border-l-4 border-l-green-500">
-                    <h3 class="font-bold text-gray-800 uppercase border-b pb-2 mb-1"><i class="fas fa-list-ol text-green-600"></i> Construtor de Campos</h3>
-                    <div id="lista-campos-admin" class="space-y-2 mb-4 mt-3"></div>
+                <!-- Gestão de Usuários (RBAC) -->
+                <div class="bg-white p-4 rounded-lg shadow border border-gray-200 border-l-4 border-l-purple-500">
+                    <h3 class="font-bold text-gray-800 uppercase border-b pb-2 mb-3"><i class="fas fa-users text-purple-600"></i> Gestão de Usuários e Permissões</h3>
+                    
+                    <div id="lista-usuarios-admin" class="space-y-2 mb-4 max-h-60 overflow-y-auto"></div>
+
                     <div class="border-t pt-4 mt-2">
-                        <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Novo Campo</label>
+                        <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Cadastrar Novo Usuário</label>
                         <div class="flex space-x-2">
-                            <input type="text" id="novo-campo-nome" placeholder="NOME" class="flex-1 border-2 p-2 rounded-lg text-sm uppercase">
-                            <select id="novo-campo-tipo" class="border-2 p-2 rounded-lg text-xs uppercase">
+                            <input type="text" id="novo-user-nome" placeholder="NOME" class="w-1/2 border-2 border-gray-300 p-2 rounded text-sm uppercase focus:border-purple-500 focus:outline-none">
+                            <input type="password" id="novo-user-senha" placeholder="SENHA" class="w-1/2 border-2 border-gray-300 p-2 rounded text-sm uppercase focus:border-purple-500 focus:outline-none">
+                            <button onclick="window.criarUsuario()" class="bg-purple-600 text-white px-4 rounded font-bold uppercase hover:bg-purple-700"><i class="fas fa-plus"></i></button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Backup -->
+                <div class="bg-white p-4 rounded-lg shadow border border-gray-200">
+                    <h3 class="font-bold text-gray-800 uppercase border-b pb-2 mb-3"><i class="fas fa-database"></i> Backup do Sistema</h3>
+                    <button onclick="window.gerarBackupNuvem()" id="btn-backup-nuvem" class="w-full bg-blue-600 text-white font-bold py-3 rounded uppercase shadow hover:bg-blue-700"><i class="fas fa-cloud-download-alt"></i> Baixar Backup Completo JSON</button>
+                </div>
+
+                <!-- Construtor de Campos -->
+                <div class="bg-white p-4 rounded-lg shadow border border-gray-200 border-l-4 border-l-green-500">
+                    <h3 class="font-bold text-gray-800 uppercase border-b pb-2 mb-3"><i class="fas fa-list-ol text-green-600"></i> Estrutura de Campos (Formulário)</h3>
+                    
+                    <div id="lista-campos-admin" class="space-y-2 mb-4"></div>
+
+                    <div class="border-t pt-4 mt-2">
+                        <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Criar Novo Campo</label>
+                        <div class="flex space-x-2">
+                            <input type="text" id="novo-campo-nome" placeholder="NOME DO CAMPO" class="flex-1 border-2 border-gray-300 p-2 rounded text-sm uppercase focus:border-green-500 focus:outline-none">
+                            <select id="novo-campo-tipo" class="border-2 border-gray-300 p-2 rounded text-sm uppercase bg-gray-50">
                                 <option value="text">Texto</option>
                                 <option value="textarea">Observação</option>
                             </select>
-                            <button onclick="window.adicionarCampo()" class="bg-green-600 text-white px-4 rounded-lg font-bold"><i class="fas fa-plus"></i></button>
+                            <button onclick="window.adicionarCampo()" class="bg-green-600 text-white px-4 rounded font-bold uppercase hover:bg-green-700"><i class="fas fa-plus"></i></button>
                         </div>
                     </div>
                 </div>
-                
-                <div class="bg-white p-4 rounded-xl shadow border">
-                    <button id="btn-backup-nuvem" onclick="window.gerarBackupNuvem()" class="w-full bg-blue-600 text-white font-bold py-3 rounded-xl uppercase">Baixar Backup JSON</button>
-                </div>
+
+                <button onclick="window.fazerLogoff()" class="w-full bg-red-100 text-red-700 font-bold py-4 rounded-lg shadow mt-4 uppercase border border-red-300 hover:bg-red-200"><i class="fas fa-sign-out-alt"></i> Sair da Conta (Logoff)</button>
             </div>
         </div>
 
     </main>
 
     <!-- MENU INFERIOR -->
-    <nav id="bottom-nav" class="hidden bg-white border-t border-gray-200 flex justify-around p-1.5 fixed bottom-0 w-full shadow-[0_-10px_20px_rgba(0,0,0,0.05)] z-20 transition-transform duration-300 uppercase no-print">
-        <button onclick="window.mudarAba('dashboard')" id="tab-dashboard" class="flex flex-col items-center flex-1 py-2 text-blue-600 font-bold transition"><i class="fas fa-chart-pie text-lg mb-0.5"></i><span class="text-[9px] md:text-xs">Painel</span></button>
-        <button onclick="window.mudarAba('registro')" id="tab-registro" class="hidden flex-col items-center flex-1 py-2 text-gray-500 font-bold transition"><i class="fas fa-edit text-lg mb-0.5"></i><span class="text-[9px] md:text-xs">Entrada</span></button>
-        <button onclick="window.mudarAba('patio')" id="tab-patio" class="hidden flex-col items-center flex-1 py-2 text-gray-500 font-bold transition"><i class="fas fa-truck text-lg mb-0.5"></i><span class="text-[9px] md:text-xs">Pátio</span></button>
-        <button onclick="window.mudarAba('planilha')" id="tab-planilha" class="hidden flex-col items-center flex-1 py-2 text-gray-500 font-bold transition"><i class="fas fa-table text-lg mb-0.5"></i><span class="text-[9px] md:text-xs">Histórico</span></button>
-        <button onclick="window.mudarAba('config')" id="tab-config" class="hidden flex-col items-center flex-1 py-2 text-gray-400 font-bold transition"><i class="fas fa-user-shield text-lg mb-0.5"></i><span class="text-[9px] md:text-xs">DEV</span></button>
-        <button onclick="window.solicitarLogoff()" class="flex flex-col items-center flex-1 py-2 text-gray-400 font-bold transition hover:text-red-500"><i class="fas fa-sign-out-alt text-lg mb-0.5"></i><span class="text-[9px] md:text-xs">Sair</span></button>
+    <nav id="bottom-nav" class="hidden bg-white border-t border-gray-200 flex justify-around p-2 fixed bottom-0 w-full shadow-[0_-10px_20px_rgba(0,0,0,0.05)] z-20 transition-transform duration-300 uppercase no-print">
+        <button onclick="window.mudarAba('registro')" id="tab-registro" class="flex flex-col items-center flex-1 py-2 text-blue-600 font-bold transition">
+            <i class="fas fa-edit text-xl mb-1"></i><span class="text-[10px] md:text-xs">Registrar</span>
+        </button>
+        <button onclick="window.mudarAba('patio')" id="tab-patio" class="flex flex-col items-center flex-1 py-2 text-gray-500 font-bold transition">
+            <i class="fas fa-truck text-xl mb-1"></i><span class="text-[10px] md:text-xs">Pátio</span>
+        </button>
+        <button onclick="window.mudarAba('planilha')" id="tab-planilha" class="flex flex-col items-center flex-1 py-2 text-gray-500 font-bold transition">
+            <i class="fas fa-table text-xl mb-1"></i><span class="text-[10px] md:text-xs">Planilha</span>
+        </button>
+        <button onclick="window.mudarAba('config')" id="tab-config" class="hidden flex-col items-center flex-1 py-2 text-gray-400 font-bold transition hover:text-red-500">
+            <i class="fas fa-cogs text-xl mb-1"></i><span class="text-[10px] md:text-xs">Admin</span>
+        </button>
     </nav>
 
-    <!-- MODAIS DE OPERAÇÃO: FICHA, EDIÇÃO, SAÍDA, LOG -->
-    <div id="modal-detalhes" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-blue-950/80 backdrop-blur-sm p-2 no-print modal-custom">
-        <div class="bg-white rounded-2xl shadow-2xl w-[95vw] max-w-[540px] h-[94vh] flex flex-col overflow-hidden relative pop-in">
+    <!-- MODAL ZOOM IMAGEM -->
+    <div id="modal-zoom" class="hidden fixed inset-0 z-[100] bg-black bg-opacity-95 flex items-center justify-center p-2 backdrop-blur-md no-print" onclick="window.fecharZoom()">
+        <button class="absolute top-4 right-4 text-white text-4xl">&times;</button>
+        <img id="img-zoom" src="" class="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl">
+    </div>
+
+    <!-- MODAL DE DETALHES GIGANTE (FICHA DO VEÍCULO) -->
+    <div id="modal-detalhes" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80 backdrop-blur-sm p-2 no-print">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md h-[95vh] flex flex-col overflow-hidden relative pop-in">
             <div class="bg-blue-900 text-white p-4 flex justify-between items-center flex-shrink-0">
-                <h3 class="font-black text-base uppercase tracking-wider"><i class="fas fa-file-alt mr-2"></i> Ficha do Veículo</h3>
+                <h3 class="font-bold text-lg uppercase"><i class="fas fa-file-alt"></i> Ficha do Veículo</h3>
                 <button onclick="window.fecharDetalhes()" class="text-white text-3xl leading-none">&times;</button>
             </div>
             <div class="flex-1 overflow-y-auto p-4 space-y-4" id="conteudo-detalhes"></div>
@@ -420,97 +253,1079 @@
         </div>
     </div>
 
-    <div id="modal-edicao" class="hidden fixed inset-0 z-[60] bg-blue-950/80 backdrop-blur-sm flex items-center justify-center p-2 no-print modal-custom">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-[500px] max-h-[90vh] flex flex-col overflow-hidden relative pop-in">
-            <div class="bg-amber-500 text-white p-4 flex justify-between items-center flex-shrink-0">
-                <h3 class="font-black text-base uppercase"><i class="fas fa-pen mr-2"></i> Editar Registro</h3>
+    <!-- MODAL EDIÇÃO DE REGISTRO (ADMIN/GERENTE) -->
+    <div id="modal-edicao" class="hidden fixed inset-0 z-[60] bg-black bg-opacity-80 flex items-center justify-center p-2 no-print">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md max-h-[90vh] flex flex-col overflow-hidden relative pop-in">
+            <div class="bg-yellow-500 text-white p-4 flex justify-between items-center flex-shrink-0">
+                <h3 class="font-bold text-lg uppercase"><i class="fas fa-pen"></i> Editar Registro</h3>
                 <button onclick="window.fecharEdicao()" class="text-white text-3xl leading-none">&times;</button>
             </div>
             <div class="flex-1 overflow-y-auto p-4 space-y-3" id="formulario-edicao"></div>
             <div class="p-4 border-t bg-gray-50 flex-shrink-0">
-                <button onclick="window.salvarEdicao()" id="btn-salvar-edicao" class="w-full bg-amber-500 hover:bg-amber-600 text-white font-black py-3.5 rounded-xl shadow-md uppercase">Salvar Alterações</button>
+                <button onclick="window.salvarEdicao()" id="btn-salvar-edicao" class="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-3 rounded-lg shadow-md uppercase">Salvar Alterações</button>
             </div>
         </div>
     </div>
 
-    <div id="modal-saida" class="hidden fixed inset-0 z-[70] bg-blue-950/85 backdrop-blur-sm flex items-center justify-center p-3 no-print modal-custom">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[94vh] overflow-y-auto pop-in border border-red-200">
-            <div class="bg-red-600 text-white p-4 flex justify-between items-center sticky top-0 z-10">
-                <div>
-                    <h3 class="font-black text-base uppercase tracking-wider"><i class="fas fa-sign-out-alt mr-1"></i> Registrar Saída</h3>
-                    <p id="saida-placa-alvo" class="text-xs text-red-100 font-black uppercase mt-0.5">PLACA: ---</p>
+    <!-- MODAL DE SAÍDA -->
+    <div id="modal-saida" class="hidden fixed inset-0 z-[60] bg-black bg-opacity-70 flex items-center justify-center p-4 no-print">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden pop-in">
+            <div class="bg-red-600 text-white p-4 font-bold text-lg text-center uppercase">Registrar Saída</div>
+            <div class="p-6">
+                <p class="text-sm text-gray-600 mb-6 text-center">Confirmar saída do veículo. O horário e o seu nome de usuário serão registrados agora.</p>
+                <div class="flex space-x-3">
+                    <button onclick="window.fecharModalSaida()" class="flex-1 bg-gray-200 text-gray-800 font-bold py-3 rounded-lg uppercase hover:bg-gray-300">Cancelar</button>
+                    <button onclick="window.confirmarSaida()" id="btn-confirmar-saida" class="flex-1 bg-red-600 text-white font-bold py-3 rounded-lg shadow-md uppercase hover:bg-red-700">Confirmar</button>
                 </div>
-                <button onclick="window.fecharModalSaida()" class="text-white text-3xl leading-none">&times;</button>
             </div>
-            <div class="tutorial-box mx-3 mt-3 mb-0">
-                <h4 class="font-black text-blue-950 text-[11px] uppercase"><i class="fas fa-graduation-cap mr-1"></i> Saída (Plano A vs Plano B)</h4>
-                <p class="text-[10px] text-blue-900 font-bold mt-1 leading-snug">
-                    • <b>Plano A:</b> Foto do veículo. Extrai <b>Data/Hora EXIF</b> e <b>GPS</b>.<br>
-                    • <b>Plano B:</b> Digite a placa à mão se a câmera falhar.
-                </p>
-            </div>
-            <div class="grid grid-cols-2 bg-gray-100 p-1.5 m-3 rounded-xl border border-gray-200">
-                <button type="button" id="tab-saida-plano-a" onclick="window.alternarModoSaida('A')" class="py-2 rounded-lg font-black text-xs uppercase bg-blue-600 text-white shadow transition">
-                    <i class="fas fa-camera mr-1"></i> Plano A: Foto
-                </button>
-                <button type="button" id="tab-saida-plano-b" onclick="window.alternarModoSaida('B')" class="py-2 rounded-lg font-black text-xs uppercase text-gray-600 hover:text-gray-900 transition">
-                    <i class="fas fa-keyboard mr-1"></i> Plano B: Manual
-                </button>
-            </div>
-            <div class="px-5 pb-5">
-                <div id="box-saida-plano-a" class="space-y-3">
-                    <div class="grid grid-cols-2 gap-3">
-                        <label class="bg-blue-50 text-blue-700 border-2 border-blue-300 rounded-xl p-4 flex flex-col items-center justify-center cursor-pointer hover:bg-blue-100 transition">
-                            <i class="fas fa-camera text-3xl mb-1"></i><span class="text-[10px] font-black uppercase">Câmera</span>
-                            <input type="file" accept="image/*" capture="environment" class="hidden" onchange="window.processarFotoSaida(event)">
-                        </label>
-                        <label class="bg-purple-50 text-purple-700 border-2 border-purple-300 rounded-xl p-4 flex flex-col items-center justify-center cursor-pointer hover:bg-purple-100 transition">
-                            <i class="fas fa-image text-3xl mb-1"></i><span class="text-[10px] font-black uppercase">Galeria</span>
-                            <input type="file" accept="image/*" class="hidden" onchange="window.processarFotoSaida(event)">
-                        </label>
-                    </div>
-                    <div id="preview-saida-container" class="hidden p-3 border-2 border-emerald-300 rounded-xl bg-emerald-50/60 flex items-center space-x-3">
-                        <img id="preview-saida-img" class="h-16 w-16 object-cover rounded-lg border border-emerald-400">
-                        <div class="flex-1 text-[9px] font-bold uppercase text-gray-700">
-                            <div><i class="fas fa-clock text-blue-600 w-3"></i> <span id="saida-meta-horario">...</span></div>
-                            <div><i class="fas fa-map-marker-alt text-red-600 w-3"></i> <span id="saida-meta-gps">...</span></div>
-                            <div><i class="fas fa-cloud text-emerald-600 w-3"></i> <span id="saida-meta-cloud">...</span></div>
+        </div>
+    </div>
+
+    <!-- ============================================== -->
+    <!-- SCRIPT TIPO MODULE: FIREBASE E LÓGICA          -->
+    <!-- ============================================== -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, setDoc, updateDoc, doc, deleteDoc, onSnapshot, query, orderBy, limit, where, getDocs } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+
+        // CONFIGURAÇÕES
+        const firebaseConfig = {
+            apiKey: "AIzaSyDYXFu-soolSOoCAxNYlVVgeJVwzJef_fk",
+            authDomain: "patiopark-7984f.firebaseapp.com",
+            projectId: "patiopark-7984f",
+            storageBucket: "patiopark-7984f.firebasestorage.app",
+            messagingSenderId: "1057772370201",
+            appId: "1:1057772370201:web:2da0185c98c15e28926d88"
+        };
+        const IMGBB_API_KEY = "eb75e9530b3092570067d4e63d367ad2";
+        const SENHA_ADMIN = "Biguidu2013@lhpm";
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // VARIÁVEIS GLOBAIS DE ESTADO
+        let registrosPatioAtivo = [];
+        let registrosHistorico = [];
+        let usuarios = [];
+        let usuarioLogado = null;
+        let permissoesAtuais = {};
+        let isAdmin = false;
+
+        let registroSelecionadoFirebaseId = null;
+        let fotoAtualUrl = null; 
+        let dataHoraMetadata = null; 
+        let gpsLocalizacao = null; 
+        let ultimoVeiculoEncontrado = null;
+
+        let unsubscribePatio = null;
+        let unsubscribeSchema = null;
+
+        const camposPadrao = [
+            { id: "placa", nome: "Placa", tipo: "placa", fixo: true },
+            { id: "local", nome: "Local de Entrega", tipo: "text", fixo: false },
+            { id: "motorista", nome: "Motorista Principal", tipo: "text", fixo: false },
+            { id: "documento", nome: "Documento", tipo: "text", fixo: false },
+            { id: "empresa", nome: "Nome da Empresa", tipo: "text", fixo: false },
+            { id: "modelo", nome: "Modelo do Veículo", tipo: "select_modelo", fixo: false },
+            { id: "nota", nome: "Nota Fiscal", tipo: "text", fixo: false },
+            { id: "observacoes", nome: "Observações", tipo: "textarea", fixo: false }
+        ];
+
+        let schemaCampos = [...camposPadrao];
+
+        // ==========================================
+        // LOGIN E ACESSO
+        // ==========================================
+        onSnapshot(collection(db, "usuarios"), (snapshot) => {
+            usuarios = [];
+            snapshot.forEach((doc) => usuarios.push({ id: doc.id, ...doc.data() }));
+            window.renderizarUsuarios();
+        }, (error) => {
+            document.getElementById('login-status').innerText = 'Falha ao conectar com banco de dados de usuários.';
+        });
+
+        window.fazerLogin = function() {
+            const status = document.getElementById('login-status');
+            const u = document.getElementById('login-usuario').value.trim().toUpperCase();
+            const s = document.getElementById('login-senha').value;
+
+            if(!u || !s) {
+                status.innerText = 'Preencha usuário e senha.';
+                return;
+            }
+
+            status.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Autenticando...';
+
+            if(u === 'ADMIN' && s === SENHA_ADMIN) {
+                usuarioLogado = 'ADMINISTRADOR';
+                isAdmin = true;
+                permissoesAtuais = { reg: true, pat: true, sai: true, pla: true, imp: true, edi: true, exc: true };
+                iniciarApp();
+                return;
+            }
+
+            const func = usuarios.find(user => user.nome === u && user.senha === s);
+            if(func) {
+                usuarioLogado = func.nome;
+                isAdmin = false;
+                permissoesAtuais = func.permissoes || { reg: true, pat: true, sai: true, pla: false, imp: false, edi: false, exc: false };
+                iniciarApp();
+            } else {
+                status.innerText = 'Usuário ou Senha incorretos.';
+            }
+        };
+
+        function iniciarApp() {
+            document.getElementById('view-login').classList.add('hidden');
+            document.getElementById('app-header').classList.remove('hidden');
+            document.getElementById('main-content').classList.remove('hidden');
+            document.getElementById('bottom-nav').classList.remove('hidden');
+            document.getElementById('nome-usuario-header').innerHTML = `<i class="fas fa-user-circle"></i> ${usuarioLogado}`;
+            
+            // Controle de Menu Baseado nas Permissões
+            document.getElementById('tab-registro').style.display = permissoesAtuais.reg ? 'flex' : 'none';
+            document.getElementById('tab-patio').style.display = permissoesAtuais.pat ? 'flex' : 'none';
+            document.getElementById('tab-planilha').style.display = permissoesAtuais.pla ? 'flex' : 'none';
+            document.getElementById('tab-config').style.display = isAdmin ? 'flex' : 'none';
+
+            // Ocultar botões da planilha se não tiver permissão
+            document.getElementById('btn-excluir-lote').style.display = permissoesAtuais.exc ? 'block' : 'none';
+
+            iniciarOuvintesBancoDeDados();
+            
+            // Redireciona para a primeira tela que o usuário tem acesso
+            if(permissoesAtuais.reg) window.mudarAba('registro');
+            else if(permissoesAtuais.pat) window.mudarAba('patio');
+            else if(permissoesAtuais.pla) window.mudarAba('planilha');
+        }
+
+        window.fazerLogoff = function() {
+            if(confirm("Deseja realmente sair do sistema?")) {
+                if(unsubscribePatio) unsubscribePatio();
+                if(unsubscribeSchema) unsubscribeSchema();
+                document.location.reload();
+            }
+        };
+
+        function iniciarOuvintesBancoDeDados() {
+            // Ouvinte do Schema de Campos
+            unsubscribeSchema = onSnapshot(doc(db, "configuracoes", "schema"), (docSnap) => {
+                if (docSnap.exists() && Array.isArray(docSnap.data().campos)) {
+                    schemaCampos = docSnap.data().campos;
+                } else if (isAdmin) {
+                    setDoc(doc(db, "configuracoes", "schema"), { campos: camposPadrao }).catch(()=>{});
+                }
+                window.renderizarTudo();
+            });
+
+            // Ouvinte do Pátio (Apenas veículos sem saída)
+            const qPatio = query(collection(db, "registros"), where("saida", "==", ""));
+            unsubscribePatio = onSnapshot(qPatio, (snapshot) => {
+                registrosPatioAtivo = [];
+                snapshot.forEach((d) => registrosPatioAtivo.push({ firebase_id: d.id, ...d.data() }));
+                
+                // Ordenação em memória para não precisar de índice composto
+                registrosPatioAtivo.sort((a, b) => (b.id || 0) - (a.id || 0));
+                window.filtrarListas();
+                document.getElementById('status-conexao').innerHTML = '<i class="fas fa-wifi text-green-400"></i> Online';
+            }, (error) => {
+                document.getElementById('status-conexao').innerHTML = '<i class="fas fa-exclamation-triangle text-red-400"></i> Erro DB';
+            });
+        }
+
+
+        // ==========================================
+        // GESTÃO DE USUÁRIOS E PERMISSÕES (ADMIN)
+        // ==========================================
+        window.criarUsuario = async function() {
+            const nome = document.getElementById('novo-user-nome').value.trim().toUpperCase();
+            const senha = document.getElementById('novo-user-senha').value.trim();
+            if(!nome || !senha) return alert("Preencha Nome e Senha.");
+            if(usuarios.find(u => u.nome === nome)) return alert("Já existe um usuário com esse nome.");
+            
+            // Permissões padrão para porteiro
+            const permissoesIniciais = { reg: true, pat: true, sai: true, pla: false, imp: false, edi: false, exc: false };
+
+            try {
+                await addDoc(collection(db, "usuarios"), { nome, senha, permissoes: permissoesIniciais });
+                document.getElementById('novo-user-nome').value = '';
+                document.getElementById('novo-user-senha').value = '';
+            } catch(e) { alert("Erro ao criar usuário."); }
+        };
+
+        window.excluirUsuario = async function(id, nome) {
+            if(confirm(`Tem certeza que deseja excluir o acesso de ${nome}?`)) {
+                try { await deleteDoc(doc(db, "usuarios", id)); } catch(e) {}
+            }
+        };
+
+        window.atualizarPermissao = async function(userId, permissaoKey, value) {
+            try {
+                await updateDoc(doc(db, "usuarios", userId), { [`permissoes.${permissaoKey}`]: value });
+            } catch(e) { alert("Falha ao atualizar permissão."); }
+        };
+
+        window.renderizarUsuarios = function() {
+            const container = document.getElementById('lista-usuarios-admin');
+            if(!container) return;
+            container.innerHTML = '';
+            
+            usuarios.forEach(u => {
+                const p = u.permissoes || {};
+                container.innerHTML += `
+                    <div class="bg-gray-50 border p-3 rounded-lg shadow-sm">
+                        <div class="flex justify-between items-center border-b border-gray-200 pb-2 mb-2">
+                            <div>
+                                <div class="font-bold text-sm uppercase text-blue-900"><i class="fas fa-user-tie"></i> ${u.nome}</div>
+                                <div class="text-[10px] text-gray-500 font-bold">SENHA: ${u.senha}</div>
+                            </div>
+                            <button onclick="window.excluirUsuario('${u.id}', '${u.nome}')" class="text-red-500 hover:text-red-700 bg-red-100 p-2 rounded"><i class="fas fa-trash"></i></button>
+                        </div>
+                        <div class="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1">Permissões de Acesso</div>
+                        <div class="grid grid-cols-2 gap-2 text-xs">
+                            <label class="flex items-center space-x-1"><input type="checkbox" onchange="window.atualizarPermissao('${u.id}', 'reg', this.checked)" ${p.reg ? 'checked' : ''} class="w-4 h-4 text-purple-600 rounded"><span>Nova Entrada</span></label>
+                            <label class="flex items-center space-x-1"><input type="checkbox" onchange="window.atualizarPermissao('${u.id}', 'pat', this.checked)" ${p.pat ? 'checked' : ''} class="w-4 h-4 text-purple-600 rounded"><span>Ver Pátio</span></label>
+                            <label class="flex items-center space-x-1"><input type="checkbox" onchange="window.atualizarPermissao('${u.id}', 'sai', this.checked)" ${p.sai ? 'checked' : ''} class="w-4 h-4 text-purple-600 rounded"><span class="text-red-600 font-bold">Dar Saída</span></label>
+                            <label class="flex items-center space-x-1"><input type="checkbox" onchange="window.atualizarPermissao('${u.id}', 'pla', this.checked)" ${p.pla ? 'checked' : ''} class="w-4 h-4 text-purple-600 rounded"><span>Ver Histórico</span></label>
+                            <label class="flex items-center space-x-1"><input type="checkbox" onchange="window.atualizarPermissao('${u.id}', 'imp', this.checked)" ${p.imp ? 'checked' : ''} class="w-4 h-4 text-purple-600 rounded"><span>Imprimir PDF</span></label>
+                            <label class="flex items-center space-x-1"><input type="checkbox" onchange="window.atualizarPermissao('${u.id}', 'edi', this.checked)" ${p.edi ? 'checked' : ''} class="w-4 h-4 text-purple-600 rounded"><span class="text-blue-600 font-bold">Editar Ficha</span></label>
+                            <label class="flex items-center space-x-1"><input type="checkbox" onchange="window.atualizarPermissao('${u.id}', 'exc', this.checked)" ${p.exc ? 'checked' : ''} class="w-4 h-4 text-purple-600 rounded"><span class="text-red-600 font-bold">Excluir Ficha</span></label>
                         </div>
                     </div>
-                    <div id="status-foto-saida" class="text-xs font-bold text-orange-600 text-center hidden"></div>
+                `;
+            });
+        };
+
+
+        // ==========================================
+        // GESTÃO DE CAMPOS DINÂMICOS DA NUVEM
+        // ==========================================
+        window.adicionarCampo = async function() {
+            const nome = document.getElementById('novo-campo-nome').value.trim().toUpperCase();
+            const tipo = document.getElementById('novo-campo-tipo').value;
+            if(!nome) return alert("Digite um nome para o campo.");
+            
+            schemaCampos.push({ id: "custom_" + Date.now(), nome, tipo, fixo: false });
+            document.getElementById('novo-campo-nome').value = '';
+            
+            try {
+                await setDoc(doc(db, "configuracoes", "schema"), { campos: schemaCampos });
+            } catch(e) { alert("Erro ao sincronizar campos: " + e.message); }
+        };
+
+        window.excluirCampo = async function(index) {
+            if(confirm("Excluir este campo para todos os usuários? (Os dados antigos continuam no banco)")) {
+                schemaCampos.splice(index, 1);
+                await setDoc(doc(db, "configuracoes", "schema"), { campos: schemaCampos });
+            }
+        };
+
+        window.moverCampo = async function(index, dir) {
+            const novoIndex = index + dir;
+            if(novoIndex >= 0 && novoIndex < schemaCampos.length) {
+                const temp = schemaCampos[index];
+                schemaCampos[index] = schemaCampos[novoIndex];
+                schemaCampos[novoIndex] = temp;
+                await setDoc(doc(db, "configuracoes", "schema"), { campos: schemaCampos });
+            }
+        };
+
+
+        // ==========================================
+        // RENDERIZAÇÃO PRINCIPAL DO APLICATIVO
+        // ==========================================
+        window.mudarAba = function(aba) {
+            ['registro', 'patio', 'planilha', 'config'].forEach(a => {
+                const v = document.getElementById('view-' + a);
+                if(v) v.classList.add('hidden');
+                
+                const t = document.getElementById('tab-' + a);
+                if(t) {
+                    t.classList.remove('text-blue-600', 'text-red-600');
+                    t.classList.add('text-gray-500');
+                }
+            });
+            
+            const vA = document.getElementById(`view-${aba}`);
+            if(vA) vA.classList.remove('hidden');
+            
+            const tA = document.getElementById(`tab-${aba}`);
+            if(tA) {
+                tA.classList.remove('text-gray-500');
+                tA.classList.add(aba === 'config' ? 'text-red-600' : 'text-blue-600');
+            }
+
+            if(aba === 'planilha' && registrosHistorico.length === 0) {
+                window.carregarHistoricoSobDemanda();
+            }
+        };
+
+        window.limparCampo = function(id) {
+            const input = document.getElementById(id);
+            if(input) { input.value = ''; input.focus(); }
+        };
+
+        window.verificarModeloOutros = function(valor, id) {
+            const obsInput = document.getElementById('campo_' + id + '_obs');
+            if(obsInput) {
+                if(valor === 'OUTROS') {
+                    obsInput.classList.remove('hidden');
+                    obsInput.focus();
+                } else {
+                    obsInput.classList.add('hidden');
+                    obsInput.value = '';
+                }
+            }
+        };
+
+        window.renderizarTudo = function() {
+            // 1. Constrói o Formulário de Entrada
+            const formContainer = document.getElementById('formulario-dinamico');
+            if(formContainer) {
+                // Guarda valores digitados temporariamente
+                const valoresAtuais = {};
+                schemaCampos.forEach(c => {
+                    const el = document.getElementById('campo_' + c.id);
+                    if(el) valoresAtuais[c.id] = el.value;
+                });
+
+                formContainer.innerHTML = '';
+                
+                schemaCampos.forEach((campo, index) => {
+                    let html = '';
+                    if(campo.tipo === 'placa') {
+                        html = `
+                            <div class="mb-4">
+                                <label class="block text-sm font-bold text-gray-700 uppercase">${index+1}. ${campo.nome} (Foto de Entrada)</label>
+                                <div class="relative flex items-center mt-1 no-print">
+                                    <input type="text" id="campo_${campo.id}" class="w-full border-2 border-gray-300 p-3 pr-24 rounded-lg focus:border-blue-500 focus:outline-none uppercase font-bold" onblur="window.verificarHistorico(this.value)" placeholder="ABC-1234">
+                                    <div class="absolute right-2 top-1/2 -translate-y-1/2 flex space-x-1">
+                                        <label class="bg-blue-100 hover:bg-blue-200 text-blue-600 rounded w-10 h-10 flex items-center justify-center cursor-pointer border border-blue-300 shadow-sm transition">
+                                            <i class="fas fa-camera text-lg"></i>
+                                            <input type="file" accept="image/*" capture="environment" class="hidden" onchange="window.processarFotoPlaca(event)">
+                                        </label>
+                                        <label class="bg-purple-100 hover:bg-purple-200 text-purple-600 rounded w-10 h-10 flex items-center justify-center cursor-pointer border border-purple-300 shadow-sm transition">
+                                            <i class="fas fa-image text-lg"></i>
+                                            <input type="file" accept="image/*" class="hidden" onchange="window.processarFotoPlaca(event)">
+                                        </label>
+                                    </div>
+                                </div>
+                                <div id="preview-container" class="hidden mt-2 p-2 border rounded-lg bg-gray-50 flex items-center justify-between shadow-inner">
+                                    <img id="preview-img" src="" class="h-16 w-16 object-cover rounded border border-gray-300">
+                                    <div class="text-[10px] text-gray-500 font-bold text-right ml-2 leading-tight uppercase" id="preview-info"></div>
+                                </div>
+                                <div id="status_foto_completo" class="text-xs font-bold text-orange-600 mt-1 hidden">
+                                    <i class="fas fa-spinner fa-spin"></i> Processando Imagem...
+                                </div>
+                                <div id="alerta_historico_completo" class="hidden bg-blue-50 border-l-4 border-blue-500 p-3 mt-2 rounded-r-lg shadow-sm">
+                                    <div class="flex justify-between items-center">
+                                        <div>
+                                            <h3 class="font-bold text-blue-800 text-xs uppercase"><i class="fas fa-history"></i> Conhecido</h3>
+                                            <p id="texto_historico_completo" class="text-[10px] text-blue-600 uppercase"></p>
+                                        </div>
+                                        <button type="button" onclick="window.aplicarAutopreenchimento()" class="bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-bold px-3 py-2 rounded shadow uppercase transition">
+                                            Autopreencher
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>`;
+                    } else if(campo.tipo === 'select_modelo') {
+                        html = `
+                            <div class="mb-4">
+                                <label class="block text-sm font-bold text-gray-700 uppercase">${index+1}. ${campo.nome}</label>
+                                <select id="campo_${campo.id}" onchange="window.verificarModeloOutros(this.value, '${campo.id}')" class="w-full border-2 border-gray-300 p-3 rounded-lg mt-1 bg-white uppercase font-bold focus:border-blue-500 focus:outline-none">
+                                    <option value="" disabled selected>SELECIONE O TIPO</option>
+                                    <option value="CAMINHÃO">CAMINHÃO</option>
+                                    <option value="PICAPE">PICAPE</option>
+                                    <option value="MOTO">MOTO</option>
+                                    <option value="CARRO DE PASSEIO">CARRO DE PASSEIO</option>
+                                    <option value="OUTROS">OUTROS</option>
+                                </select>
+                                <input type="text" id="campo_${campo.id}_obs" class="hidden w-full border-2 border-blue-300 p-3 rounded-lg mt-2 uppercase font-bold focus:border-blue-500 focus:outline-none" placeholder="DIGITE O MODELO EXATO">
+                            </div>`;
+                    } else if(campo.tipo === 'textarea') {
+                        html = `
+                            <div class="mb-4">
+                                <label class="block text-sm font-bold text-gray-700 uppercase">${index+1}. ${campo.nome}</label>
+                                <textarea id="campo_${campo.id}" rows="3" class="w-full border-2 border-gray-300 p-3 rounded-lg mt-1 uppercase font-bold focus:border-blue-500 focus:outline-none"></textarea>
+                                <button tabindex="-1" onclick="window.limparCampo('campo_${campo.id}')" class="text-red-400 text-xs mt-1 uppercase font-bold"><i class="fas fa-eraser"></i> Limpar</button>
+                            </div>`;
+                    } else {
+                        html = `
+                            <div class="mb-4">
+                                <label class="block text-sm font-bold text-gray-700 uppercase">${index+1}. ${campo.nome}</label>
+                                <div class="relative flex items-center mt-1">
+                                    <input type="text" id="campo_${campo.id}" class="w-full border-2 border-gray-300 p-3 pr-10 rounded-lg focus:border-blue-500 focus:outline-none uppercase font-bold">
+                                    <button tabindex="-1" onclick="window.limparCampo('campo_${campo.id}')" class="absolute right-3 text-red-400 hover:text-red-600 text-xl transition"><i class="fas fa-times-circle"></i></button>
+                                </div>
+                            </div>`;
+                    }
+                    formContainer.insertAdjacentHTML('beforeend', html);
+                });
+
+                // Devolve os dados
+                schemaCampos.forEach(c => {
+                    const el = document.getElementById('campo_' + c.id);
+                    if(el && valoresAtuais[c.id]) el.value = valoresAtuais[c.id];
+                });
+            }
+
+            // 2. Constrói Cabeçalho da Tabela
+            const cabecalho = document.getElementById('cabecalho-planilha');
+            if(cabecalho) {
+                let ths = `<th class="px-3 py-2 border-r w-10 no-print ${permissoesAtuais.exc ? '' : 'hidden'}"><i class="fas fa-check-square"></i></th>`;
+                ths += `<th class="px-3 py-2 border-r no-print ${permissoesAtuais.edi || permissoesAtuais.exc || permissoesAtuais.sai ? '' : 'hidden'}">Ações</th>`;
+                ths += `<th class="px-3 py-2 border-r no-print">Foto</th>`;
+                ths += `<th class="px-3 py-2 border-r">Entrada</th>`;
+                ths += `<th class="px-3 py-2 border-r">Saída</th>`;
+                
+                schemaCampos.forEach(c => {
+                    ths += `<th class="px-3 py-2 border-r">${c.tipo === 'placa' ? 'PLACA' : c.nome}</th>`;
+                });
+                
+                ths += `<th class="px-3 py-2 border-r no-print">GPS Entrada</th>`;
+                ths += `<th class="px-3 py-2">Assinatura (E/S)</th>`;
+                
+                cabecalho.innerHTML = ths;
+            }
+
+            // 3. Constrói Painel Admin de Campos
+            const painelCampos = document.getElementById('lista-campos-admin');
+            if(painelCampos && isAdmin) {
+                painelCampos.innerHTML = '';
+                schemaCampos.forEach((c, index) => {
+                    painelCampos.innerHTML += `
+                        <div class="flex items-center justify-between bg-gray-50 border p-2 rounded-lg">
+                            <div class="flex flex-col text-xs space-y-1">
+                                <button onclick="window.moverCampo(${index}, -1)" ${index === 0 ? 'disabled' : ''} class="text-gray-400 hover:text-blue-600 disabled:opacity-30"><i class="fas fa-chevron-up"></i></button>
+                                <button onclick="window.moverCampo(${index}, 1)" ${index === schemaCampos.length - 1 ? 'disabled' : ''} class="text-gray-400 hover:text-blue-600 disabled:opacity-30"><i class="fas fa-chevron-down"></i></button>
+                            </div>
+                            <div class="flex-1 px-3">
+                                <div class="font-bold text-sm uppercase">${c.nome}</div>
+                                <div class="text-[10px] text-gray-500 uppercase">${c.tipo}</div>
+                            </div>
+                            ${!c.fixo ? `<button onclick="window.excluirCampo(${index})" class="text-red-500 hover:text-red-700 p-2"><i class="fas fa-trash"></i></button>` : '<span class="text-gray-400 text-xs px-2"><i class="fas fa-lock"></i> Fixo</span>'}
+                        </div>`;
+                });
+            }
+
+            window.filtrarListas();
+        };
+
+
+        // ==========================================
+        // CAPTURA DE FOTO E EXIF
+        // ==========================================
+        window.processarFotoPlaca = async function(event) {
+            const file = event.target.files[0];
+            if(!file) return;
+
+            const statusLabel = document.getElementById('status_foto_completo');
+            const previewCont = document.getElementById('preview-container');
+            const previewImg = document.getElementById('preview-img');
+            const previewInfo = document.getElementById('preview-info');
+
+            statusLabel.classList.remove('hidden');
+            statusLabel.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Lendo Foto e GPS...';
+
+            const meta = await extrairMetadadosFoto(file);
+            dataHoraMetadata = meta.horario;
+            gpsLocalizacao = meta.gps;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = async function() {
+                    statusLabel.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Comprimindo WebP e Enviando...';
+                    
+                    const canvas = document.createElement('canvas');
+                    const MAX_WIDTH = 800;
+                    const scaleSize = MAX_WIDTH / img.width;
+                    canvas.width = MAX_WIDTH;
+                    canvas.height = img.height * scaleSize;
+                    canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+                    
+                    const webpDataStr = canvas.toDataURL('image/webp', 0.8);
+                    previewImg.src = webpDataStr;
+                    previewCont.classList.remove('hidden');
+                    previewInfo.innerHTML = `HORA: ${dataHoraMetadata}<br>GPS: ${gpsLocalizacao}<br><span class="text-blue-500">Enviando Nuvem...</span>`;
+                    
+                    try {
+                        const formData = new FormData();
+                        formData.append("image", webpDataStr.split(',')[1]);
+                        
+                        const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, { method: "POST", body: formData });
+                        const json = await res.json();
+                        
+                        if(json.success) {
+                            fotoAtualUrl = json.data.url;
+                            statusLabel.innerHTML = `<i class="fas fa-check-circle text-green-600"></i> Sucesso!`;
+                            previewInfo.innerHTML = `HORA: ${dataHoraMetadata}<br>GPS: ${gpsLocalizacao}<br><span class="text-green-600 font-black">IMGBB OK</span>`;
+                        } else {
+                            throw new Error("Erro na API");
+                        }
+                    } catch (err) {
+                        fotoAtualUrl = null;
+                        statusLabel.innerHTML = `<i class="fas fa-exclamation-triangle text-red-600"></i> Falha de Conexão. A foto não será salva.`;
+                        previewInfo.innerHTML = `<span class="text-red-600 font-black">ERRO DE UPLOAD</span>`;
+                    }
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        };
+
+        // ==========================================
+        // FLUXO DE ENTRADA NO BANCO DE DADOS
+        // ==========================================
+        window.verificarHistorico = async function(placaStr) {
+            const placa = placaStr.trim().toUpperCase();
+            const alertaBox = document.getElementById('alerta_historico_completo');
+            const textoBox = document.getElementById('texto_historico_completo');
+            if(!alertaBox || !textoBox) return;
+
+            if(placa.length < 7) {
+                alertaBox.classList.add('hidden');
+                window._veiculo_temp = null;
+                return;
+            }
+
+            try {
+                const snap = await getDocs(query(collection(db, "registros"), where("placa", "==", placa)));
+                const historico = [];
+                snap.forEach(d => historico.push({ firebase_id: d.id, ...d.data() }));
+                historico.sort((a, b) => (b.id || 0) - (a.id || 0));
+
+                if(historico.length > 0) {
+                    ultimoVeiculoEncontrado = historico[0];
+                    const empresa = ultimoVeiculoEncontrado.dados_dinamicos?.empresa || 'S/ EMPRESA';
+                    const texto = `Visitas Registradas: ${historico.length} <br> Última Visita: ${ultimoVeiculoEncontrado.entrada.split(' ')[0]} <br> Transportadora: ${empresa}`;
+                    alertaBox.classList.remove('hidden');
+                    textoBox.innerHTML = texto;
+                    window._veiculo_temp = ultimoVeiculoEncontrado;
+                } else {
+                    alertaBox.classList.add('hidden');
+                    window._veiculo_temp = null;
+                }
+            } catch(e) { console.error("Erro ao verificar histórico: ", e); }
+        };
+
+        window.aplicarAutopreenchimento = function() {
+            if(!window._veiculo_temp) return;
+            
+            schemaCampos.forEach(c => {
+                const input = document.getElementById('campo_' + c.id);
+                if(input && c.id !== 'placa') {
+                    const valorSalvo = window._veiculo_temp.dados_dinamicos?.[c.id] || '';
+                    if(c.tipo === 'select_modelo') {
+                        const options = Array.from(input.options).map(opt => opt.value);
+                        if(options.includes(valorSalvo)) {
+                            input.value = valorSalvo;
+                            window.verificarModeloOutros(valorSalvo, c.id);
+                        } else {
+                            input.value = 'OUTROS';
+                            window.verificarModeloOutros('OUTROS', c.id);
+                            const obsInput = document.getElementById('campo_' + c.id + '_obs');
+                            if(obsInput) obsInput.value = valorSalvo;
+                        }
+                    } else {
+                        input.value = valorSalvo;
+                    }
+                }
+            });
+            document.getElementById('alerta_historico_completo').classList.add('hidden');
+        };
+
+        window.salvarRegistro = async function() {
+            const btn = document.getElementById('btn-salvar-entrada');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> SALVANDO...';
+            btn.disabled = true;
+
+            const dados = {};
+            let placaDefinitiva = '';
+
+            schemaCampos.forEach(c => {
+                const input = document.getElementById('campo_' + c.id);
+                if(input) {
+                    let val = input.value.trim().toUpperCase();
+                    if(c.tipo === 'select_modelo' && val === 'OUTROS') {
+                        const obs = document.getElementById('campo_' + c.id + '_obs');
+                        val = obs ? obs.value.trim().toUpperCase() || 'OUTROS' : 'OUTROS';
+                    }
+                    if(c.id === 'placa') placaDefinitiva = val;
+                    dados[c.id] = val;
+                }
+            });
+
+            if(!placaDefinitiva) {
+                btn.innerHTML = '<i class="fas fa-save mr-1"></i> SALVAR ENTRADA';
+                btn.disabled = false;
+                return alert("A placa do veículo é obrigatória para registrar a entrada.");
+            }
+
+            const entrada = dataHoraMetadata || getDataHoraNavegador() + " (Sistema)";
+            const diaParticao = entrada.substring(0, 10);
+
+            const novo = {
+                id: Date.now(),
+                placa: placaDefinitiva,
+                entrada: entrada,
+                dia_particao: diaParticao,
+                saida: '',
+                visto_entrada: usuarioLogado,
+                visto_saida: '',
+                foto: fotoAtualUrl || '', 
+                gps: gpsLocalizacao || 'Sem registro',
+                dados_dinamicos: dados
+            };
+
+            try {
+                await addDoc(collection(db, "registros"), novo);
+                
+                // Limpa formulário
+                schemaCampos.forEach(c => {
+                    const inp = document.getElementById('campo_' + c.id);
+                    if(inp) inp.value = '';
+                    if(c.tipo === 'select_modelo') {
+                        const obs = document.getElementById('campo_' + c.id + '_obs');
+                        if(obs) { obs.value = ''; obs.classList.add('hidden'); }
+                    }
+                });
+
+                fotoAtualUrl = null; 
+                dataHoraMetadata = null; 
+                gpsLocalizacao = null;
+                
+                document.getElementById('status_foto_completo').classList.add('hidden');
+                document.getElementById('preview-container').classList.add('hidden');
+                document.getElementById('alerta_historico_completo').classList.add('hidden');
+                
+                window.mudarAba('patio');
+            } catch (e) {
+                alert("Erro grave ao salvar: " + e.message);
+            } finally {
+                btn.innerHTML = '<i class="fas fa-save mr-1"></i> SALVAR ENTRADA';
+                btn.disabled = false;
+            }
+        };
+
+        // ==========================================
+        // FLUXO DE SAÍDA (RÁPIDA)
+        // ==========================================
+        window.abrirModalSaida = function(id) {
+            document.getElementById('modal-detalhes').classList.add('hidden');
+            if(!permissoesAtuais.sai) return;
+            
+            registroSelecionadoFirebaseId = id;
+            document.getElementById('modal-saida').classList.remove('hidden');
+        };
+
+        window.fecharModalSaida = function() {
+            document.getElementById('modal-saida').classList.add('hidden');
+            registroSelecionadoFirebaseId = null;
+        };
+
+        window.confirmarSaida = async function() {
+            const btn = document.getElementById('btn-confirmar-saida');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Confirmando...';
+            btn.disabled = true;
+
+            try {
+                const horarioSaida = getDataHoraNavegador();
+                await updateDoc(doc(db, "registros", registroSelecionadoFirebaseId), {
+                    saida: horarioSaida,
+                    visto_saida: usuarioLogado
+                });
+                
+                // Atualiza na memória local
+                const idx = registrosHistorico.findIndex(r => r.firebase_id === registroSelecionadoFirebaseId);
+                if(idx !== -1) {
+                    registrosHistorico[idx].saida = horarioSaida;
+                    registrosHistorico[idx].visto_saida = usuarioLogado;
+                }
+                
+                window.fecharModalSaida();
+                window.filtrarListas();
+            } catch (e) {
+                alert("Erro ao registrar saída na nuvem: " + e.message);
+            } finally {
+                btn.innerHTML = 'Confirmar';
+                btn.disabled = false;
+            }
+        };
+
+        // ==========================================
+        // LISTAGEM E HISTÓRICO SOB DEMANDA
+        // ==========================================
+        function obterUnificada() {
+            const mapa = new Map();
+            registrosPatioAtivo.forEach(r => mapa.set(r.firebase_id, r));
+            registrosHistorico.forEach(r => {
+                if(!mapa.has(r.firebase_id)) mapa.set(r.firebase_id, r);
+                else mapa.set(r.firebase_id, { ...r, ...mapa.get(r.firebase_id) });
+            });
+            return Array.from(mapa.values()).sort((a, b) => (b.id || 0) - (a.id || 0));
+        }
+
+        window.carregarHistoricoSobDemanda = async function() {
+            const dataSel = document.getElementById('filtro-data-planilha')?.value || 'HOJE';
+            const dataEsp = document.getElementById('data-especifica-planilha')?.value || '';
+            const statusLabel = document.getElementById('status-leitura-banco');
+
+            if(statusLabel) statusLabel.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Lendo banco de dados...';
+
+            try {
+                let qHist = null;
+                if(dataSel === 'HOJE') {
+                    qHist = query(collection(db, "registros"), where("dia_particao", "==", obterDataString('HOJE')));
+                } else if(dataSel === 'ONTEM') {
+                    qHist = query(collection(db, "registros"), where("dia_particao", "==", obterDataString('ONTEM')));
+                } else if(dataSel === 'ESPECIFICA') {
+                    if(!dataEsp) {
+                        if(statusLabel) statusLabel.innerHTML = 'Selecione uma data acima.';
+                        return;
+                    }
+                    const e = dataEsp.split('-');
+                    qHist = query(collection(db, "registros"), where("dia_particao", "==", `${e[2]}/${e[1]}/${e[0]}`));
+                } else {
+                    qHist = query(collection(db, "registros"), orderBy("id", "desc"), limit(100));
+                }
+
+                const snap = await getDocs(qHist);
+                registrosHistorico = [];
+                snap.forEach(d => registrosHistorico.push({ firebase_id: d.id, ...d.data() }));
+                registrosHistorico.sort((a, b) => (b.id || 0) - (a.id || 0));
+
+                if(statusLabel) statusLabel.innerHTML = `<i class="fas fa-check-circle text-green-600"></i> ${registrosHistorico.length} registros lidos.`;
+                window.filtrarListas();
+            } catch (err) {
+                if(statusLabel) statusLabel.innerHTML = `<i class="fas fa-exclamation-circle text-red-600"></i> Erro ao consultar servidor.`;
+            }
+        };
+
+        window.buscarPlacaServidor = async function(origem) {
+            const inputId = origem === 'patio' ? 'busca-patio' : 'busca-planilha';
+            const termo = document.getElementById(inputId).value.trim().toUpperCase();
+            
+            if(termo.length < 3) return alert("Digite a placa correta para buscar no Banco de Dados.");
+
+            try {
+                const snap = await getDocs(query(collection(db, "registros"), where("placa", "==", termo)));
+                const encontrados = [];
+                snap.forEach(d => encontrados.push({ firebase_id: d.id, ...d.data() }));
+
+                encontrados.forEach(item => {
+                    if(!registrosHistorico.some(r => r.firebase_id === item.firebase_id)) {
+                        registrosHistorico.push(item);
+                    }
+                });
+                
+                if(origem === 'patio' && encontrados.length > 0) {
+                    document.getElementById('filtro-status-patio').value = 'TODOS';
+                }
+                
+                alert(`Busca concluída. ${encontrados.length} registro(s) encontrado(s) e adicionado(s) à tela.`);
+                window.filtrarListas();
+            } catch (e) {
+                alert("Erro ao buscar placa no servidor.");
+            }
+        };
+
+        window.verificarFiltroData = function(origem) {
+            const select = document.getElementById(`filtro-data-${origem}`);
+            const inputDate = document.getElementById(`data-especifica-${origem}`);
+            
+            if(select.value === 'ESPECIFICA') {
+                inputDate.classList.remove('hidden');
+            } else {
+                inputDate.classList.add('hidden');
+            }
+            
+            if(origem === 'planilha') window.carregarHistoricoSobDemanda();
+            else window.mudarFiltroPatio();
+        };
+
+        window.mudarFiltroPatio = async function() {
+            const statusPatio = document.getElementById('filtro-status-patio').value;
+            const dataPatioSel = document.getElementById('filtro-data-patio').value;
+            const dataPatioEsp = document.getElementById('data-especifica-patio').value;
+
+            if(statusPatio !== 'NO_PATIO') {
+                let q = null;
+                if(dataPatioSel === 'HOJE') q = query(collection(db, "registros"), where("dia_particao", "==", obterDataString('HOJE')));
+                else if(dataPatioSel === 'ONTEM') q = query(collection(db, "registros"), where("dia_particao", "==", obterDataString('ONTEM')));
+                else if(dataPatioSel === 'ESPECIFICA' && dataPatioEsp) {
+                    const e = dataPatioEsp.split('-');
+                    q = query(collection(db, "registros"), where("dia_particao", "==", `${e[2]}/${e[1]}/${e[0]}`));
+                } else {
+                    q = query(collection(db, "registros"), orderBy("id", "desc"), limit(50));
+                }
+                const snap = await getDocs(q);
+                registrosHistorico = [];
+                snap.forEach(d => registrosHistorico.push({ firebase_id: d.id, ...d.data() }));
+            }
+            window.filtrarListas();
+        };
+
+        window.filtrarListas = function() {
+            const termoPatio = document.getElementById('busca-patio')?.value.toUpperCase() || '';
+            const statusPatio = document.getElementById('filtro-status-patio')?.value || 'NO_PATIO';
+            const dataPatioSel = document.getElementById('filtro-data-patio')?.value || 'TODAS';
+            const dataPatioEsp = document.getElementById('data-especifica-patio')?.value || '';
+
+            const termoPlanilha = document.getElementById('busca-planilha')?.value.toUpperCase() || '';
+            const statusPlanilha = document.getElementById('filtro-status-planilha')?.value || 'TODOS';
+            const dataPlanilhaSel = document.getElementById('filtro-data-planilha')?.value || 'HOJE';
+            const dataPlanilhaEsp = document.getElementById('data-especifica-planilha')?.value || '';
+
+            const listaPatio = document.getElementById('lista-patio');
+            const listaPlanilha = document.getElementById('lista-planilha');
+            
+            if(!listaPatio || !listaPlanilha) return;
+            
+            listaPatio.innerHTML = '';
+            listaPlanilha.innerHTML = '';
+            
+            let countPatio = 0, countPlanilha = 0;
+
+            const hoje = obterDataString('HOJE');
+            const ontem = obterDataString('ONTEM');
+            const todos = obterUnificada();
+
+            todos.forEach(r => {
+                const pendente = !r.saida;
+                let textoBusca = Object.values(r.dados_dinamicos || {}).join(" ").toUpperCase() + " " + r.placa;
+                const rData = r.dia_particao || r.entrada.substring(0, 10);
+
+                // FILTRO PÁTIO
+                let showPatio = true;
+                if(statusPatio === 'NO_PATIO' && !pendente) showPatio = false;
+                if(statusPatio === 'SAIRAM' && pendente) showPatio = false;
+                if(dataPatioSel === 'HOJE' && rData !== hoje) showPatio = false;
+                if(dataPatioSel === 'ONTEM' && rData !== ontem) showPatio = false;
+                if(dataPatioSel === 'ESPECIFICA' && dataPatioEsp) {
+                    const e = dataPatioEsp.split('-');
+                    if(rData !== `${e[2]}/${e[1]}/${e[0]}`) showPatio = false;
+                }
+                if(termoPatio && !textoBusca.includes(termoPatio)) showPatio = false;
+
+                // FILTRO PLANILHA
+                let showPlanilha = true;
+                if(statusPlanilha === 'NO_PATIO' && !pendente) showPlanilha = false;
+                if(statusPlanilha === 'SAIRAM' && pendente) showPlanilha = false;
+                if(dataPlanilhaSel === 'HOJE' && rData !== hoje) showPlanilha = false;
+                if(dataPlanilhaSel === 'ONTEM' && rData !== ontem) showPlanilha = false;
+                if(dataPlanilhaSel === 'ESPECIFICA' && dataPlanilhaEsp) {
+                    const e = dataPlanilhaEsp.split('-');
+                    if(rData !== `${e[2]}/${e[1]}/${e[0]}`) showPlanilha = false;
+                }
+                if(termoPlanilha && !textoBusca.includes(termoPlanilha)) showPlanilha = false;
+
+                const imgThumb = r.foto ? `<img src="${r.foto}" onclick="event.stopPropagation(); window.abrirZoom('${r.foto}')" class="w-12 h-12 object-cover rounded-lg border shadow-sm cursor-zoom-in no-print">` : `<div class="w-12 h-12 bg-gray-100 rounded flex flex-col items-center justify-center text-gray-400 text-[10px] no-print"><i class="fas fa-camera"></i></div>`;
+                
+                const btnEdit = permissoesAtuais.edi ? `<button onclick="event.stopPropagation(); window.abrirEdicao('${r.firebase_id}')" class="text-blue-500 hover:text-blue-700 bg-blue-50 p-2 rounded mr-1 no-print"><i class="fas fa-pen"></i></button>` : '';
+                const btnDel = permissoesAtuais.exc ? `<button onclick="event.stopPropagation(); window.excluirIndiv('${r.firebase_id}')" class="text-red-500 hover:text-red-700 bg-red-50 p-2 rounded no-print"><i class="fas fa-trash"></i></button>` : '';
+
+                if(showPatio) {
+                    countPatio++;
+                    const card = document.createElement('div');
+                    card.className = `bg-white rounded-xl shadow-sm border-l-8 ${pendente ? 'border-blue-500' : 'border-green-500'} p-4 flex flex-col relative cursor-pointer hover:bg-gray-50 transition`;
+                    card.setAttribute('onclick', `window.abrirDetalhes('${r.firebase_id}')`);
+
+                    let btnSaida = '';
+                    if(pendente && permissoesAtuais.sai) {
+                        btnSaida = `<button onclick="event.stopPropagation(); window.abrirModalSaida('${r.firebase_id}')" class="mt-3 w-full bg-red-100 hover:bg-red-200 text-red-700 font-bold py-3 rounded-lg border border-red-300 text-sm shadow-sm uppercase transition"><i class="fas fa-sign-out-alt"></i> Registrar Saída</button>`;
+                    } else if (!pendente) {
+                        btnSaida = `<div class="mt-3 text-green-700 font-bold text-center bg-green-50 py-3 rounded-lg border border-green-200 shadow-sm uppercase">✅ SAIU: ${r.saida.substring(0,16)}</div>`;
+                    }
+                    
+                    card.innerHTML = `
+                        <div class="flex justify-between items-start border-b pb-3 mb-3">
+                            <div class="flex items-center gap-3">
+                                ${imgThumb}
+                                <div><div class="font-black text-xl text-gray-800 leading-none mb-1">${r.placa}</div><div class="text-[10px] font-bold text-gray-500 uppercase">${r.dados_dinamicos?.modelo || 'VEÍCULO'} • ${r.dados_dinamicos?.empresa || 'S/ EMPRESA'}</div></div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-[10px] text-gray-500 uppercase font-bold tracking-wider">ENTRADA</div>
+                                <div class="text-xs font-black text-blue-700 leading-tight">${r.entrada.split(' ')[0]}<br>${r.entrada.split(' ')[1]}</div>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <div class="text-xs text-gray-600 uppercase font-bold"><i class="fas fa-user text-gray-400"></i> ${r.dados_dinamicos?.motorista || 'N/A'}</div>
+                            <div class="no-print">${btnEdit}${btnDel}</div>
+                        </div>
+                        ${btnSaida}
+                    `;
+                    listaPatio.appendChild(card);
+                }
+
+                if(showPlanilha) {
+                    countPlanilha++;
+                    const tr = document.createElement('tr');
+                    tr.className = "hover:bg-gray-50 transition cursor-pointer";
+                    tr.setAttribute('onclick', `window.abrirDetalhes('${r.firebase_id}')`);
+
+                    let acao = '';
+                    if(pendente && permissoesAtuais.sai) acao = `<button onclick="event.stopPropagation(); window.abrirModalSaida('${r.firebase_id}')" class="bg-red-500 text-white px-2 py-1 rounded text-[10px] font-bold shadow-sm uppercase no-print">SAÍDA</button>`;
+                    else if (!pendente) acao = `<span class="text-green-600 font-bold text-[10px] uppercase"><i class="fas fa-check"></i> OK</span>`;
+                    
+                    let rowHtml = `<td class="px-2 py-2 border-r text-center no-print ${permissoesAtuais.exc ? '' : 'hidden'}" onclick="event.stopPropagation()"><input type="checkbox" class="cb-planilha w-4 h-4" value="${r.firebase_id}"></td>`;
+                    rowHtml += `<td class="px-2 py-2 border-r text-center no-print whitespace-nowrap ${permissoesAtuais.edi || permissoesAtuais.exc || permissoesAtuais.sai ? '' : 'hidden'}">${btnEdit}${btnDel} ${acao}</td>`;
+                    rowHtml += `<td class="px-2 py-2 border-r text-center no-print">${imgThumb}</td>`;
+                    rowHtml += `<td class="px-2 py-2 border-r font-bold text-blue-700 whitespace-nowrap">${r.entrada}</td>`;
+                    rowHtml += `<td class="px-2 py-2 border-r font-bold ${pendente ? 'text-gray-400' : 'text-green-600'} whitespace-nowrap">${r.saida || 'NO PÁTIO'}</td>`;
+                    
+                    schemaCampos.forEach(c => {
+                        if(c.tipo === 'placa') rowHtml += `<td class="px-3 py-2 border-r font-black text-base">${r.placa}</td>`;
+                        else rowHtml += `<td class="px-3 py-2 border-r uppercase max-w-[150px] truncate" title="${r.dados_dinamicos?.[c.id] || ''}">${r.dados_dinamicos?.[c.id] || ''}</td>`;
+                    });
+                    
+                    rowHtml += `<td class="px-2 py-2 border-r text-[9px] whitespace-nowrap no-print">${r.gps || '---'}</td>`;
+                    rowHtml += `<td class="px-2 py-2 border-r uppercase text-[10px] whitespace-nowrap text-gray-500 font-bold">E: ${r.visto_entrada}<br>S: ${r.visto_saida || '...'}</td>`;
+                    
+                    tr.innerHTML = rowHtml;
+                    listaPlanilha.appendChild(tr);
+                }
+            });
+
+            const badgePatio = document.getElementById('contador-patio-topo');
+            if(badgePatio) badgePatio.innerText = `${registrosPatioAtivo.length} No Pátio`;
+
+            if(countPatio === 0) listaPatio.innerHTML = '<p class="text-center text-gray-400 py-10 font-bold uppercase">Nenhum veículo no pátio para este filtro.</p>';
+            if(countPlanilha === 0) listaPlanilha.innerHTML = '<tr><td colspan="15" class="text-center py-6 font-bold text-gray-400 uppercase">Nenhum registro encontrado no histórico.</td></tr>';
+        };
+
+        // ==========================================
+        // EXCLUSÃO, EDIÇÃO E FICHA
+        // ==========================================
+        window.abrirZoom = function(url) {
+            document.getElementById('img-zoom').src = url;
+            document.getElementById('modal-zoom').classList.remove('hidden');
+        };
+        window.fecharZoom = () => document.getElementById('modal-zoom').classList.add('hidden');
+
+        window.abrirDetalhes = function(firebase_id) {
+            const r = obterUnificada().find(reg => reg.firebase_id === firebase_id);
+            if(!r) return;
+            const pendente = !r.saida;
+            
+            const imgHtml = r.foto ? `<img src="${r.foto}" onclick="window.abrirZoom('${r.foto}')" class="w-full max-h-64 object-contain bg-gray-100 rounded border mt-2 cursor-zoom-in shadow no-print">` : `<div class="w-full h-32 bg-gray-100 flex items-center justify-center text-gray-400 font-bold rounded border mt-2 uppercase no-print">Sem foto disponível</div>`;
+            const gpsLink = r.gps && !r.gps.includes('Sem') ? `<a href="https://maps.google.com/?q=${encodeURIComponent(r.gps.replace(' (EXIF)','').trim())}" target="_blank" class="inline-block bg-blue-600 text-white text-[9px] font-black px-2 py-0.5 rounded ml-1 uppercase"><i class="fas fa-map-marked-alt mr-0.5"></i> Mapa</a>` : '';
+
+            let infos = '';
+            schemaCampos.forEach(c => {
+                if(c.tipo !== 'placa') {
+                    infos += `<div class="border-b py-2"><span class="block text-[10px] text-gray-400 font-black uppercase tracking-widest">${c.nome}</span><span class="font-bold text-gray-800 uppercase block whitespace-pre-wrap">${r.dados_dinamicos?.[c.id] || '---'}</span></div>`;
+                }
+            });
+
+            document.getElementById('conteudo-detalhes').innerHTML = `
+                <div class="text-center mb-2">
+                    <div class="text-4xl font-black text-blue-950 tracking-wider">${r.placa}</div>
                 </div>
-                <div id="box-saida-plano-b" class="hidden space-y-3">
-                    <div class="bg-amber-50 border-l-4 border-amber-500 p-3 rounded-r-xl text-[10px] text-amber-900 font-bold uppercase">
-                        <i class="fas fa-exclamation-triangle text-amber-600 mr-1"></i> Contingência: Digite a placa para liberar.
+                ${imgHtml}
+                <div class="grid grid-cols-2 gap-2 mt-4 text-sm">
+                    <div class="bg-blue-50 p-2 rounded-xl border border-blue-200">
+                        <span class="block text-[10px] text-blue-700 font-black uppercase">Entrada</span>
+                        <span class="font-black text-sm block">${r.entrada}</span>
+                        <span class="block text-[10px] text-gray-600 mt-1 uppercase font-bold">Op: ${r.visto_entrada}</span>
                     </div>
-                    <input type="text" id="input-placa-plano-b" placeholder="DIGITE A PLACA EXATA" class="w-full border-2 border-amber-400 p-3 rounded-xl text-center text-xl font-black uppercase">
-                    <select id="motivo-plano-b" class="w-full border-2 border-gray-300 p-2.5 rounded-xl text-xs font-bold uppercase">
-                        <option value="FALHA NA CÂMERA DO APARELHO">Falha na Câmera</option>
-                        <option value="OSCILAÇÃO DE INTERNET">Oscilação de Internet</option>
-                        <option value="PLACA ILEGÍVEL / CHUVA">Placa Ilegível / Chuva</option>
-                        <option value="LIBERAÇÃO RÁPIDA DE EMERGÊNCIA">Emergência</option>
-                    </select>
+                    <div class="bg-${pendente ? 'amber' : 'green'}-50 p-2 rounded-xl border border-${pendente ? 'amber' : 'green'}-200">
+                        <span class="block text-[10px] text-${pendente ? 'amber' : 'green'}-700 font-black uppercase">Saída</span>
+                        <span class="font-black text-sm block">${r.saida || 'Aguardando no Pátio...'}</span>
+                        ${r.visto_saida ? `<span class="block text-[10px] text-gray-600 mt-1 uppercase font-bold">Op: ${r.visto_saida}</span>` : ''}
+                    </div>
                 </div>
-                <div class="flex space-x-2 mt-5">
-                    <button type="button" onclick="window.fecharModalSaida()" class="w-1/3 bg-gray-200 text-gray-800 font-black py-3.5 rounded-xl uppercase text-xs">Cancelar</button>
-                    <button type="button" onclick="window.confirmarSaida()" id="btn-confirmar-saida" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-black py-3.5 rounded-xl uppercase text-sm transition">Confirmar</button>
-                </div>
-            </div>
-        </div>
-    </div>
+                <div class="mt-4 bg-white p-3 border rounded-xl shadow-sm">${infos}</div>
+                <div class="mt-2 text-xs text-gray-500 text-center font-bold no-print"><i class="fas fa-map-marker-alt"></i> GPS Entrada: ${r.gps} ${gpsLink}</div>
+            `;
+            
+            if(pendente && permissoesAtuais.sai) {
+                document.getElementById('rodape-detalhes').innerHTML = `<button onclick="window.fecharDetalhes(); window.abrirModalSaida('${r.firebase_id}')" class="w-full bg-red-600 hover:bg-red-700 text-white font-black py-4 rounded-xl shadow-md uppercase transition">Registrar Saída</button>`;
+            } else {
+                document.getElementById('rodape-detalhes').innerHTML = `<button onclick="window.fecharDetalhes()" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 font-black py-4 rounded-xl uppercase transition">Fechar Ficha</button>`;
+            }
+            
+            document.getElementById('modal-detalhes').classList.remove('hidden');
+        };
 
-    <div id="modal-detalhe-log" class="hidden fixed inset-0 z-[80] bg-blue-950/85 backdrop-blur-sm flex items-center justify-center p-3 no-print modal-custom">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col overflow-hidden pop-in border border-red-200">
-            <div class="bg-red-900 text-white p-4 flex justify-between items-center flex-shrink-0">
-                <h3 class="font-black text-sm uppercase"><i class="fas fa-search-plus mr-2"></i> Inspetor de Auditoria</h3>
-                <button onclick="window.fecharDetalheLog()" class="text-white text-3xl leading-none">&times;</button>
-            </div>
-            <div id="conteudo-detalhe-log" class="flex-1 overflow-y-auto p-4 space-y-3 text-xs"></div>
-            <div id="rodape-detalhe-log" class="p-4 border-t bg-gray-50 flex space-x-2 flex-shrink-0"></div>
-        </div>
-    </div>
+        window.excluirIndiv = async function(id) {
+            if(!permissoesAtuais.exc) return;
+            const r = obterUnificada().find(reg => reg.firebase_id === id);
+            if(!r) return;
+            
+            if(confirm(`Tem certeza que deseja apagar a placa ${r.placa} permanentemente?`)) {
+                try {
+                    await deleteDoc(doc(db, "registros", id));
+                    registrosHistorico = registrosHistorico.filter(reg => reg.firebase_id !== id);
+                    window.filtrarListas();
+                } catch (e) { alert("Erro ao excluir."); }
+            }
+        };
 
-    <!-- O ARQUIVO EXTERNO COM A LÓGICA -->
-    <script type="module" src="app.js"></script>
+        window.abrirEdicao = function(id) {
+            if(!permissoesAtuais.edi) return;
+            const r = obterUnificada().find(reg => reg.firebase_id === id);
+            if(!r) return;
+            
+            registroSelecionadoFirebaseId = id;
+            const cont = document.getElementById('formulario-edicao');
+            cont.innerHTML = `<div class="mb-3"><label class="text-xs font-bold text-gray-500">PLACA</label><input type="text" id="edit_placa" value="${r.placa}" class="w-full border-2 border-blue-400 p-2.5 rounded-xl uppercase font-black text-blue-900 shadow-sm"></div>`;
+            
+            schemaCampos.forEach(c => {
+                if(c.tipo !== 'placa') {
+                    if(c.tipo === 'textarea') {
+                        cont.innerHTML += `<div class="mb-3"><label class="text-xs font-bold text-gray-500">${c.nome.toUpperCase()}</label><textarea id="edit_${c.id}" class="w-full border p-2.5 rounded-xl uppercase shadow-sm">${r.dados_dinamicos?.[c.id] || ''}</textarea></div>`;
+                    } else {
+                        cont.innerHTML += `<div class="mb-3"><label class="text-xs font-bold text-gray-500">${c.nome.toUpperCase()}</label><input type="text" id="edit_${c.id}" value="${r.dados_dinamicos?.[c.id] || ''}" class="w-full border p-2.5 rounded-xl uppercase shadow-sm"></div>`;
+                    }
+                }
+            });
+            document.getElementById('modal-edicao').classList.remove('hidden');
+        };
+
+        window.fecharEdicao = () => { document.getElementById('modal-edicao').classList.add('hidden'); registroSelecionadoFirebaseId = null; };
+
+        window.salvarEdicao = async function() {
+            const btn = document.getElementById('btn-salvar-edicao');
+            btn.innerHTML = 'Salvando...'; 
+            btn.disabled = true;
+
+            const r = obterUnificada().find(reg => reg.firebase_id === registroSelecionadoFirebaseId);
+            const dadosNovos = { ...r.dados_dinamicos };
+            
+            schemaCampos.forEach(c => {
+                if(c.tipo !== 'placa') dadosNovos[c.id] = document.getElementById('edit_' + c.id).value.trim().toUpperCase();
+            });
+            const novaPlaca = document.getElementById('edit_placa').value.trim().toUpperCase();
+
+            try {
+                await updateDoc(doc(db, "registros", registroSelecionadoFirebaseId), { placa: novaPlaca, dados_dinamicos: dadosNovos });
+                
+                const idx = registrosHistorico.findIndex(item => item.firebase_id === registroSelecionadoFirebaseId);
+                if(idx !== -1) {
+                    registrosHistorico[idx].placa = novaPlaca;
+                    registrosHistorico[idx].dados_dinamicos = dadosNovos;
+                }
+                
+                window.filtrarListas();
+                window.fecharEdicao();
+            } catch (e) {
+                alert("Erro ao editar.");
+            } finally {
+                btn.innerHTML = 'Salvar Alterações';
+                btn.disabled = false;
+            }
+        };
+
+        window.imprimirRelatorio = function() {
+            document.getElementById('data-impressao').innerText = `Gerado em: ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')} por ${usuarioLogado}`;
+            window.print();
+        };
+
+        // GATILHO INICIAL PARA RENDERIZAR A TELA
+        window.renderizarTudo();
+
+    </script>
 </body>
 </html>
